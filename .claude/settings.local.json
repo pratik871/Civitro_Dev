@@ -47,7 +47,10 @@
       "Bash(curl:*)",
       "Bash(powershell.exe:*)",
       "Bash(where:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "Bash(mv:*)"
     ]
   }
 }
