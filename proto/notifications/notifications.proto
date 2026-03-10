@@ -1,0 +1,17 @@
+syntax = "proto3";
+package civitro.notifications;
+option go_package = "github.com/civitro/proto/notifications";
+
+import "common/common.proto";
+
+service NotificationService {
+  rpc SendNotification(NotificationRequest) returns (civitro.common.StatusResponse);
+}
+
+message NotificationRequest {
+  string user_id = 1;
+  string type = 2;
+  string title = 3;
+  string body = 4;
+  map<string, string> data = 5;
+}

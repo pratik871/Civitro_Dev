@@ -1,0 +1,39 @@
+app:
+  environment: production
+  debug: false
+
+databases:
+  postgres:
+    provider: aws_aurora
+    host: civitro-cluster.xxx.ap-south-1.rds.amazonaws.com
+    ssl: true
+    password: "${DB_PASSWORD}"
+
+storage:
+  provider: aws_s3
+  bucket: civitro-media-prod
+  cdn_url: https://cdn.civitro.in
+
+ai:
+  llm:
+    provider: aws_bedrock
+    model: anthropic.claude-sonnet
+
+bhashini:
+  mode: api
+
+auth:
+  otp:
+    provider: msg91
+
+notifications:
+  push:
+    provider: fcm
+
+payments:
+  provider: razorpay
+
+monitoring:
+  logging:
+    level: info
+    format: json

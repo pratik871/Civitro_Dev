@@ -1,0 +1,22 @@
+syntax = "proto3";
+package civitro.chi;
+option go_package = "github.com/civitro/proto/chi";
+
+import "common/common.proto";
+
+service CHIService {
+  rpc GetCHI(civitro.common.IDRequest) returns (CHIResponse);
+}
+
+message CHIDimension {
+  string name = 1;
+  double score = 2;
+  double weight = 3;
+}
+
+message CHIResponse {
+  string boundary_id = 1;
+  double overall_score = 2;
+  int32 rank = 3;
+  repeated CHIDimension dimensions = 4;
+}

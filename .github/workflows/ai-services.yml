@@ -1,0 +1,41 @@
+name: AI Services CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['ai/**']
+  pull_request:
+    branches: [main]
+    paths: ['ai/**']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install ruff mypy
+      - name: Lint
+        run: ruff check ai/
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [classification, sentiment, promises, chi, datamine, advertising]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          cd ai/services/${{ matrix.service }}
+          pip install -e ".[dev]" 2>/dev/null || pip install fastapi uvicorn pydantic
+      - name: Import check
+        run: |
+          cd ai/services/${{ matrix.service }}
+          python -c "from app.main import app; print('OK')"

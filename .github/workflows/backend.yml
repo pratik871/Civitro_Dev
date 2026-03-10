@@ -1,0 +1,66 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['backend/**', 'proto/**']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**', 'proto/**']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          working-directory: backend/pkg
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [identity, geospatial, registry, voices, issues, ledger, rating, reputation, polls, messaging, search, notifications, admin, party]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build ${{ matrix.service }}
+        run: |
+          cd backend/services/${{ matrix.service }}
+          go build ./cmd/
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: civitro_test
+          POSTGRES_USER: civitro
+          POSTGRES_PASSWORD: civitro_test
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U civitro" --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          REDIS_HOST: localhost
+        run: |
+          cd backend/pkg
+          go test ./...

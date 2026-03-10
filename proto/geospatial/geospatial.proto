@@ -1,0 +1,34 @@
+syntax = "proto3";
+package civitro.geospatial;
+option go_package = "github.com/civitro/proto/geospatial";
+
+import "common/common.proto";
+
+service GeospatialService {
+  rpc ResolveLocation(civitro.common.LatLng) returns (BoundaryList);
+  rpc GetBoundary(civitro.common.IDRequest) returns (BoundaryResponse);
+  rpc GetUserRepresentatives(civitro.common.IDRequest) returns (RepresentativeList);
+}
+
+message BoundaryResponse {
+  string id = 1;
+  string name = 2;
+  string level = 3;
+  string parent_id = 4;
+}
+
+message BoundaryList {
+  repeated BoundaryResponse boundaries = 1;
+}
+
+message RepresentativeInfo {
+  string id = 1;
+  string name = 2;
+  string party = 3;
+  string position = 4;
+  string boundary_id = 5;
+}
+
+message RepresentativeList {
+  repeated RepresentativeInfo representatives = 1;
+}

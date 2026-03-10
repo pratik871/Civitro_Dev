@@ -1,0 +1,39 @@
+# Windows/WSL-specific overrides for local development
+# This file is automatically loaded by Docker Compose alongside docker-compose.yml
+#
+# On Windows/WSL, named volumes perform better than bind mounts.
+# The main docker-compose.yml already uses named volumes, so no path overrides
+# are needed. This file exists for any Windows-specific tweaks.
+
+services:
+  # Ollama: If you don't have an NVIDIA GPU or nvidia-container-toolkit,
+  # uncomment the following to disable GPU passthrough:
+  # ollama:
+  #   deploy:
+  #     resources:
+  #       reservations: {}
+
+  # OpenSearch: Increase vm.max_map_count for WSL
+  # Run this on your WSL host: wsl -d docker-desktop sysctl -w vm.max_map_count=262144
+  opensearch:
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      # Reduce bootstrap checks for local dev on Windows
+      bootstrap.memory_lock: "false"
+
+  # Redpanda: Reduce resource usage for Windows dev machines
+  redpanda:
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=256M
+      - --overprovisioned
+      - --node-id=0
+      - --kafka-addr=internal://0.0.0.0:29092,external://0.0.0.0:9092
+      - --advertise-kafka-addr=internal://redpanda:29092,external://localhost:9092
+      - --schema-registry-addr=internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --pandaproxy-addr=internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr=internal://redpanda:8082,external://localhost:18082

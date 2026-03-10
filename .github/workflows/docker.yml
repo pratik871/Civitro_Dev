@@ -1,0 +1,28 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-go:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [identity, geospatial, registry, voices, issues, ledger, rating, reputation, polls, messaging, search, notifications, admin, party]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t civitro/${{ matrix.service }}:test backend/services/${{ matrix.service }}
+
+  build-python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [classification, sentiment, promises, chi, datamine, advertising]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t civitro/${{ matrix.service }}:test ai/services/${{ matrix.service }}

@@ -1,0 +1,27 @@
+syntax = "proto3";
+package civitro.registry;
+option go_package = "github.com/civitro/proto/registry";
+
+import "common/common.proto";
+
+service RegistryService {
+  rpc GetRepresentative(civitro.common.IDRequest) returns (RepresentativeResponse);
+  rpc GetByBoundary(civitro.common.IDRequest) returns (RepresentativeList);
+}
+
+message RepresentativeResponse {
+  string id = 1;
+  string name = 2;
+  string party = 3;
+  string position = 4;
+  string level = 5;
+  string boundary_id = 6;
+  double rating = 7;
+  double response_rate = 8;
+  string photo_url = 9;
+  bool verified = 10;
+}
+
+message RepresentativeList {
+  repeated RepresentativeResponse representatives = 1;
+}

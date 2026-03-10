@@ -1,0 +1,218 @@
+app:
+  name: civitro
+  environment: local
+  debug: true
+  version: 0.1.0
+
+databases:
+  postgres:
+    provider: local
+    host: localhost
+    port: 15432
+    name: civitro
+    user: civitro
+    password: "${DB_PASSWORD:-civitro_dev}"
+    ssl: false
+    pool_size: 20
+    postgis: true
+
+  mongodb:
+    provider: local
+    uri: "mongodb://localhost:27017"
+    database: civitro
+
+  redis:
+    provider: local
+    host: localhost
+    port: 16379
+    password: "${REDIS_PASSWORD:-}"
+    cluster: false
+
+  opensearch:
+    provider: local
+    host: localhost
+    port: 19200
+    scheme: http
+    username: admin
+    password: admin
+
+  timescaledb:
+    provider: local
+    host: localhost
+    port: 15433
+    name: civitro_ts
+    user: civitro
+    password: "${DB_PASSWORD:-civitro_dev}"
+
+storage:
+  provider: minio
+  endpoint: "http://localhost:19000"
+  region: us-east-1
+  bucket: civitro-media
+  access_key: "${MINIO_ACCESS_KEY:-minioadmin}"
+  secret_key: "${MINIO_SECRET_KEY:-minioadmin}"
+  cdn_url: ""
+
+events:
+  provider: redpanda
+  brokers:
+    - localhost:19092
+  schema_registry: "http://localhost:18081"
+  consumer_group_prefix: civitro
+  topics:
+    user: civitro.user.events
+    issue: civitro.issue.events
+    voice: civitro.voice.events
+    rating: civitro.rating.events
+    promise: civitro.promise.events
+    chi: civitro.chi.events
+    poll: civitro.poll.events
+    message: civitro.message.events
+    moderation: civitro.moderation.events
+    analytics: civitro.analytics.events
+    org: civitro.org.events
+    ad: civitro.ad.events
+
+ai:
+  llm:
+    provider: ollama
+    endpoint: "http://localhost:11434"
+    model: llama3.1:8b
+    device: npu
+    max_tokens: 4096
+    temperature: 0.3
+
+  vision:
+    provider: local
+    endpoint: "http://localhost:8501"
+    model: vit-b-16-civitro
+    device: gpu
+    confidence_threshold: 0.8
+    uncertain_threshold: 0.6
+    max_latency_ms: 500
+
+  sentiment:
+    provider: local
+    endpoint: "http://localhost:8502"
+    model: multilingual-bert-sentiment
+    device: npu
+
+  moderation:
+    provider: local
+    text_endpoint: "http://localhost:11434"
+    text_model: llama-guard3
+    image_endpoint: "http://localhost:8503"
+    image_model: open-nsfw2
+    device: npu
+    auto_remove_threshold: 0.9
+    review_threshold: 0.7
+
+  language_detection:
+    provider: local
+    model: fasttext-lid
+    device: npu
+
+bhashini:
+  mode: offline
+  offline:
+    runtime: openvino
+    device: npu
+    models_dir: ./models/bhashini
+    asr:
+      enabled: true
+      model: bhashini-asr-multilingual
+      languages: [hi, ta, te, bn, mr, gu, kn, ml, pa, en]
+    nmt:
+      enabled: true
+      model: bhashini-nmt-multilingual
+      source_languages: [hi, ta, te, bn, mr, gu, kn, ml, pa, en]
+      target_languages: [hi, ta, te, bn, mr, gu, kn, ml, pa, en]
+    tts:
+      enabled: true
+      model: bhashini-tts-multilingual
+      languages: [hi, ta, te, bn, mr, gu, kn, ml, en]
+      voices: [male, female]
+    ocr:
+      enabled: true
+      model: bhashini-ocr
+      languages: [hi, ta, te, bn, mr, en]
+  api:
+    base_url: "https://dhruva-api.bhashini.gov.in"
+    api_key: "${BHASHINI_API_KEY:-}"
+    user_id: "${BHASHINI_USER_ID:-}"
+    ulca_api_key: "${BHASHINI_ULCA_API_KEY:-}"
+    pipeline_id: ""
+    timeout_ms: 5000
+    retry_count: 3
+  hybrid:
+    prefer: offline
+    fallback_on_error: true
+    fallback_on_unsupported_language: true
+
+auth:
+  jwt:
+    secret: "${JWT_SECRET:-civitro-local-dev-secret-change-in-prod}"
+    expiry: 24h
+    refresh_expiry: 720h
+    issuer: civitro
+  otp:
+    provider: console
+  aadhaar:
+    provider: mock
+
+notifications:
+  push:
+    provider: console
+  email:
+    provider: console
+  sms:
+    provider: console
+
+payments:
+  provider: mock
+
+geo:
+  geocoding:
+    provider: mock
+  boundaries:
+    source: local_shapefile
+    shapefile_dir: ./data/boundaries
+
+monitoring:
+  metrics:
+    provider: prometheus
+    port: 9090
+  tracing:
+    provider: jaeger
+    endpoint: "http://localhost:14268"
+    otlp_grpc: "localhost:14317"
+    otlp_http: "http://localhost:14318"
+  logging:
+    level: debug
+    format: text
+    output: stdout
+
+services:
+  protocol: grpc
+  discovery: static
+  endpoints:
+    identity:       { host: localhost, grpc_port: 50051, http_port: 8001 }
+    geospatial:     { host: localhost, grpc_port: 50052, http_port: 8002 }
+    registry:       { host: localhost, grpc_port: 50053, http_port: 8003 }
+    voices:         { host: localhost, grpc_port: 50054, http_port: 8004 }
+    issues:         { host: localhost, grpc_port: 50055, http_port: 8005 }
+    ledger:         { host: localhost, grpc_port: 50056, http_port: 8006 }
+    rating:         { host: localhost, grpc_port: 50057, http_port: 8007 }
+    classification: { host: localhost, grpc_port: 50058, http_port: 8008 }
+    sentiment:      { host: localhost, grpc_port: 50059, http_port: 8009 }
+    promises:       { host: localhost, grpc_port: 50060, http_port: 8010 }
+    chi:            { host: localhost, grpc_port: 50061, http_port: 8011 }
+    reputation:     { host: localhost, grpc_port: 50062, http_port: 8012 }
+    polls:          { host: localhost, grpc_port: 50063, http_port: 8013 }
+    messaging:      { host: localhost, grpc_port: 50064, http_port: 8014 }
+    search:         { host: localhost, grpc_port: 50065, http_port: 8015 }
+    datamine:       { host: localhost, grpc_port: 50066, http_port: 8016 }
+    notifications:  { host: localhost, grpc_port: 50067, http_port: 8017 }
+    admin:          { host: localhost, grpc_port: 50068, http_port: 8018 }
+    party:          { host: localhost, grpc_port: 50069, http_port: 8019 }
+    advertising:    { host: localhost, grpc_port: 50070, http_port: 8020 }

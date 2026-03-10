@@ -1,0 +1,18 @@
+syntax = "proto3";
+package civitro.reputation;
+option go_package = "github.com/civitro/proto/reputation";
+
+import "common/common.proto";
+
+service ReputationService {
+  rpc GetReputation(civitro.common.IDRequest) returns (ReputationResponse);
+}
+
+message ReputationResponse {
+  string user_id = 1;
+  double credibility_score = 2;
+  double influence_score = 3;
+  string tier = 4;
+  int32 reports_filed = 5;
+  double accuracy_rate = 6;
+}

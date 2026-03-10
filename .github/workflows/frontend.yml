@@ -1,0 +1,30 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['frontend/**']
+  pull_request:
+    branches: [main]
+    paths: ['frontend/**']
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        working-directory: frontend/web
+        run: npm ci
+      - name: Lint
+        working-directory: frontend/web
+        run: npm run lint
+      - name: Build
+        working-directory: frontend/web
+        run: npm run build
+      - name: Type check
+        working-directory: frontend/web
+        run: npx tsc --noEmit

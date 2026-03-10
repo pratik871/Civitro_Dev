@@ -1,0 +1,24 @@
+syntax = "proto3";
+package civitro.messaging;
+option go_package = "github.com/civitro/proto/messaging";
+
+import "common/common.proto";
+
+service MessagingService {
+  rpc SendMessage(MessageRequest) returns (MessageResponse);
+}
+
+message MessageRequest {
+  string conversation_id = 1;
+  string sender_id = 2;
+  string text = 3;
+  string media_url = 4;
+}
+
+message MessageResponse {
+  string id = 1;
+  string conversation_id = 2;
+  string sender_id = 3;
+  string text = 4;
+  civitro.common.Timestamp created_at = 5;
+}

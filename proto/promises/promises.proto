@@ -1,0 +1,23 @@
+syntax = "proto3";
+package civitro.promises;
+option go_package = "github.com/civitro/proto/promises";
+
+import "common/common.proto";
+
+service PromiseService {
+  rpc GetPromisesByLeader(civitro.common.IDRequest) returns (PromiseList);
+}
+
+message PromiseResponse {
+  string id = 1;
+  string leader_id = 2;
+  string text = 3;
+  string category = 4;
+  string status = 5;
+  double progress = 6;
+  string source = 7;
+}
+
+message PromiseList {
+  repeated PromiseResponse promises = 1;
+}

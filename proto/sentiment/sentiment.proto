@@ -1,0 +1,19 @@
+syntax = "proto3";
+package civitro.sentiment;
+option go_package = "github.com/civitro/proto/sentiment";
+
+service SentimentService {
+  rpc Analyze(SentimentRequest) returns (SentimentResponse);
+}
+
+message SentimentRequest {
+  string text = 1;
+  string language = 2;
+}
+
+message SentimentResponse {
+  string sentiment = 1;
+  double confidence = 2;
+  map<string, double> emotions = 3;
+  string urgency = 4;
+}

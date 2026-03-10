@@ -1,0 +1,20 @@
+syntax = "proto3";
+package civitro.rating;
+option go_package = "github.com/civitro/proto/rating";
+
+import "common/common.proto";
+
+service RatingService {
+  rpc GetRating(civitro.common.IDRequest) returns (RatingResponse);
+}
+
+message RatingResponse {
+  string representative_id = 1;
+  double score = 2;
+  double responsiveness = 3;
+  double resolution_speed = 4;
+  double satisfaction = 5;
+  double sentiment = 6;
+  double chi_improvement = 7;
+  int32 sample_count = 8;
+}

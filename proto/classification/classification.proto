@@ -1,0 +1,22 @@
+syntax = "proto3";
+package civitro.classification;
+option go_package = "github.com/civitro/proto/classification";
+
+import "common/common.proto";
+
+service ClassificationService {
+  rpc ClassifyImage(ClassifyRequest) returns (ClassificationResponse);
+}
+
+message ClassifyRequest {
+  bytes image_data = 1;
+  string text = 2;
+  civitro.common.LatLng gps = 3;
+}
+
+message ClassificationResponse {
+  string category = 1;
+  double confidence = 2;
+  string severity = 3;
+  string department = 4;
+}

@@ -1,0 +1,19 @@
+go 1.22
+
+use (
+	./backend/pkg
+	./backend/services/identity
+	./backend/services/geospatial
+	./backend/services/registry
+	./backend/services/voices
+	./backend/services/issues
+	./backend/services/ledger
+	./backend/services/rating
+	./backend/services/reputation
+	./backend/services/polls
+	./backend/services/messaging
+	./backend/services/search
+	./backend/services/notifications
+	./backend/services/admin
+	./backend/services/party
+)

@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Civitro — Enterprise Architecture Document v1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--saffron:#FF6B35;--navy:#0B1426;--navy-l:#1A2D4A;--white:#fff;--cream:#FFFCF8;--bg:#F9FAFB;--border:#E5E7EB;--border-l:#F3F4F6;--text:#111827;--text-s:#374151;--text-m:#6B7280;--green:#059669;--red:#DC2626;--blue:#2563EB;--amber:#D97706;--purple:#7C3AED;--teal:#0D9488}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);line-height:1.7;font-size:15px}
+.layout{display:flex;min-height:100vh}
+nav{width:280px;background:var(--navy);color:#fff;padding:24px 0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent}
+nav::-webkit-scrollbar{width:4px}
+nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+nav .logo{padding:0 24px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+nav .logo h1{font-size:24px;font-weight:800;color:var(--saffron);letter-spacing:-0.5px}
+nav .logo p{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+nav .nav-section{padding:16px 24px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px}
+nav a{display:block;padding:7px 24px;font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;transition:all 0.15s;border-left:3px solid transparent}
+nav a:hover{color:#fff;background:rgba(255,255,255,0.05);border-left-color:var(--saffron)}
+nav a.sub{padding-left:40px;font-size:12px;color:rgba(255,255,255,0.4)}
+main{flex:1;margin-left:280px;padding:40px 60px 80px;max-width:960px}
+h2{font-size:28px;font-weight:800;color:var(--navy);margin:48px 0 8px;padding-top:20px;border-top:2px solid var(--border);letter-spacing:-0.5px}
+h2:first-of-type{border-top:none;margin-top:0}
+h2 .part-num{color:var(--saffron);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;display:block;margin-bottom:4px}
+h3{font-size:20px;font-weight:700;color:var(--navy);margin:32px 0 12px}
+h4{font-size:16px;font-weight:700;color:var(--text-s);margin:24px 0 8px}
+p{margin:0 0 14px;color:var(--text-s)}
+strong{color:var(--text);font-weight:600}
+ul,ol{margin:0 0 16px;padding-left:24px;color:var(--text-s)}
+li{margin-bottom:6px}
+li strong{color:var(--text)}
+.callout{padding:16px 20px;border-radius:12px;margin:16px 0;font-size:14px;line-height:1.6}
+.callout-warn{background:#FEF3C7;border-left:4px solid var(--amber);color:#92400E}
+.callout-info{background:#EFF6FF;border-left:4px solid var(--blue);color:#1E40AF}
+.callout-critical{background:#FEF2F2;border-left:4px solid var(--red);color:#991B1B}
+.callout-success{background:#ECFDF5;border-left:4px solid var(--green);color:#065F46}
+.callout-saffron{background:#FFF4EE;border-left:4px solid var(--saffron);color:#9A3412}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+td{padding:10px 14px;border-bottom:1px solid var(--border-l);color:var(--text-s)}
+tr:hover td{background:#F9FAFB}
+code{font-family:'JetBrains Mono',monospace;font-size:13px;background:#F3F4F6;padding:2px 6px;border-radius:4px;color:var(--navy)}
+pre{background:var(--navy);color:#E2E8F0;padding:20px 24px;border-radius:12px;margin:16px 0;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0;color:inherit}
+.tag{display:inline-block;padding:2px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px}
+.tag-mvp{background:#ECFDF5;color:var(--green)}
+.tag-wave2{background:#EFF6FF;color:var(--blue)}
+.tag-wave3{background:#F5F3FF;color:var(--purple)}
+.tag-hook{background:#FEF3C7;color:var(--amber)}
+.service-header{background:linear-gradient(135deg,var(--navy),var(--navy-l));color:#fff;padding:20px 24px;border-radius:14px 14px 0 0;margin-top:32px}
+.service-header h3{color:#fff;margin:0 0 4px;font-size:18px}
+.service-header p{color:rgba(255,255,255,0.6);margin:0;font-size:13px}
+.service-body{border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;padding:20px 24px;background:#fff;margin-bottom:8px}
+.service-section{margin:16px 0 0}
+.service-section h4{font-size:13px;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border-l)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{margin:0;font-size:13px}
+.card-stat{text-align:center}
+.card-stat .val{font-size:28px;font-weight:800;font-family:'JetBrains Mono';color:var(--saffron)}
+.card-stat .label{font-size:11px;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.persona{border:1px solid var(--border);border-radius:12px;padding:20px;margin:12px 0;background:#fff}
+.persona h4{margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.persona h4 .num{width:28px;height:28px;border-radius:8px;background:var(--saffron);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.persona ul{margin:8px 0 0;padding-left:20px}
+.persona li{font-size:13px;margin-bottom:3px}
+.principle{display:flex;gap:12px;margin:10px 0;padding:12px 16px;border-radius:10px;background:#fff;border:1px solid var(--border-l)}
+.principle .num{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.principle .content{flex:1}
+.principle .content strong{font-size:14px;display:block;margin-bottom:2px}
+.principle .content p{font-size:13px;margin:0;color:var(--text-m)}
+.wave{display:flex;gap:8px;align-items:flex-start;margin:8px 0;padding:12px;border-radius:10px;border:1px solid var(--border-l);background:#fff}
+.wave .badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.wave .desc{font-size:13px;color:var(--text-s);line-height:1.5}
+.cover{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-l) 100%);color:#fff;padding:60px;border-radius:20px;margin-bottom:48px;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,107,53,0.15),transparent);border-radius:50%}
+.cover::after{content:'';position:absolute;bottom:-60px;left:-60px;width:250px;height:250px;background:radial-gradient(circle,rgba(37,99,235,0.08),transparent);border-radius:50%}
+.cover h1{font-size:42px;font-weight:900;letter-spacing:-1px;position:relative}
+.cover h1 span{color:var(--saffron)}
+.cover .subtitle{font-size:16px;color:rgba(255,255,255,0.5);margin-top:8px;position:relative}
+.cover .meta{margin-top:24px;display:flex;gap:24px;font-size:13px;color:rgba(255,255,255,0.4);position:relative}
+.cover .meta strong{color:rgba(255,255,255,0.7)}
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:40px 0}
+.hook{background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;margin:12px 0;font-size:13px;color:#92400E}
+.hook::before{content:'🔗 HOOK: ';font-weight:700}
+@media print{nav{display:none}main{margin-left:0;padding:20px}pre{white-space:pre-wrap}.cover{break-after:page}}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+<div class="logo"><h1>Civitro</h1><p>Architecture v1.0</p></div>
+<div class="nav-section">Foundation</div>
+<a href="#part1">1 — Identity & Vision</a>
+<a href="#part2">2 — System Architecture</a>
+<div class="nav-section">Services (20)</div>
+<a href="#part3">3 — Microservice Breakdown</a>
+<a href="#svc1" class="sub">Identity & Auth</a>
+<a href="#svc2" class="sub">Geospatial Mapping</a>
+<a href="#svc3" class="sub">Representative Registry</a>
+<a href="#svc4" class="sub">Voices & Content</a>
+<a href="#svc5" class="sub">Issue Reporting</a>
+<a href="#svc6" class="sub">Public Work Ledger</a>
+<a href="#svc7" class="sub">Rating & Accountability</a>
+<a href="#svc8" class="sub">AI Classification</a>
+<a href="#svc9" class="sub">AI Sentiment & Trends</a>
+<a href="#svc10" class="sub">Promise Tracker</a>
+<a href="#svc11" class="sub">CHI Engine</a>
+<a href="#svc12" class="sub">Citizen Reputation</a>
+<a href="#svc13" class="sub">Polls & Democracy</a>
+<a href="#svc14" class="sub">Messaging</a>
+<a href="#svc15" class="sub">Search & Discovery</a>
+<a href="#svc16" class="sub">Datamine Analytics</a>
+<a href="#svc17" class="sub">Notifications</a>
+<a href="#svc18" class="sub">Admin & Moderation</a>
+<a href="#svc19" class="sub">Party & Organization</a>
+<a href="#svc20" class="sub">Advertising</a>
+<div class="nav-section">Data & Geo</div>
+<a href="#part4">4 — Database Schema</a>
+<a href="#part5">5 — Geospatial System</a>
+<a href="#part6">6 — Verification Flow</a>
+<div class="nav-section">Intelligence</div>
+<a href="#part7">7 — Leader Workflows</a>
+<a href="#part8">8 — AI/ML Pipelines</a>
+<a href="#part9">9 — Abuse Prevention</a>
+<a href="#part9b">9B — Public Trust</a>
+<a href="#part10">10 — Event Catalog</a>
+<div class="nav-section">Infrastructure</div>
+<a href="#part11">11 — Dashboards</a>
+<a href="#part12">12 — Mobile-First</a>
+<a href="#part13">13 — Tech Stack & DR</a>
+<a href="#part14">14 — Scaling Plan</a>
+<a href="#part14b">14B — Monetisation</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════ COVER ═══════════════ -->
+<div class="cover">
+<h1><span>Civitro</span> — Enterprise Architecture</h1>
+<p class="subtitle">Citizen-Government Collaboration Platform — Architecture Blueprint</p>
+<div class="meta">
+<span><strong>Version:</strong> 1.0</span>
+<span><strong>Target:</strong> India launch (30 days)</span>
+<span><strong>Scale:</strong> 100M+ users</span>
+<span><strong>Services:</strong> 20 microservices</span>
+</div>
+</div>
+
+<!-- ═══════════════ PART 1 ═══════════════ -->
+<h2 id="part1"><span class="part-num">Part 1</span>Platform Identity, Vision & Design Principles</h2>
+
+<h3>1.1 Platform Identity</h3>
+
+<div class="grid-3">
+<div class="card card-stat"><div class="val">Civitro</div><div class="label">Platform Name</div></div>
+<div class="card card-stat"><div class="val" style="font-size:16px;color:var(--navy)">"Democracy you can see"</div><div class="label">Tagline</div></div>
+<div class="card card-stat"><div class="val" style="font-size:14px;color:var(--green)">Citizen-Government Collaboration</div><div class="label">Classification</div></div>
+</div>
+
+<h4>India Governance Chain (Example)</h4>
+<div class="callout callout-info">Every verified citizen is automatically connected to all their elected representatives across every level of government, based on home address:</div>
+<pre><code>Citizen → Ward Councillor / Mayor → MLA → State Minister → Chief Minister → MP → Cabinet Minister → Prime Minister</code></pre>
+<p>The system maps this complete chain automatically — the citizen never needs to know which department or leader handles their issue.</p>
+
+<div class="callout callout-critical">
+<strong>Strategic framing (critical):</strong> Civitro is positioned as a <strong>collaboration and civic utility platform</strong> — NOT a leader rating app or political criticism tool. This framing distinction is the difference between national adoption and being banned within six months. Every public-facing surface — app store listing, onboarding, press materials, government outreach — must reinforce the collaborative, constructive identity.
+</div>
+
+<h4>Vision Statements</h4>
+<ul>
+<li><strong>"Every voice deserves to be heard"</strong> — foundational mission</li>
+<li><strong>"Democracy you can see"</strong> — citizen-facing tagline</li>
+<li><strong>"Transparent 360° feedback"</strong> — enabling transparent feedback between citizens and government at every level</li>
+<li><strong>"India's Civic Nervous System"</strong> — long-term systems vision (millions of citizens as distributed sensors for civic infrastructure)</li>
+<li><strong>"Governance Operating System"</strong> — platform evolution target (the three pillars of transparency, accountability, and measurement become the operating layer for democratic governance)</li>
+<li><strong>"Structural intelligence for democracy"</strong> — the platform evolves from complaint handling to governance intelligence network</li>
+</ul>
+
+<h4>The Data Layer Vision</h4>
+<p>The real value of the platform is not the complaint flow — it is the <strong>governance data layer</strong> that emerges. Over time, Civitro becomes the <strong>largest civic dataset in the country</strong>. That dataset powers: policy research, urban planning, disaster prediction and response, corruption detection, infrastructure investment decisions, and national policy insights.</p>
+
+<h3>1.2 Six User Personas</h3>
+
+<div class="persona">
+<h4><span class="num">1</span> Citizens</h4>
+<ul>
+<li>Post voices (500 chars, media, hashtags, mentions, 15-language translations)</li>
+<li>Report civic issues (photo + GPS + AI classification in under 30 seconds)</li>
+<li>Rate elected representatives at ZIP-code/ward granularity</li>
+<li>Join polls and budget prioritization votes (participatory budgeting)</li>
+<li>Build civic reputation: Credibility Score → Community Validator → Thought Leader → People's Champion (100K+ followers, community-voted)</li>
+<li>Direct message verified users and leaders</li>
+<li>View constituency health, leader performance, promise tracking</li>
+<li>Premium tier: tagged voices, extended DM history, enhanced discovery, ad-free</li>
+</ul>
+</div>
+
+<div class="persona">
+<h4><span class="num">2</span> Elected Leaders</h4>
+<ul>
+<li>Manage constituency through dedicated dashboard with incoming issue queue</li>
+<li>Receive, triage, and assign citizen-reported issues to staff members</li>
+<li>Run targeted constituency polls (sentiment, budget prioritization)</li>
+<li>View heatmap analytics, demographic reports (Datamine), citizen sentiment</li>
+<li>Respond publicly to issues and voices; track own performance metrics</li>
+<li>Campaign management: scheduled voices, constituency targeting, engagement tracking</li>
+<li>Subscription-based access to advanced analytics</li>
+</ul>
+</div>
+
+<div class="persona">
+<h4><span class="num">3</span> Political Parties</h4>
+<ul>
+<li>Build and manage organizational charts (national → state → district → booth hierarchy)</li>
+<li>Manage functionaries (add, remove, assign roles, permission levels)</li>
+<li>Broadcast to all party functionaries</li>
+<li>Access party-wide analytics rollup across all party leaders</li>
+<li>Party identity toggle: users switch between personal and party identity at login</li>
+<li>Demographic data access across party-controlled constituencies</li>
+<li>Party subscription billing (monthly/annual tiers)</li>
+</ul>
+</div>
+
+<div class="persona">
+<h4><span class="num">4</span> NGOs / RWAs / Clubs</h4>
+<ul>
+<li>Community group creation and member management with onboarding workflows</li>
+<li>Community broadcast messaging and community-scoped polling</li>
+<li>Issue tracking within geographic or thematic scope</li>
+<li>Affordable group subscription plans with bulk engagement tools</li>
+</ul>
+</div>
+
+<div class="persona">
+<h4><span class="num">5</span> Advertisers / Brands</h4>
+<ul>
+<li>Create hyper-targeted political and civic advertising campaigns</li>
+<li>Audience targeting by geography, demographics, interests, political engagement level</li>
+<li>Full campaign analytics: impressions, clicks, reach, engagement; CPM/CPC billing</li>
+<li>Self-serve campaign creation dashboard; compliance with political ad regulations</li>
+</ul>
+</div>
+
+<div class="persona">
+<h4><span class="num">6</span> Civitro Admin Staff</h4>
+<ul>
+<li>Dedicated internal admin portal (not public-facing) with complete audit trails</li>
+<li>User and voice suspension; leader profile dispute resolution</li>
+<li>Advertiser account creation; exit poll configuration and targeting</li>
+<li>Content moderation queue (AI-flagged + human review); platform health monitoring</li>
+<li>Transparency report generation; brigading and abuse signal dashboards</li>
+</ul>
+</div>
+
+<h3>1.3 Design Principles</h3>
+
+<div class="principle"><div class="num">1</div><div class="content"><strong>Microservices-first</strong><p>Every bounded context is an independently deployable service with its own data store, scaling profile, and deployment lifecycle.</p></div></div>
+<div class="principle"><div class="num">2</div><div class="content"><strong>Event-driven</strong><p>All cross-service communication flows through a central event bus. Services react to domain events, enabling loose coupling and full auditability.</p></div></div>
+<div class="principle"><div class="num">3</div><div class="content"><strong>Mobile-first</strong><p>Primary interface is a mobile app. Every feature must work on low-bandwidth Indian networks with offline-capable reporting.</p></div></div>
+<div class="principle"><div class="num">4</div><div class="content"><strong>AI-native</strong><p>Classification, sentiment, promise extraction, fraud detection, and CHI computation are core architectural concerns with dedicated ML pipeline infrastructure.</p></div></div>
+<div class="principle"><div class="num">5</div><div class="content"><strong>Geospatial-first</strong><p>Location is the fundamental organizing principle. Every user, issue, representative, constituency, and metric is anchored to geography.</p></div></div>
+<div class="principle"><div class="num">6</div><div class="content"><strong>Multi-tenant</strong><p>Six distinct user types with different permission models, feature sets, subscription tiers, and data access levels — all on shared infrastructure.</p></div></div>
+<div class="principle"><div class="num">7</div><div class="content"><strong>Multi-language</strong><p>15 Indian languages from day one. Every content surface supports translation. UI, notifications, and AI pipelines are language-aware.</p></div></div>
+<div class="principle"><div class="num">8</div><div class="content"><strong>India-first, global-ready</strong><p>Optimized for India's Ward → Municipal → Assembly → Parliamentary → State → National hierarchy, with abstraction layers for any country's governance structure.</p></div></div>
+<div class="principle"><div class="num">9</div><div class="content"><strong>Trust by design</strong><p>Every rating algorithm, CHI computation, and moderation decision is explainable and auditable. Platform credibility IS the product.</p></div></div>
+<div class="principle"><div class="num">10</div><div class="content"><strong>Immutable audit trail</strong><p>The Public Work Ledger, Promise Tracker, and moderation actions use event-sourced patterns. Nothing is silently deleted. History is permanent institutional memory.</p></div></div>
+
+<h3>1.4 Product Experience Requirements</h3>
+
+<p>These are architectural requirements expressed as user experience outcomes that engineering must deliver:</p>
+
+<div class="callout callout-saffron"><strong>"30-Second Civic Fix"</strong> — A citizen reports an issue in under 30 seconds: open app → tap photo → GPS auto-locks → AI classifies → system routes. Zero knowledge of government departments required.</div>
+
+<div class="callout callout-saffron"><strong>"Neighborhood Control Panel"</strong> — The ward map and dashboard must make citizens feel they have a live control panel for their neighborhood — open/resolved/trending issues, department performance, leader responsiveness — not just a complaint box.</div>
+
+<div class="callout callout-saffron"><strong>"Things actually change because of this"</strong> — Resolution feedback loops are the single most critical retention mechanism. Users must see reports acknowledged, assigned, worked on, and completed with timestamps and responsible parties at every step. Without this, users leave.</div>
+
+<div class="callout callout-saffron"><strong>"Celebration moments"</strong> — When an issue is resolved, the notification must feel like a civic win: before/after photos, share prompts, contribution counts ("You're the 4,822nd citizen report this month"). Confetti, not checkmarks.</div>
+
+<div class="callout callout-saffron"><strong>"Social proof engine"</strong> — Every resolved issue, before/after comparison, and share creates social proof. The viral loop (report → fix → celebrate → share → new user) is the primary growth mechanism.</div>
+
+<div class="callout callout-saffron"><strong>"Good leaders will want this"</strong> — The Leader Dashboard must give high-performing leaders political advantage from participating. It is a public performance dashboard, not a punishment system.</div>
+
+<div class="callout callout-saffron"><strong>"Data-driven political memory"</strong> — Politicians rely on short public memory. The Promise Tracker creates permanent, searchable institutional memory. This is the most politically transformative feature.</div>
+
+<h3>1.5 Three Pillars of Democratic Accountability</h3>
+
+<table>
+<tr><th>Pillar</th><th>Service</th><th>Function</th></tr>
+<tr><td><strong>Public Work Ledger</strong></td><td>Service #6</td><td>Transparency of action — every civic work step is timestamped, attributed, and evidence-backed</td></tr>
+<tr><td><strong>Promise Tracker</strong></td><td>Service #10</td><td>Accountability of words — every public promise is tracked from statement to delivery</td></tr>
+<tr><td><strong>Constituency Health Index</strong></td><td>Service #11</td><td>Measurement of outcomes — multi-dimensional health score changes elections from narratives to metrics</td></tr>
+</table>
+
+<h3>1.6 MVP Scope & Release Waves</h3>
+
+<div class="wave"><span class="badge tag-mvp">MVP — 30 Days</span><div class="desc"><strong>Citizen registration</strong> (phone OTP + address), <strong>auto representative mapping</strong> (India hierarchy), <strong>issue reporting</strong> (photo + GPS + AI classify + auto-route), <strong>Public Work Ledger</strong> (6-step lifecycle), <strong>leader profiles</strong> (pre-loaded, claimable), basic star rating, notification system, mobile app (React Native) + basic web.</div></div>
+
+<div class="wave"><span class="badge tag-wave2">Wave 2 — M2-3</span><div class="desc"><strong>Voices</strong> (citizen publishing, hashtags, mentions), <strong>Polls</strong> (constituency, budget prioritization), <strong>Citizen Reputation</strong>, <strong>CHI</strong> (initial), <strong>Search & Discovery</strong>, <strong>Leader Dashboard</strong>.</div></div>
+
+<div class="wave"><span class="badge tag-wave3">Wave 3 — M4-6</span><div class="desc"><strong>Promise Tracker</strong>, <strong>AI Sentiment Engine</strong>, <strong>Direct Messaging</strong>, <strong>Datamine analytics</strong>, <strong>Party management</strong>, <strong>NGO/RWA tools</strong>.</div></div>
+
+<div class="wave"><span class="badge" style="background:#F5F3FF;color:var(--purple)">Wave 4 — M6-12</span><div class="desc"><strong>Advertising platform</strong>, <strong>exit poll system</strong>, advanced fraud detection, <strong>participatory budgeting</strong>, <strong>campaign management</strong>, full Datamine with downloadable reports.</div></div>
+
+<div class="wave"><span class="badge tag-hook">Wave 5 — Year 2+</span><div class="desc"><strong>International expansion</strong>, <strong>e-commerce integrations</strong> (civic marketplace, government service payments, local business directory), advanced AI (corruption detection, predictive issues, disaster response), government system integrations, API marketplace for researchers.</div></div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 2 ═══════════════ -->
+<h2 id="part2"><span class="part-num">Part 2</span>High-Level System Architecture</h2>
+
+<h3>2.1 Architecture Tiers</h3>
+
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                           CLIENT TIER                                   │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────────┐   │
+│  │ Mobile App │  │ Web App    │  │ Admin      │  │ Advertiser     │   │
+│  │ (React     │  │ (Next.js   │  │ Portal     │  │ Portal         │   │
+│  │  Native)   │  │  PWA)      │  │ (Next.js)  │  │ (Self-serve)   │   │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └──────┬─────────┘   │
+└────────┼───────────────┼───────────────┼────────────────┼──────────────┘
+         └───────────────┴───────┬───────┴────────────────┘
+                                 │
+┌────────────────────────────────┴────────────────────────────────────────┐
+│  API GATEWAY — Kong / AWS API Gateway                                   │
+│  Rate limiting · JWT auth · Role-based routing · API versioning         │
+│  Request logging · DDoS protection (WAF + Shield)                       │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+┌────────────────────────────────┴────────────────────────────────────────┐
+│                    20 MICROSERVICES                                      │
+│                                                                         │
+│  IDENTITY &amp; ACCESS        CORE CIVIC ENGINE         AI &amp; INTELLIGENCE   │
+│  ┌─────────────────┐   ┌─────────────────────┐  ┌──────────────────┐  │
+│  │ 1. Identity     │   │ 5. Issue Reporting   │  │ 8. AI Classify   │  │
+│  │ 2. Geospatial   │   │ 6. Public Ledger     │  │ 9. AI Sentiment  │  │
+│  │ 3. Rep Registry │   │ 7. Rating Engine     │  │ 10. Promise Track│  │
+│  └─────────────────┘   │ 12. Citizen Rep      │  │ 11. CHI Engine   │  │
+│                         └─────────────────────┘  └──────────────────┘  │
+│  CONTENT &amp; SOCIAL         PLATFORM SERVICES       BUSINESS             │
+│  ┌─────────────────┐   ┌─────────────────────┐  ┌──────────────────┐  │
+│  │ 4. Voices       │   │ 17. Notifications    │  │ 16. Datamine     │  │
+│  │ 13. Polls       │   │ 18. Admin/Mod/Trust  │  │ 19. Party &amp; Org  │  │
+│  │ 14. Messaging   │   └─────────────────────┘  │ 20. Advertising  │  │
+│  │ 15. Search      │                             └──────────────────┘  │
+│  └─────────────────┘                                                    │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+┌────────────────────────────────┴────────────────────────────────────────┐
+│  EVENT BACKBONE — Apache Kafka (AWS MSK)                                │
+│  Topics: user.* · issue.* · voice.* · rating.* · promise.* · chi.*     │
+│          poll.* · message.* · mod.* · analytics.* · org.* · ad.*       │
+│  Schema Registry (Avro) · Dead Letter Queues · Event Sourcing           │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+┌────────────────────────────────┴────────────────────────────────────────┐
+│  DATA TIER                                                              │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────────┐ │
+│  │ Aurora   │ │ DocDB    │ │ Redis    │ │ Open     │ │ TimescaleDB │ │
+│  │ Postgres │ │ (Mongo)  │ │ (Cache)  │ │ Search   │ │ (Timeseries)│ │
+│  │ +PostGIS │ │          │ │          │ │          │ │             │ │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └─────────────┘ │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │ S3 (Media) + CloudFront (CDN) — photos, videos, reports        │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  AI / ML TIER                                                           │
+│  SageMaker (CivitroVision, Fraud) · Bedrock/Claude (Promises,          │
+│  Sentiment) · Rekognition (Image Moderation)                            │
+│  6 Pipelines: Classify · Sentiment · Promises · CHI · Fraud · Corrupt  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  EXTERNAL INTEGRATIONS                                                  │
+│  Aadhaar e-KYC · DigiLocker · SMS (OTP) · Election Commission          │
+│  FCM/APNs · Razorpay/Stripe · Translation APIs · Open Data Feeds       │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+
+<h3>2.2 Inter-Service Communication Patterns</h3>
+
+<table>
+<tr><th>Pattern</th><th>Use Case</th><th>Technology</th></tr>
+<tr><td><strong>Synchronous (REST)</strong></td><td>Request-response where caller needs immediate answer (auth validation, geo boundary lookup during registration)</td><td>Internal ALB + service discovery</td></tr>
+<tr><td><strong>Asynchronous (Events)</strong></td><td>All cross-domain side effects (issue reported → classification + routing + notification + analytics)</td><td>Kafka topics</td></tr>
+<tr><td><strong>CQRS</strong></td><td>Separate write models (PostgreSQL) from read models (Elasticsearch, Redis, materialized views) for high-read surfaces</td><td>Kafka consumers project to read stores</td></tr>
+<tr><td><strong>Saga</strong></td><td>Multi-service transactions (issue submission: create → classify → route → notify → analytics) with compensation handlers</td><td>Event choreography via Kafka</td></tr>
+</table>
+
+<h3>2.3 Service Communication Matrix</h3>
+
+<table>
+<tr><th>Producer</th><th>Key Event</th><th>Consumers</th></tr>
+<tr><td>Identity & Auth</td><td><code>user.verified</code></td><td>Geospatial, Reputation, Notification</td></tr>
+<tr><td>Geospatial</td><td><code>representatives.assigned</code></td><td>Notification, Rep Registry</td></tr>
+<tr><td>Issue Reporting</td><td><code>issue.reported</code></td><td>AI Classification, Notification, Analytics, CHI</td></tr>
+<tr><td>AI Classification</td><td><code>issue.classified</code></td><td>Issue Reporting (routing), Ledger, Notification</td></tr>
+<tr><td>Public Ledger</td><td><code>ledger.step_completed</code></td><td>Notification, Rating, Analytics, CHI</td></tr>
+<tr><td>Rating Engine</td><td><code>rating.recomputed</code></td><td>Datamine, Notification, Search</td></tr>
+<tr><td>Voices</td><td><code>voice.published</code></td><td>Sentiment, Search, Moderation, Notification</td></tr>
+<tr><td>Sentiment</td><td><code>trend.detected</code></td><td>Search, Notification, Datamine</td></tr>
+<tr><td>Promise Tracker</td><td><code>promise.status_changed</code></td><td>Notification, Search, Rating</td></tr>
+<tr><td>CHI Engine</td><td><code>chi.recomputed</code></td><td>Notification, Datamine, Search</td></tr>
+<tr><td>Polls</td><td><code>poll.closed</code></td><td>Notification, Analytics, Datamine</td></tr>
+<tr><td>Moderation</td><td><code>user.suspended</code></td><td>Notification, Reputation</td></tr>
+<tr><td>Party & Org</td><td><code>broadcast.sent</code></td><td>Messaging, Notification</td></tr>
+<tr><td>Advertising</td><td><code>ad.impression</code></td><td>Analytics, Billing</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 3 ═══════════════ -->
+<h2 id="part3"><span class="part-num">Part 3</span>Complete Microservice Breakdown — 20 Services</h2>
+<p>Each service: responsibility, owned tables, events, endpoints, scaling, and <span class="tag tag-hook">HOOK</span> enhancement points.</p>
+
+<div class="service-header" id="svc1"><h3>Service 1 — Identity & Auth</h3><p>Registration, Aadhaar/DigiLocker KYC, OTP, sessions, fraud detection</p></div>
+<div class="service-body">
+<h4>Owned Tables</h4>
+<p><code>users</code> (id, phone, aadhaar_hash, verification_level, user_type, status, language_preference) · <code>auth_sessions</code> (device_fingerprint, jwt_hash, ip) · <code>verification_records</code> (type: otp/aadhaar/digilocker/gps, status, provider_ref) · <code>kyc_documents</code> (doc_type, hash, 5yr retention) · <code>devices</code> (fingerprint, platform, push_token)</p>
+<h4>Events</h4>
+<p><strong>Pub:</strong> <code>user.registered</code> <code>user.verified</code> <code>user.suspended</code> <code>user.address_updated</code> · <strong>Sub:</strong> <code>mod.user_suspended</code></p>
+<h4>Endpoints</h4>
+<p><code>POST /auth/register</code> · <code>POST /auth/verify-otp</code> · <code>POST /auth/verify-aadhaar</code> · <code>POST /auth/verify-address</code> · <code>GET /auth/me</code> · <code>POST /auth/refresh</code></p>
+<p><strong>Scale:</strong> Stateless horizontal. Redis sessions. 5 OTP/phone/hour limit.</p>
+<div class="hook">Biometric auth, face match vs Aadhaar photo, eKYC 2.0, social login (international).</div>
+</div>
+
+<div class="service-header" id="svc2"><h3>Service 2 — Geospatial Mapping</h3><p>Address→constituency resolution, PostGIS boundaries, representative auto-assignment</p></div>
+<div class="service-body">
+<h4>India Hierarchy</h4>
+<pre><code>Nation (1) → State/UT (36) → Parliamentary (543) → Assembly (~4,100) → Municipal (~7,900) → Ward (~250,000+)</code></pre>
+<h4>Tables</h4>
+<p><code>boundaries</code> (id, level, name, parent_id, polygon PostGIS, centroid, population) · <code>address_mappings</code> (user_id, geocoded_point, pin_code, gps_verified, matched_ward/assembly/parliamentary_id, confidence) · <code>representative_assignments</code> (user_id, representative_id, boundary_id, level)</p>
+<h4>Resolution Algorithm</h4>
+<pre><code>GPS? → ST_Contains(ward.polygon, point)
+PIN? → pre-computed PIN→ward table
+Address string? → Geocode API → lat/lng → ST_Contains
+None? → Manual State→District→Ward dropdown
+Validate: GPS within 5km of Aadhaar address
+Assign: traverse hierarchy → find all reps → create assignments</code></pre>
+<p><strong>Pub:</strong> <code>representatives.assigned</code> · <strong>Sub:</strong> <code>user.registered</code>, <code>user.address_updated</code></p>
+<p><strong>Scale:</strong> Read-heavy. PostGIS spatial indices. Redis cache TTL 24h. Pre-computed PIN lookups.</p>
+<div class="hook">Global boundary import per country, redistricting auto-update, offline boundary data, What3Words.</div>
+</div>
+
+<div class="service-header" id="svc3"><h3>Service 3 — Representative Registry</h3><p>Master database of elected officials, profile claim/verify, staff management</p></div>
+<div class="service-body">
+<h4>Tables</h4>
+<p><code>representatives</code> (name, level, boundary_id, party_id, department, term dates, source: election_commission/claimed, claimed_by_user_id) · <code>leader_profiles</code> (bio, achievements, education, office_address) · <code>staff_accounts</code> (representative_id, user_id, role, permissions) · <code>profile_claims</code> (claimant_user_id, evidence_docs, status, reviewed_by)</p>
+<p><strong>Pub:</strong> <code>representative.profile_claimed</code> <code>representative.verified</code> <code>representative.staff_added</code> · <strong>Scale:</strong> ~500K reps, full Redis cache.</p>
+<div class="hook">Auto-scrape Election Commission, election result integration, candidate pre-loading during elections.</div>
+</div>
+
+<div class="service-header" id="svc4"><h3>Service 4 — Voices & Content</h3><p>Citizen publishing (500 chars, 15 langs, media, hashtags, mentions, translations, campaigns)</p></div>
+<div class="service-body">
+<h4>Tables</h4>
+<p><code>voices</code> (author_id, text, language_detected, parent_voice_id, reshared_voice_id, status, visibility, targeted_boundary_id, scheduled_publish_at) · <code>voice_translations</code> (voice_id, language_code, translated_text, source: ai/manual) · <code>media_attachments</code> (voice_id, type, s3_key, moderation_status) · <code>hashtags</code> (tag, voice_count, trending_score) · <code>voice_hashtags</code> · <code>mentions</code> · <code>bookmarks</code> · <code>voice_reactions</code> (like/upvote) · <code>reshares</code> · <code>campaigns</code> (author_id, target_boundaries, scheduled_voices, status)</p>
+<p><strong>Pub:</strong> <code>voice.published</code> <code>voice.translated</code> <code>voice.liked</code> <code>voice.reshared</code> <code>voice.moderation_requested</code> <code>campaign.voice_published</code></p>
+<p><strong>Scale:</strong> Write+read heavy. Fan-out-on-write for active users (Redis timelines). Partition by boundary.</p>
+<div class="hook">Long-form premium voices, audio/video, AI translation improvement, AI-suggested hashtags.</div>
+</div>
+
+<div class="service-header" id="svc5"><h3>Service 5 — Issue Reporting</h3><p>Core civic utility — photo + GPS + AI classify + auto-route in &lt;30 seconds</p></div>
+<div class="service-body">
+<h4>Tables</h4>
+<p><code>issues</code> (reporter_id, category [12 types], severity, gps_point PostGIS, boundary_id, status [7 states], assignee, routed_rep, routed_dept, ai_classification_id, duplicate_of) · <code>issue_media</code> (phase: initial/progress/completion/before/after) · <code>issue_assignments</code> · <code>issue_timeline</code> (immutable status log) · <code>auto_routes</code> (category + boundary → rep + dept + confidence)</p>
+<h4>Issue Lifecycle</h4>
+<pre><code>Reported → Acknowledged → Assigned → Work Started → Completed → Citizen Verified
+    ↑                                                          │
+    └───────────── Reopened (if citizen disputes) ─────────────┘</code></pre>
+<h4>12 Categories</h4>
+<p><code>pothole</code> · <code>garbage</code> · <code>streetlight</code> · <code>water_leak</code> · <code>road_damage</code> · <code>illegal_construction</code> · <code>drainage</code> · <code>traffic</code> · <code>healthcare</code> · <code>education</code> · <code>safety</code> · <code>other</code></p>
+<p><strong>Pub:</strong> <code>issue.reported</code> through <code>issue.citizen_verified</code> + <code>issue.reopened</code> <code>issue.duplicate_detected</code></p>
+<p><strong>Scale:</strong> Partitioned by state. S3 presigned uploads. <strong>Latency: &lt;2s including AI classification.</strong></p>
+<div class="hook">Video reporting, AI-generated titles, duplicate merging, bulk NGO reporting, satellite completion detection.</div>
+</div>
+
+<div class="service-header" id="svc6"><h3>Service 6 — Public Work Ledger</h3><p>Immutable transparent lifecycle — "GitHub commits for governance"</p></div>
+<div class="service-body">
+<h4>Tables</h4>
+<p><code>ledger_entries</code> (issue_id, sequence_number, from_status, to_status, actor_id, actor_role, actor_office, timestamp, notes, evidence_hash SHA-256) — <strong>APPEND-ONLY, no UPDATE/DELETE</strong> · <code>ledger_evidence</code> (photo/video/document/gps_checkin, file_hash) · <code>citizen_confirmations</code> (before_media_id, after_media_id, satisfaction_rating 1-5)</p>
+<div class="callout callout-warn"><strong>Immutability:</strong> Enforced at PostgreSQL role level. Event sourcing — ledger IS the source of truth. Snapshots for performance.</div>
+<p><strong>Pub:</strong> <code>ledger.entry_created</code> <code>ledger.citizen_confirmed</code> <code>ledger.citizen_disputed</code></p>
+<div class="hook">Blockchain-anchored Merkle roots, government work order integration, satellite imagery verification.</div>
+</div>
+
+<div class="service-header" id="svc7"><h3>Service 7 — Rating & Accountability</h3><p>Dynamic star ratings from objective signals — ZIP/ward granularity</p></div>
+<div class="service-body">
+<h4>Rating Formula (publicly documented — Trust Framework 9B)</h4>
+<pre><code>overall = 0.25 × responsiveness + 0.25 × resolution_speed
+        + 0.20 × citizen_satisfaction + 0.15 × sentiment
+        + 0.15 × chi_improvement
+// 0-5 stars. 90-day rolling window. Min 20 samples. Weights public.</code></pre>
+<h4>Tables</h4>
+<p><code>ratings</code> (representative_id, boundary_id, overall_score, component_scores_json) · <code>rating_components</code> · <code>rating_history</code> (TimescaleDB) · <code>satisfaction_surveys</code></p>
+<p><strong>Pub:</strong> <code>rating.recomputed</code> <code>rating.milestone_reached</code> · <strong>Scale:</strong> Batch daily. Cached in Redis.</p>
+<div class="hook">Comparative ratings, predictive trajectories, seasonal adjustment, per-component explanation.</div>
+</div>
+
+<div class="service-header" id="svc8"><h3>Service 8 — AI Classification & Vision (CivitroVision)</h3><p>Image/text classification, severity estimation, duplicate detection, moderation</p></div>
+<div class="service-body">
+<h4>Pipeline</h4>
+<pre><code>Photo + GPS + Text
+→ Preprocess (224×224, quality check)
+→ Vision Transformer (ViT-B/16) → 12 categories + confidence
+  &gt;0.8: auto-classify | 0.6-0.8: uncertain flag | &lt;0.6: manual queue
+→ Text NER (locations, departments, urgency)
+→ Ensemble (image + text weighted average)
+→ Severity (Critical/High/Medium/Low from image+GPS context)
+→ Auto-route (category + boundary → department + representative)
+→ Duplicate check (image hash + feature vector)</code></pre>
+<p><code>classification_results</code> · <code>model_versions</code> · <code>training_data</code> (citizen-verified ground truth) · <code>duplicate_detections</code></p>
+<p><strong>ML:</strong> SageMaker endpoint, auto-scale 2-10. Retrain every 1000 verified samples. A/B shadow testing. <strong>Latency: &lt;500ms.</strong></p>
+<div class="hook">Video classification, depth estimation from shadows, cost estimation, temporal satellite change detection.</div>
+</div>
+
+<div class="service-header" id="svc9"><h3>Service 9 — AI Sentiment & Trends</h3><p>Multilingual NLP, emotion detection, trending topics, governance signals</p></div>
+<div class="service-body">
+<h4>Pipeline</h4>
+<pre><code>Text (15 languages) → Language detect → Translate (if needed)
+→ Sentiment (multilingual BERT): positive/negative/neutral
+→ Emotion: anger/frustration/hope/satisfaction/fear
+→ Urgency score (0-1)
+→ Aggregate per-boundary (hourly)
+→ Trending: sliding window velocity (1h/6h/24h)
+→ Alert: &gt;20% negative shift in 24h</code></pre>
+<p><code>sentiment_scores</code> · <code>trending_topics</code> · <code>sentiment_aggregations</code> · <code>topic_clusters</code></p>
+<p><strong>Streaming:</strong> Kafka consumer, &lt;30s latency. Trending recalculated every 5 min.</p>
+<div class="hook">Predictive issue detection, early warning systems, sarcasm detection, media monitoring.</div>
+</div>
+
+<div class="service-header" id="svc10"><h3>Service 10 — Promise Tracker</h3><p>AI extracts promises from speeches, interviews, manifestos, social media — permanent political memory</p></div>
+<div class="service-body">
+<h4>Promise Lifecycle</h4>
+<pre><code>Source (speech/interview/manifesto/social media/news) → AI extraction (Bedrock Claude)
+→ Deduplication (NLP similarity) → Human verification queue
+→ Promise created: on_track
+→ Progress tracking (CHI, reports, budgets, news cross-reference)
+→ Status: on_track → delayed (no action after 25% timeline)
+         → fulfilled (criteria met) | broken (expired + unmet)</code></pre>
+<p>Statuses: <span class="tag tag-wave2">Detected</span> <span class="tag tag-mvp">On Track</span> <span class="tag tag-hook">Delayed</span> <span class="tag" style="background:#ECFDF5;color:var(--green)">Fulfilled</span> <span class="tag" style="background:#FEF2F2;color:var(--red)">Broken</span></p>
+<p><code>promises</code> · <code>promise_sources</code> · <code>promise_milestones</code> · <code>promise_evidence</code> (budget allocations, project approvals, construction progress photos, news articles, government orders, citizen reports) · <code>delivery_scores</code></p>
+<p><strong>ML:</strong> Bedrock Claude extraction. Crawlers: 6h social, daily news. NLP dedup.</p>
+<div class="hook">Parliament transcript processing, budget PDF parsing, RTI integration, manifesto auto-import.</div>
+</div>
+
+<div class="service-header" id="svc11"><h3>Service 11 — Constituency Health Index (CHI) Engine</h3><p>Central intelligence layer — multi-dimensional health score per constituency. "Changes elections from narratives to metrics."</p></div>
+<div class="service-body">
+<h4>8 Dimensions</h4>
+<div class="grid-2">
+<div class="card"><h4>1. Infrastructure</h4><p>Road quality, buildings, public facilities</p></div>
+<div class="card"><h4>2. Sanitation</h4><p>Garbage, cleanliness, waste management</p></div>
+<div class="card"><h4>3. Healthcare</h4><p>Hospital access, wait times, facility conditions</p></div>
+<div class="card"><h4>4. Education</h4><p>School conditions, teacher availability</p></div>
+<div class="card"><h4>5. Public Safety</h4><p>Crime, lighting, emergency response</p></div>
+<div class="card"><h4>6. Water Supply</h4><p>Availability, quality, leakage complaints</p></div>
+<div class="card"><h4>7. Transport</h4><p>Traffic, public transit, road conditions</p></div>
+<div class="card"><h4>8. Air Quality</h4><p>Pollution data, respiratory health signals</p></div>
+</div>
+<h4>CHI Computation</h4>
+<pre><code>Per dimension:
+  score = weighted_avg(report_density, resolution_rate, avg_resolution_time,
+                       citizen_satisfaction, external_data_signals)
+
+Overall CHI = weighted_avg(all dimension scores)  // 0-100
+Rank within level (ward, assembly, parliamentary)
+Daily recompute at 02:00 IST. Incremental every 6h for high-activity areas.</code></pre>
+<p><code>chi_scores</code> (boundary_id, overall 0-100, dimensions_json, rank) · <code>chi_dimensions</code> (weights, signals) · <code>chi_history</code> (TimescaleDB) · <code>signal_sources</code> (APIs, refresh frequency) · <code>chi_signals</code> · <code>constituency_rankings</code></p>
+<p><strong>Pub:</strong> <code>chi.recomputed</code> <code>chi.rank_changed</code> <code>chi.alert_triggered</code> (drop >10pts in 30d)</p>
+<div class="hook">Satellite imagery (road quality, green cover), IoT sensors (air, water, traffic), government open data APIs, predictive CHI forecasting, disaster prediction (multi-dimension drops signal crisis).</div>
+</div>
+
+<div class="service-header" id="svc12"><h3>Service 12 — Citizen Reputation</h3><p>Civic Credibility Score + AI-calculated Influence Score — incentivizes accuracy, penalizes abuse, creates trust tiers</p></div>
+<div class="service-body">
+<h4>Two Score System</h4>
+<p><strong>Civic Credibility Score (0-1000):</strong> Measures accuracy and trustworthiness of civic contributions. Determines tier and platform privileges.</p>
+<p><strong>Influence Score (AI-calculated, 0-100):</strong> AI-computed personal impact score based on engagement, follower count, voice reach, validation history, and community impact. High-impact users are promoted to <strong>Thought Leader status</strong>. Users with 100,000+ followers and Influence Score above 90 are eligible for <strong>People's Champion</strong> — a community-voted recognition validated by follower polling.</p>
+<h4>Tier Progression</h4>
+<pre><code>New Citizen (0-199) → Verified Reporter (200-499) → Community Validator (500-799)
+→ Thought Leader (800-949) → People's Champion (950+ AND 100K+ followers AND community vote)</code></pre>
+<h4>Score Events</h4>
+<table>
+<tr><th>Event</th><th>Delta</th></tr>
+<tr><td>Report verified by government</td><td style="color:var(--green)">+15</td></tr>
+<tr><td>Report led to resolved issue</td><td style="color:var(--green)">+12</td></tr>
+<tr><td>Community Validator confirmed</td><td style="color:var(--green)">+8</td></tr>
+<tr><td>Helpful update on others' issue</td><td style="color:var(--green)">+5</td></tr>
+<tr><td>50+ upvotes on report</td><td style="color:var(--green)">+10</td></tr>
+<tr><td>Government confirmed accuracy</td><td style="color:var(--green)">+20</td></tr>
+<tr><td>False report (moderation)</td><td style="color:var(--red)">-50</td></tr>
+<tr><td>Spam content</td><td style="color:var(--red)">-30</td></tr>
+<tr><td>Abusive behavior</td><td style="color:var(--red)">-40</td></tr>
+</table>
+<p><code>civic_scores</code> · <code>influence_scores</code> (AI-calculated: engagement, reach, follower count, impact) · <code>score_events</code> · <code>reputation_tiers</code> (privileges per tier) · <code>validation_records</code> · <code>champion_nominations</code> (polling workflow)</p>
+<div class="hook">Reputation portability across cities, gamification badges, civic leaderboards, reputation decay for inactive users.</div>
+</div>
+
+<div class="service-header" id="svc13"><h3>Service 13 — Polls & Democracy Tools</h3><p>Constituency polls, participatory budgeting, exit polls — one-person-one-vote via identity verification</p></div>
+<div class="service-body">
+<h4>Poll Types</h4>
+<table>
+<tr><th>Type</th><th>Creator</th><th>Purpose</th></tr>
+<tr><td>Sentiment</td><td>Leader</td><td>Gauge citizen opinion on issues</td></tr>
+<tr><td>Budget Prioritization</td><td>Leader</td><td>Citizens directly influence how constituency funds are allocated — participatory budgeting where citizens vote on spending priorities</td></tr>
+<tr><td>Satisfaction</td><td>Leader/Admin</td><td>Rate government service quality</td></tr>
+<tr><td>Exit Poll</td><td>Admin only</td><td>Election day polling, licensed to media</td></tr>
+<tr><td>Custom</td><td>Leader/NGO</td><td>Any structured question</td></tr>
+</table>
+<h4>Participatory Budgeting Workflow</h4>
+<pre><code>Leader creates budget poll → specifies total constituency budget → defines categories
+→ Citizens in constituency allocate amounts across categories
+→ Results aggregated → published as citizen-mandated priority list
+→ Feeds into leader accountability (did they follow citizen priorities?)</code></pre>
+<p><code>polls</code> · <code>poll_options</code> (with allocated_amount for budget) · <code>votes</code> (unique constraint: poll_id + voter_id) · <code>poll_targeting</code> · <code>exit_polls</code> · <code>budget_allocations</code></p>
+<p><strong>Vote integrity:</strong> One verified user per poll. Geospatial eligibility check. Hidden results until close.</p>
+<div class="hook">Binding referendums (govt partnership), real-time media dashboards, ranked-choice voting, recurring surveys, AI-suggested questions from trending issues.</div>
+</div>
+
+<div class="service-header" id="svc14"><h3>Service 14 — Messaging & Communication</h3><p>1:1 DM, group messaging, leader-citizen comms, party broadcast, identity toggle</p></div>
+<div class="service-body">
+<p><code>conversations</code> (type: direct/group/broadcast) · <code>conversation_participants</code> (role, identity_mode: personal/party) · <code>messages</code> (text/image/voice_link/poll_link/issue_link) · <code>broadcast_lists</code> (party admin, target scope) · <code>broadcasts</code> · <code>read_receipts</code></p>
+<p><strong>Verified users only.</strong> WebSocket for real-time. Redis pub/sub for delivery. Partitioned by conversation_id.</p>
+<div class="hook">End-to-end encryption, government service chatbots, AI response suggestions for leaders, rich inline cards.</div>
+</div>
+
+<div class="service-header" id="svc15"><h3>Service 15 — Search, Discovery & Trends</h3><p>Full-text search across voices, hashtags, handles, issues, leaders, promises — Elasticsearch-powered</p></div>
+<div class="service-body">
+<h4>Elasticsearch Indices</h4>
+<p><code>voices_index</code> (text, hashtags, mentions, author, boundary, sentiment, engagement) · <code>issues_index</code> (title, desc, category, status, location) · <code>leaders_index</code> (name, level, party, rating) · <code>hashtags_index</code> (trending_score) · <code>promises_index</code> (text, leader, status, progress)</p>
+<h4>Trending Algorithm</h4>
+<pre><code>trending = velocity_weight × (post_rate_6h / post_rate_7d)
+         + engagement_weight × avg_engagement_6h
+         + leader_weight × leader_activity_boost
+         + hashtag_weight × hashtag_momentum_score
+         + recency_weight × time_decay</code></pre>
+<p><strong>Scale:</strong> 3 data nodes (MVP), auto-scale. Near-real-time indexing via Kafka (30s delay).</p>
+<div class="hook">Semantic vector search, AI-recommended feed, personalized algorithm, search analytics for governance insights.</div>
+</div>
+
+<div class="service-header" id="svc16"><h3>Service 16 — Datamine Analytics</h3><p>Premium analytics — ZIP heat maps, demographics, AI voice traits, downloadable reports, pay-per-report</p></div>
+<div class="service-body">
+<p><code>analytics_reports</code> (type, boundary_ids, parameters, s3_key PDF/CSV) · <code>heat_maps</code> (metric, grid data) · <code>demographic_snapshots</code> (age, gender, income, education distributions) · <code>voice_trait_analysis</code> (topics, language, sentiment, engagement patterns) · <code>report_purchases</code> (user, amount, payment_ref)</p>
+<p><strong>Scale:</strong> Async report generation (background jobs). Pre-computed heatmaps cached. Analytics workers isolated from production.</p>
+<div class="hook">Media organization dashboards, researcher API, predictive analytics, corruption detection engine, white-label for government.</div>
+</div>
+
+<div class="service-header" id="svc17"><h3>Service 17 — Notification & Engagement</h3><p>Multi-channel delivery (push/in-app/email/SMS), viral loop engine, celebration moments</p></div>
+<div class="service-body">
+<h4>Notification Types</h4>
+<table>
+<tr><th>Type</th><th>Trigger</th><th>Channel</th></tr>
+<tr><td>Issue update</td><td>Status change on your issue</td><td>Push + in-app</td></tr>
+<tr><td>Resolution celebrate</td><td>Issue citizen-verified</td><td>Push + in-app: "Your report helped fix this problem!" + confetti + before/after photos + share prompt + "You're the 4,822nd citizen report this month"</td></tr>
+<tr><td>Rating prompt</td><td>Leader resolved issues in your area</td><td>In-app</td></tr>
+<tr><td>Trending alert</td><td>Issue trending in your constituency</td><td>Push</td></tr>
+<tr><td>Promise update</td><td>Promise status changed</td><td>In-app</td></tr>
+<tr><td>Civic milestone</td><td>Score crossed tier threshold</td><td>Push + in-app</td></tr>
+<tr><td>Viral share</td><td>Someone shared your resolved issue</td><td>In-app</td></tr>
+<tr><td>Poll available</td><td>New poll in your constituency</td><td>Push</td></tr>
+<tr><td>Broadcast</td><td>Message from leader/party</td><td>Push</td></tr>
+</table>
+<p><code>notifications</code> · <code>notification_preferences</code> · <code>delivery_logs</code> · <code>engagement_metrics</code></p>
+<p><strong>Scale:</strong> Kafka fan-out. FCM/APNs batch API. Max 10 push/day (unless critical). SMS for critical only.</p>
+<div class="hook">AI-optimized send times, intelligent batching, WhatsApp/Telegram channels, weekly civic digest email, A/B testing.</div>
+</div>
+
+<div class="service-header" id="svc18"><h3>Service 18 — Admin, Moderation & Trust</h3><p>Platform immune system — AI+human moderation, brigading detection, audit trails, transparency</p></div>
+<div class="service-body">
+<h4>Moderation Pipeline</h4>
+<pre><code>Content submitted
+→ Layer 1: AI screening (toxicity, hate speech, NSFW, manipulated media)
+  Score &gt;0.9: auto-remove + human review
+  Score 0.7-0.9: publish + flag for human review
+  Score &lt;0.5: publish normally
+→ Layer 2: Human moderator queue (priority: high-confidence flags first)
+→ Layer 3: Appeal process (different moderator reviews)
+→ Every action → immutable audit log</code></pre>
+<h4>Anti-Brigading</h4>
+<p>Rating brigading: spike detection from unusual geographic origins. Vote manipulation: temporal + device clustering. Coordinated posting: text similarity + account correlation. Reputation-weighted signals: low-rep users' votes carry less weight.</p>
+<p><code>admin_actions</code> (immutable log) · <code>moderation_queue</code> · <code>audit_logs</code> · <code>suspensions</code> · <code>abuse_reports</code> · <code>brigading_signals</code> · <code>transparency_reports</code></p>
+<div class="hook">Community moderation panels, appeal escalation, fact-checking API integration, deepfake detection, political ad labeling enforcement.</div>
+</div>
+
+<div class="service-header" id="svc19"><h3>Service 19 — Party & Organization</h3><p>Org management for parties, NGOs, RWAs, clubs — hierarchy, functionaries, billing, identity toggle</p></div>
+<div class="service-body">
+<h4>Org Hierarchy (Political Party Example)</h4>
+<pre><code>National Committee → State Unit → District Unit → Mandal → Booth-level</code></pre>
+<p><code>organizations</code> (name, type: party/ngo/rwa/club, registration_number, subscription_tier) · <code>org_hierarchy</code> (node_name, level, parent_id, boundary_id, head_user_id) · <code>org_members</code> (user_id, role, permissions, identity_mode_enabled) · <code>org_subscriptions</code> (plan, billing_cycle, amount, status) · <code>org_analytics_rollup</code> (total_leaders, avg_rating, issues_resolved, promises_fulfilled)</p>
+<p><strong>Pub:</strong> <code>org.member_added</code> <code>org.broadcast_requested</code> <code>org.subscription_changed</code></p>
+<div class="hook">Election season features, campaign coordination, inter-party comparison, government dept integration for NGOs, member engagement scoring.</div>
+</div>
+
+<div class="service-header" id="svc20"><h3>Service 20 — Advertising & Campaign</h3><p>Self-serve ad platform — hyper-targeted civic/political ads, CPM/CPC, compliance</p></div>
+<div class="service-body">
+<h4>Tables</h4>
+<p><code>advertisers</code> (org_name, billing, status: pending_review/approved, spend_limit) · <code>ad_campaigns</code> (objective, budget, bid_type cpm/cpc, bid_amount, status, dates) · <code>ad_creatives</code> (headline, body, media, moderation_status) · <code>ad_targeting</code> (boundary/age/gender/interest/engagement_level) · <code>ad_impressions</code> · <code>ad_clicks</code> · <code>ad_billing</code> (period, impressions, clicks, amount)</p>
+<h4>Political Ad Compliance</h4>
+<ul>
+<li>All political ads labeled "Sponsored Political Content"</li>
+<li>Advertiser identity publicly visible on every ad</li>
+<li>Ad archive: all political ads publicly searchable for 7 years</li>
+<li>Spending transparency: aggregate spend per party published quarterly</li>
+<li>48-hour cooling period before elections</li>
+</ul>
+<p><strong>Scale:</strong> Impression logging via Kafka → TimescaleDB batch writes. Ad serving decision &lt;50ms via Redis-cached targeting.</p>
+<div class="hook">AI creative tools, A/B testing, lookalike audiences, retargeting, frequency capping, cross-platform campaigns.</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 4 ═══════════════ -->
+<h2 id="part4"><span class="part-num">Part 4</span>Database Schema Design</h2>
+
+<h3>4.1 Technology Allocation</h3>
+<table>
+<tr><th>Database</th><th>Engine</th><th>Purpose</th><th>Services</th></tr>
+<tr><td>Primary relational</td><td>Aurora PostgreSQL + PostGIS</td><td>Users, issues, ratings, promises, CHI, reputation, polls, orgs, ledger, boundaries, representatives</td><td>1-3, 5-7, 10-13, 19</td></tr>
+<tr><td>Document store</td><td>DocumentDB (MongoDB)</td><td>Voices, messages, media metadata, analytics reports, campaign creatives</td><td>4, 14, 16, 20</td></tr>
+<tr><td>Cache & sessions</td><td>ElastiCache (Redis)</td><td>JWT sessions, rate limiting, real-time counters, feed timelines, cached ratings</td><td>All</td></tr>
+<tr><td>Search</td><td>OpenSearch (Elasticsearch)</td><td>Full-text search, trending, discovery, autocomplete</td><td>15</td></tr>
+<tr><td>Time-series</td><td>TimescaleDB</td><td>CHI history, rating history, sentiment trends, ad impressions</td><td>7, 9, 11, 16, 20</td></tr>
+<tr><td>Object storage</td><td>S3 + CloudFront</td><td>Photos, videos, documents, reports, media attachments</td><td>4, 5, 6, 8, 16, 20</td></tr>
+<tr><td>Event store</td><td>Kafka (MSK)</td><td>Domain events, event sourcing for ledger and audit</td><td>All</td></tr>
+</table>
+
+<h3>4.2 Partitioning Strategy</h3>
+<table>
+<tr><th>Table</th><th>Partition Key</th><th>Rationale</th></tr>
+<tr><td><code>issues</code></td><td>state (from boundary_id)</td><td>State-level queries without national scan</td></tr>
+<tr><td><code>voices</code></td><td>created_at (monthly)</td><td>Old partitions → cold storage after 2 years</td></tr>
+<tr><td><code>ledger_entries</code></td><td>issue_id hash</td><td>Append-only, even distribution</td></tr>
+<tr><td><code>users</code></td><td>user_id hash</td><td>Even distribution across shards</td></tr>
+<tr><td><code>ad_impressions</code></td><td>timestamp (daily)</td><td>Aggregated and archived after 90 days</td></tr>
+</table>
+
+<h3>4.3 Data Retention & Compliance</h3>
+<table>
+<tr><th>Data Type</th><th>Retention</th><th>Rationale</th></tr>
+<tr><td>Active data</td><td>2 years (hot)</td><td>Aurora, DocumentDB</td></tr>
+<tr><td>Archived data</td><td>2+ years (cold)</td><td>S3 Glacier, metadata index retained</td></tr>
+<tr><td>Ledger data</td><td><strong>PERMANENT</strong></td><td>Public interest — institutional memory</td></tr>
+<tr><td>KYC documents</td><td>5 years</td><td>Regulatory requirement</td></tr>
+<tr><td>Political ads</td><td>7 years</td><td>Transparency requirement</td></tr>
+<tr><td>User deletion</td><td>30-day grace → anonymize</td><td>India DPDP Act compliance</td></tr>
+</table>
+
+<h3>4.4 Entity Relationships</h3>
+<pre><code>users ──→ issues, voices, votes, messages, civic_scores, rep_assignments, org_members
+representatives ──→ issues (routed), ratings, promises, staff_accounts, polls
+boundaries ──→ representatives, issues, chi_scores, trends, sentiment, polls
+issues ──→ ledger_entries, issue_media, issue_timeline, classifications, confirmations
+organizations ──→ org_members, org_hierarchy, org_subscriptions, analytics_rollup</code></pre>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 5 ═══════════════ -->
+<h2 id="part5"><span class="part-num">Part 5</span>Geospatial Mapping System</h2>
+
+<h3>5.1 India Administrative Hierarchy</h3>
+<pre><code>Level 0: Nation          →  1 record (India)
+Level 1: State/UT       →  36 records
+Level 2: Parliamentary  →  543 records (Lok Sabha constituencies)
+Level 3: Assembly       →  ~4,100 records (Vidhan Sabha)
+Level 4: Municipal      →  ~7,900 records (corporations, councils, panchayats)
+Level 5: Ward           →  ~250,000+ records
+
+Each boundary: PostGIS polygon geometry + parent_id self-referencing hierarchy</code></pre>
+
+<h3>5.2 Address Resolution Flow</h3>
+<pre><code>                    ┌─────────────┐
+                    │ User Input  │
+                    └──────┬──────┘
+                           │
+                    ┌──────┴──────┐
+                ┌───┤ GPS coords? ├───┐
+                │YES└─────────────┘NO │
+                │                     │
+    ┌───────────┴──────────┐  ┌──────┴──────┐
+    │ ST_Contains          │  │ PIN code?   │
+    │ (ward.polygon,point) │  └──────┬──────┘
+    └───────────┬──────────┘     YES │  NO
+                │            ┌──────┴──────┐  ┌──────────────┐
+                │            │ PIN→Ward    │  │ Address text?│
+                │            │ lookup table│  └──────┬───────┘
+                │            └──────┬──────┘     YES │  NO
+                │                   │     ┌──────────┴────────┐
+                │                   │     │ Geocode API→lat/lng│  Manual
+                │                   │     │ → ST_Contains      │  Selection
+                │                   │     └──────────┬────────┘  Dropdown
+                └─────────┬─────────┴───────────────┘
+                          │
+                  ┌───────┴────────┐
+                  │ Validate:      │
+                  │ GPS within 5km │
+                  │ of Aadhaar addr│
+                  └───────┬────────┘
+                          │
+                  ┌───────┴────────┐
+                  │ Assign all reps│
+                  │ Ward→...→PM    │
+                  └────────────────┘</code></pre>
+
+<h3>5.3 Boundary Data Sources</h3>
+<ul>
+<li><strong>Election Commission of India:</strong> Parliamentary + Assembly constituency shapefiles (official)</li>
+<li><strong>Survey of India:</strong> State and district administrative boundaries</li>
+<li><strong>Municipal Corporation GIS:</strong> Ward-level boundaries (per city/municipality)</li>
+<li><strong>Census data:</strong> Population and area per boundary</li>
+<li><strong>MapMyIndia / Google Maps:</strong> Geocoding and reverse geocoding services</li>
+</ul>
+
+<h3>5.4 Key PostGIS Queries</h3>
+<pre><code>-- Which boundaries contain this user?
+SELECT * FROM boundaries WHERE ST_Contains(polygon, ST_SetSRID(ST_MakePoint(lng,lat), 4326));
+
+-- Issues within a boundary
+SELECT * FROM issues WHERE ST_Within(gps_point, (SELECT polygon FROM boundaries WHERE id = ?));
+
+-- Issues near a location (radius search)
+SELECT * FROM issues WHERE ST_DWithin(gps_point, ST_MakePoint(lng,lat)::geography, 5000);</code></pre>
+
+<div class="hook">Global expansion: pluggable boundary hierarchy per country. Abstract level names into configurable per-country definitions. Each deployment imports its own boundary data.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 6 ═══════════════ -->
+<h2 id="part6"><span class="part-num">Part 6</span>Citizen Verification Flow</h2>
+
+<h3>6.1 Registration Steps</h3>
+
+<pre><code>Step 1: Phone OTP  ──────────────────────────────────────────────────
+  Citizen enters phone → SMS OTP (Twilio/MSG91) → validate
+  → Account created (verification_level: phone)
+  → JWT issued. Basic features: view content, limited reactions.
+
+Step 2: Aadhaar e-KYC (DigiLocker)  ────────────────────────────────
+  Redirect to DigiLocker consent flow
+  → Returns: name, DOB, gender, address, photo
+  → Aadhaar number hashed (SHA-256 + salt) — NEVER stored plain text
+  → Address extracted → geospatial mapping
+  → verification_level: aadhaar
+  → Full features: voice publishing, issue reporting, polls
+
+Step 3: Address Validation  ─────────────────────────────────────────
+  GPS captured from device
+  → Cross-reference with Aadhaar address (5km proximity check)
+  → Auto-confirmed if within range; else → manual review queue
+  → verification_level: full
+  → Representative auto-mapping triggered
+  → All features: DM, tagged voices, Community Validator eligibility
+
+Step 4: Civic Score Initialization  ─────────────────────────────────
+  Score initialized at 100 (tier: new_citizen)
+  First report bonus: +50 if verified
+  Onboarding tutorial: +25</code></pre>
+
+<h3>6.2 Leader Claim & Verification</h3>
+<pre><code>1. Leader finds pre-loaded profile → initiates claim
+2. Submits: government ID + election certificate + optional social verification
+3. Claim enters admin queue (priority: high)
+4. Admin verifies against Election Commission data
+5. Approved → profile ownership transferred, dashboard access, staff mgmt, polls
+6. Disputed → escalated investigation</code></pre>
+
+<h3>6.3 Party Functionary Onboarding</h3>
+<pre><code>1. Party admin creates invitation (role, hierarchy node)
+2. Invitation sent via SMS / in-app
+3. Functionary completes phone OTP
+4. Party identity linked → identity toggle enabled
+5. Permissions assigned per role</code></pre>
+
+<h3>6.4 Identity Fraud Detection</h3>
+<ul>
+<li><strong>Duplicate Aadhaar:</strong> Same hash cannot verify multiple accounts</li>
+<li><strong>Device fingerprinting:</strong> Multiple accounts from same device → flagged</li>
+<li><strong>Velocity checks:</strong> >3 OTP requests/phone/hour → temporary block</li>
+<li><strong>SIM swap:</strong> Phone change after Aadhaar verification → re-verify required</li>
+<li><strong>GPS spoofing:</strong> Altitude, speed, accuracy metadata analyzed for anomalies</li>
+<li><strong>Behavioral:</strong> New accounts with coordinated behavior → flagged</li>
+</ul>
+
+<div class="hook">Face match against Aadhaar photo (liveness detection), video KYC for leaders, re-verification triggers, biometric auth for high-value actions.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 7 ═══════════════ -->
+<h2 id="part7"><span class="part-num">Part 7</span>Leader & Staff Workflow System</h2>
+
+<h3>7.1 Leader Dashboard Workflow</h3>
+<pre><code>INCOMING ISSUES QUEUE
+  → Auto-routed by category + geography
+  → Priority: Critical (safety) &gt; High (infrastructure) &gt; Medium &gt; Low
+  → Shows: title, category, location, priority, reporter reputation, upvotes, age
+
+TRIAGE (Leader actions)
+  → Acknowledge | Assign to Staff | Respond Publicly | Escalate Up | Mark Duplicate
+
+ASSIGNMENT
+  → Select staff by department/role match (pothole → PWD, garbage → sanitation)
+  → Set expected resolution timeline
+  → Ledger entry: "Assigned to [staff] by [leader]"
+  → Staff notified via push
+
+STAFF WORKFLOW
+  → Staff receives queue → Work Started → upload progress photos → Completed
+  → Each status change → ledger entry with evidence
+  → Leader monitors all staff from dashboard
+
+RESOLUTION
+  → Staff marks Completed with evidence
+  → Citizen notified → verifies (before/after comparison) or disputes
+  → Confirmed: closed, rating updated, reputation points awarded
+  → Disputed: reopened, escalation triggered</code></pre>
+
+<h3>7.2 SLA Enforcement</h3>
+<table>
+<tr><th>Timeframe</th><th>Signal</th><th>Action</th></tr>
+<tr><td>&lt;4 hours</td><td style="color:var(--green)">🟢 Green</td><td>Normal</td></tr>
+<tr><td>4-24 hours</td><td style="color:var(--amber)">🟡 Amber</td><td>Warning notification to leader</td></tr>
+<tr><td>&gt;24 hours</td><td style="color:var(--red)">🔴 Red</td><td>Escalation: Councillor → Mayor → MLA → State Minister</td></tr>
+</table>
+<p>SLA violations feed into leader rating negatively.</p>
+
+<h3>7.3 Party Analytics Rollup</h3>
+<p>Party admin sees all leaders aggregated: total issues, average rating, constituency-by-constituency comparison, promise delivery rate, worst-performing areas (for party attention), best-performing leaders (for recognition).</p>
+
+<div class="hook">Automated assignment (category→department bypass), AI-suggested priority (severity + upvotes + reputation), automated SLA escalation, staff mobile app with GPS check-in.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 8 ═══════════════ -->
+<h2 id="part8"><span class="part-num">Part 8</span>AI/ML Pipeline Architecture — 6 Pipelines</h2>
+
+<h3>Pipeline 1: Issue Classification (CivitroVision)</h3>
+<pre><code>Input: Photo + GPS + Text
+→ Image: ViT-B/16 → 12 categories + confidence + severity
+→ Text: NER → locations, departments, urgency
+→ Ensemble: weighted average image+text
+→ Auto-route: category + boundary → department + representative
+Training: citizen-verified resolved issues. Retrain every 1000 samples.
+Serving: SageMaker auto-scaling 2-10. Latency: &lt;500ms.</code></pre>
+
+<h3>Pipeline 2: Sentiment Analysis</h3>
+<pre><code>Input: Text (15 languages)
+→ Language detect (fastText) → Translate (if needed)
+→ Multilingual BERT → sentiment + confidence
+→ Emotion: anger/frustration/hope/satisfaction/fear
+→ Urgency: 0.0-1.0
+→ Aggregate per-boundary (hourly)
+→ Alert on &gt;20% negative shift in 24h
+Streaming via Kafka. Latency: &lt;30 seconds.</code></pre>
+
+<h3>Pipeline 3: Promise Tracking</h3>
+<pre><code>Sources: social media (6h), news (daily), interviews, manifesto PDFs, parliament transcripts
+→ LLM extraction (Bedrock Claude): promise_text, category, location, timeline
+→ NLP deduplication vs existing promises
+→ Human verification for high-value promises
+→ Progress estimation: cross-reference CHI, budgets, news, citizen reports</code></pre>
+
+<h3>Pipeline 4: CHI Computation</h3>
+<pre><code>Schedule: Daily 02:00 IST (full). Every 6h (incremental, high-activity)
+→ Per constituency, per dimension:
+  Gather: citizen reports, resolution rates, response times, external data
+→ Normalize per signal (0-1 vs national distribution)
+→ Weighted dimension score (0-100)
+→ Overall CHI = weighted average of dimensions
+→ Rank within level (ward/assembly/parliamentary)
+→ Alerts on &gt;10pt drop in 30 days</code></pre>
+
+<h3>Pipeline 5: Fraud & Abuse Detection</h3>
+<pre><code>Real-time (per action):
+  Login: device fingerprint, IP geo, VPN detection
+  Post: toxicity, spam, duplicate content
+  Report: image duplicate, GPS spoof, velocity check
+  Vote: coordinated pattern, geographic anomaly
+Batch (hourly):
+  Account clustering, network analysis, temporal synchronization
+Output: risk score (0-1)
+  &gt;0.9: block + flag | 0.6-0.9: allow + human review | &lt;0.6: normal</code></pre>
+
+<h3>Pipeline 6: Corruption Pattern Detection</h3>
+<pre><code>Signals:
+  • Department resolution patterns (consistently slow?)
+  • Geographic neglect (certain wards always ignored?)
+  • Budget vs complaints (high spending + persistent complaints?)
+  • Contractor patterns (same contractor across issues?)
+  • Timeline anomalies (completed suspiciously fast without evidence?)
+  • Citizen disputes (high dispute rate after completion claims?)
+Output: department efficiency scores (slow departments vs fast departments), geographic neglect signals, repeat infrastructure failure patterns, anomaly alerts
+NOTE: Generates signals only — human investigation required before any public output.</code></pre>
+
+<div class="hook">Model monitoring & drift detection, automated retraining, SHAP explainability, federated learning, on-device inference for offline classification.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 9 ═══════════════ -->
+<h2 id="part9"><span class="part-num">Part 9</span>Abuse, Brigading & Misinformation Prevention</h2>
+
+<h3>9.1 Rate Limiting</h3>
+<table>
+<tr><th>Action</th><th>Limit</th><th>Window</th></tr>
+<tr><td>Voice publishing</td><td>20</td><td>per day per user</td></tr>
+<tr><td>Issue reporting</td><td>10</td><td>per day per user</td></tr>
+<tr><td>Votes/reactions</td><td>100</td><td>per day per user</td></tr>
+<tr><td>DM messages</td><td>200</td><td>per day per user</td></tr>
+<tr><td>Poll votes</td><td>1 per poll</td><td>lifetime per user</td></tr>
+<tr><td>OTP requests</td><td>5</td><td>per hour per phone</td></tr>
+<tr><td>API calls</td><td>1000</td><td>per hour per key</td></tr>
+</table>
+
+<h3>9.2 Content Moderation (4 Layers)</h3>
+<pre><code>Layer 1: AI pre-screening (toxicity, hate, NSFW, manipulated media)
+  Score &gt;0.9: auto-remove + audit log
+  Score 0.7-0.9: publish + queue human review
+  Score &lt;0.5: publish normally
+
+Layer 2: Human moderation queue (priority order, double-review for 24h+ suspensions)
+
+Layer 3: Appeal process (different moderator, escalation to senior if disputed)
+
+Layer 4: Every action → immutable audit log entry</code></pre>
+
+<h3>9.3 Anti-Brigading</h3>
+<ul>
+<li><strong>Rating brigading:</strong> Sudden spike from unusual geographic sources → rating freeze + investigation</li>
+<li><strong>Voice brigading:</strong> Coordinated mass-posting detected via text similarity + temporal clustering</li>
+<li><strong>Poll manipulation:</strong> Unusual vote patterns (timing, geography, device) → vote freeze + audit</li>
+<li><strong>Mitigation:</strong> Reputation-weighted contributions. New accounts (&lt;30 days) have reduced impact.</li>
+</ul>
+
+<h3>9.4 Political Manipulation Safeguards</h3>
+<ul>
+<li>No platform-endorsed rankings during election blackout periods</li>
+<li>Equal visibility for all parties in search/discovery</li>
+<li>Political advertising clearly labeled and archived (7 years)</li>
+<li>Rating methodology published publicly</li>
+<li>No algorithmic amplification of political content</li>
+<li>Staff whistleblower channel for internal manipulation attempts</li>
+</ul>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 9B ═══════════════ -->
+<h2 id="part9b"><span class="part-num">Part 9B</span>Public Trust & Transparency Framework</h2>
+
+<div class="callout callout-info">This section addresses the explicit architecture requirement for "public trust mechanisms" as a distinct concern, separate from abuse prevention. Trust is earned through transparency, not enforcement.</div>
+
+<h3>9B.1 Open Rating Methodology</h3>
+<p>The exact formula (weights, components, normalization) is published on a public documentation page. Citizens can see how their leader's rating was computed — which components contributed, what data was used, sample sizes. Any methodology change announced 30 days before implementation. Historical ratings recomputed retroactively with both old/new shown during transition.</p>
+
+<h3>9B.2 CHI Score Transparency</h3>
+<p>Each dimension lists signal sources and weights publicly. Citizens drill into any dimension to see raw signals (aggregated, not individual reports). Methodology page explains computation in plain language.</p>
+
+<h3>9B.3 Public Audit Trails</h3>
+<p>Every moderation action has a public summary (content type, reason, action — reporter identity hidden). Quarterly statistics: total reviewed, percentage removed, breakdown by reason, appeal outcomes. All ledger entries for civic issues are permanently public and immutable.</p>
+
+<h3>9B.4 Anti-Censorship Guarantees</h3>
+<ul>
+<li>Removal only for: violation of published content policies (hate, threats, NSFW, spam, impersonation, misinformation)</li>
+<li>Never for: criticism of leaders, negative ratings, unfavorable CHI scores, critical voices</li>
+<li>Every removal → audit log + reason + appeal option</li>
+<li><strong>"Transparency canary":</strong> quarterly statement confirming no government-directed content removal. Absence implies pressure.</li>
+</ul>
+
+<h3>9B.5 Political Neutrality Proof</h3>
+<p>No algorithmic preference for any party/ideology. Rankings based on engagement + recency + geographic relevance only. Annual third-party algorithmic fairness audits (published). Advisory board with multi-party and civil society representation.</p>
+
+<h3>9B.6 Transparency Reports (Quarterly)</h3>
+<ul>
+<li>User growth by region, content moderation statistics</li>
+<li>Government data requests received and compliance rate</li>
+<li>Platform uptime and reliability metrics</li>
+<li>Rating methodology changes, bug disclosures affecting data accuracy</li>
+<li>Annual "State of Civic Health" report using aggregated CHI data</li>
+</ul>
+
+<div class="hook">Independent data trust/foundation for civic data governance, open-source rating and CHI engines, citizen data advisory council, right to explanation for AI decisions.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 10 ═══════════════ -->
+<h2 id="part10"><span class="part-num">Part 10</span>Event-Driven Architecture & Complete Event Catalog</h2>
+
+<h3>10.1 Event Infrastructure</h3>
+<table>
+<tr><th>Component</th><th>Configuration</th></tr>
+<tr><td>Event bus</td><td>Apache Kafka (AWS MSK) — 3 brokers (MVP), 6+ at scale</td></tr>
+<tr><td>Topics</td><td>12 domain topics: user, issue, voice, rating, promise, chi, poll, message, mod, analytics, org, ad</td></tr>
+<tr><td>Partitioning</td><td>By boundary_id — geographic locality, all events for a constituency processed in order</td></tr>
+<tr><td>Retention</td><td>7 days operational, 90 days analytics, permanent for ledger events (archival topic)</td></tr>
+<tr><td>Schema</td><td>Confluent Schema Registry with Avro schemas for all events</td></tr>
+<tr><td>Dead letters</td><td>Per-consumer DLQ with alerting on accumulation</td></tr>
+</table>
+
+<h3>10.2 Complete Event Catalog — 67 Domain Events</h3>
+
+<h4>User Domain (10 events)</h4>
+<p><code>user.registered</code> · <code>user.otp_verified</code> · <code>user.aadhaar_verified</code> · <code>user.address_verified</code> · <code>user.fully_verified</code> · <code>user.profile_updated</code> · <code>user.address_changed</code> · <code>user.suspended</code> · <code>user.reactivated</code> · <code>user.deleted</code></p>
+
+<h4>Issue Domain (11 events)</h4>
+<p><code>issue.reported</code> · <code>issue.classified</code> · <code>issue.routed</code> · <code>issue.acknowledged</code> · <code>issue.assigned</code> · <code>issue.work_started</code> · <code>issue.completed</code> · <code>issue.citizen_verified</code> · <code>issue.citizen_disputed</code> · <code>issue.reopened</code> · <code>issue.duplicate_detected</code></p>
+
+<h4>Voice Domain (7 events)</h4>
+<p><code>voice.published</code> · <code>voice.translated</code> · <code>voice.liked</code> · <code>voice.reshared</code> · <code>voice.replied</code> · <code>voice.moderation_requested</code> · <code>voice.removed</code></p>
+
+<h4>Rating Domain (3 events)</h4>
+<p><code>rating.recomputed</code> · <code>rating.milestone_reached</code> · <code>rating.survey_submitted</code></p>
+
+<h4>Promise Domain (5 events)</h4>
+<p><code>promise.detected</code> · <code>promise.created</code> · <code>promise.progress_updated</code> · <code>promise.status_changed</code> · <code>promise.fulfilled</code></p>
+
+<h4>CHI Domain (3 events)</h4>
+<p><code>chi.recomputed</code> · <code>chi.rank_changed</code> · <code>chi.alert_triggered</code></p>
+
+<h4>Poll Domain (5 events)</h4>
+<p><code>poll.created</code> · <code>poll.vote_cast</code> · <code>poll.closed</code> · <code>poll.results_published</code> · <code>budget.allocation_completed</code></p>
+
+<h4>Messaging Domain (5 events)</h4>
+<p><code>message.sent</code> · <code>message.delivered</code> · <code>message.read</code> · <code>broadcast.sent</code> · <code>broadcast.delivered</code></p>
+
+<h4>Moderation Domain (7 events)</h4>
+<p><code>mod.content_flagged</code> · <code>mod.content_removed</code> · <code>mod.user_warned</code> · <code>mod.user_suspended</code> · <code>mod.appeal_submitted</code> · <code>mod.appeal_resolved</code> · <code>mod.transparency_report_published</code></p>
+
+<h4>Organization Domain (6 events)</h4>
+<p><code>org.created</code> · <code>org.member_added</code> · <code>org.member_removed</code> · <code>org.role_changed</code> · <code>org.broadcast_requested</code> · <code>org.subscription_changed</code></p>
+
+<h4>Advertising Domain (5 events)</h4>
+<p><code>ad.campaign_created</code> · <code>ad.campaign_activated</code> · <code>ad.impression</code> · <code>ad.click</code> · <code>ad.billing_cycle_completed</code></p>
+
+<h3>10.3 Event Sourcing</h3>
+<p>The <strong>Public Work Ledger</strong> and <strong>Admin Audit Log</strong> use event sourcing: the event stream IS the source of truth (not a projection). Current state computed by replaying events. Events are immutable. Snapshots taken periodically. Archived to S3 beyond Kafka retention.</p>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 11 ═══════════════ -->
+<h2 id="part11"><span class="part-num">Part 11</span>Real-Time Dashboards & Analytics</h2>
+
+<h3>11.1 Dashboard Types by Role</h3>
+<table>
+<tr><th>Role</th><th>Dashboards</th></tr>
+<tr><td><strong>Citizens</strong></td><td>Neighborhood map (live issues, resolved issues, improvement trends), Ward dashboard (open/resolved/avg time, slow departments), CHI score + rank + trend, My Leaders (ratings, promises), My Reports + civic score</td></tr>
+<tr><td><strong>Leaders</strong></td><td>Incoming issue queue (filterable, sortable by upvotes/reputation), Staff performance (resolution rate, active assignments), Constituency heat map, Demographic analytics (Datamine), Rating trend + components, Promise tracker, Poll results</td></tr>
+<tr><td><strong>Parties</strong></td><td>All leaders rollup table, Constituency-by-constituency map (performance color coding), Party-wide promise delivery, Broadcast analytics (reach, read rates), Demographic intelligence</td></tr>
+<tr><td><strong>Admin</strong></td><td>Platform health (DAU/MAU, content volume, errors), Moderation queue + workload, Abuse/brigading signals, Content analytics (volume, category, language), System monitoring (latency, DB, Kafka lag)</td></tr>
+<tr><td><strong>NGOs</strong></td><td>Community issues (geographic/thematic scope), Member engagement, Impact metrics (issues resolved, CHI improvement)</td></tr>
+<tr><td><strong>Media</strong></td><td>Public CHI rankings (national, filterable), Trending topics + sentiment, Election data (licensed exit polls)</td></tr>
+</table>
+
+<h3>11.2 Data Freshness Targets</h3>
+<table>
+<tr><th>Component</th><th>Freshness</th><th>Technology</th></tr>
+<tr><td>Issue status changes</td><td>Real-time (&lt;5s)</td><td>WebSocket + Kafka</td></tr>
+<tr><td>Upvote counts</td><td>&lt;30 seconds</td><td>Redis counter + WebSocket</td></tr>
+<tr><td>Leader ratings</td><td>5 minutes</td><td>Materialized view + Redis</td></tr>
+<tr><td>CHI scores</td><td>Daily (incremental 6h)</td><td>Batch compute + Redis</td></tr>
+<tr><td>Trending topics</td><td>5 minutes</td><td>Kafka streaming aggregation</td></tr>
+<tr><td>Heat maps</td><td>15 minutes</td><td>Pre-computed, cached</td></tr>
+<tr><td>Demographic reports</td><td>Daily</td><td>Batch compute → S3</td></tr>
+</table>
+
+<p><strong>Technology:</strong> WebSocket (Socket.io or AWS API Gateway WebSocket) for live updates. Kafka consumer pushes to clients subscribed to matching boundary_ids. TimescaleDB continuous aggregates. Redis caching (5min TTL live, 1h historical).</p>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 12 ═══════════════ -->
+<h2 id="part12"><span class="part-num">Part 12</span>Mobile-First Infrastructure</h2>
+
+<h3>12.1 Mobile App Architecture</h3>
+<table>
+<tr><th>Component</th><th>Technology</th></tr>
+<tr><td>Framework</td><td>React Native 0.75+ (iOS + Android, single codebase)</td></tr>
+<tr><td>State</td><td>Redux Toolkit + RTK Query (API caching)</td></tr>
+<tr><td>Navigation</td><td>React Navigation (stack + bottom tabs)</td></tr>
+<tr><td>Offline</td><td>Redux Persist + background sync queue</td></tr>
+<tr><td>Maps</td><td>React Native Maps (Google Maps SDK)</td></tr>
+<tr><td>Camera</td><td>React Native Camera (GPS EXIF embedding)</td></tr>
+<tr><td>Push</td><td>FCM (Android) + APNs (iOS)</td></tr>
+<tr><td>Deep linking</td><td>Universal links / App links</td></tr>
+<tr><td>Analytics</td><td>Mixpanel / Amplitude</td></tr>
+<tr><td>Crashes</td><td>Sentry</td></tr>
+</table>
+
+<h3>12.2 Offline-First Issue Reporting</h3>
+<pre><code>Citizen captures issue (photo + GPS + desc) while offline
+→ Stored in local SQLite on device
+→ Queued for upload with retry policy
+→ When connectivity restored:
+  → Photo uploaded to S3 (presigned URL)
+  → Issue metadata submitted to API
+  → Confirmation notification delivered
+→ Max offline queue: 20 issues</code></pre>
+
+<h3>12.3 India Network Optimization</h3>
+<ul>
+<li><strong>Photo compression:</strong> Client-side resize to max 1024px, JPEG 80%, WebP. Target: &lt;500KB</li>
+<li><strong>API optimization:</strong> GraphQL or sparse fieldsets to minimize payload</li>
+<li><strong>CDN edges:</strong> Mumbai, Delhi, Chennai, Bangalore, Hyderabad, Kolkata</li>
+<li><strong>Progressive images:</strong> 50px blur thumbnail first, full image lazy-loaded</li>
+<li><strong>Connection-aware:</strong> Detect 2G/3G → reduce quality, defer non-critical loads</li>
+<li><strong>App size:</strong> Target &lt;25MB. Code splitting for rare screens.</li>
+</ul>
+
+<h3>12.4 Web & Admin</h3>
+<p><strong>Citizen web:</strong> Next.js PWA with service worker for offline. Mobile-responsive. Installable on home screen.</p>
+<p><strong>Admin portal:</strong> Next.js with SSR. WebSocket dashboards. Role-based access control.</p>
+<p><strong>Advertiser portal:</strong> Self-serve SPA. Campaign builder, targeting, creative upload, analytics.</p>
+
+<div class="hook">Lite app (&lt;5MB for feature phones), USSD interface (*123# for non-smartphones), WhatsApp bot (report via photo), Telegram bot, IVR voice reporting for non-literate citizens, regional app store optimization (15 language descriptions).</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 13 ═══════════════ -->
+<h2 id="part13"><span class="part-num">Part 13</span>Tech Stack & Infrastructure</h2>
+
+<h3>13.1 Complete Stack</h3>
+<table>
+<tr><th>Layer</th><th>Technology</th><th>Rationale</th></tr>
+<tr><td>Mobile</td><td>React Native 0.75+</td><td>Cross-platform, OTA updates</td></tr>
+<tr><td>Web</td><td>Next.js 14+</td><td>SSR, PWA, React ecosystem</td></tr>
+<tr><td>API Gateway</td><td>Kong / AWS API Gateway</td><td>Rate limiting, auth, routing</td></tr>
+<tr><td>Services</td><td>Node.js (Fastify) or Go</td><td>Node for speed (MVP), Go for perf-critical</td></tr>
+<tr><td>Events</td><td>Kafka (AWS MSK)</td><td>Proven at scale, exactly-once</td></tr>
+<tr><td>Primary DB</td><td>Aurora PostgreSQL 16+</td><td>ACID, PostGIS, read replicas</td></tr>
+<tr><td>Document DB</td><td>DocumentDB</td><td>Flexible schema for content</td></tr>
+<tr><td>Cache</td><td>ElastiCache Redis 7+</td><td>Sub-ms reads, pub/sub</td></tr>
+<tr><td>Search</td><td>OpenSearch 2.x</td><td>Full-text, multilingual</td></tr>
+<tr><td>Time-series</td><td>TimescaleDB</td><td>Continuous aggregates</td></tr>
+<tr><td>Storage</td><td>S3 + CloudFront</td><td>Scalable, CDN-integrated</td></tr>
+<tr><td>ML Training</td><td>SageMaker</td><td>Managed, hyperparameter tuning</td></tr>
+<tr><td>ML Inference</td><td>SageMaker Endpoints</td><td>Auto-scaling, A/B testing</td></tr>
+<tr><td>LLM</td><td>Bedrock (Claude)</td><td>Promise extraction, summarization</td></tr>
+<tr><td>Image Mod</td><td>Rekognition</td><td>NSFW, content moderation</td></tr>
+<tr><td>Push</td><td>FCM + APNs</td><td>Native push delivery</td></tr>
+<tr><td>SMS</td><td>Twilio / MSG91</td><td>OTP, critical alerts</td></tr>
+<tr><td>Email</td><td>Amazon SES</td><td>Transactional, digests</td></tr>
+<tr><td>Payments</td><td>Razorpay (India) / Stripe (global)</td><td>Subscriptions, invoicing</td></tr>
+<tr><td>Translation</td><td>AWS Translate + custom</td><td>15 Indian languages</td></tr>
+<tr><td>Monitoring</td><td>Datadog or Grafana Cloud</td><td>Metrics, logs, traces</td></tr>
+<tr><td>Tracing</td><td>X-Ray / OpenTelemetry</td><td>Distributed tracing</td></tr>
+<tr><td>CI/CD</td><td>GitHub Actions + ArgoCD</td><td>Automated deploy, rollback</td></tr>
+<tr><td>IaC</td><td>Terraform + Terragrunt</td><td>Multi-environment</td></tr>
+<tr><td>Containers</td><td>ECS Fargate</td><td>Serverless containers</td></tr>
+<tr><td>Secrets</td><td>Secrets Manager</td><td>API keys, credentials</td></tr>
+<tr><td>Encryption</td><td>AWS KMS</td><td>At-rest + in-transit</td></tr>
+<tr><td>DDoS</td><td>Shield + WAF</td><td>Automated mitigation</td></tr>
+</table>
+
+<h3>13.2 Resilience & Disaster Recovery</h3>
+
+<h4>High Availability</h4>
+<ul>
+<li>All services across minimum 2 AZs in ap-south-1 (Mumbai)</li>
+<li>Aurora multi-AZ with automatic failover (&lt;30 seconds)</li>
+<li>Kafka: 3-broker cluster, replication factor 3</li>
+<li>Redis: cluster mode with automatic failover</li>
+<li>ECS Fargate: minimum 2 tasks per service, auto-scale to 10+</li>
+</ul>
+
+<h4>Fault Tolerance Patterns</h4>
+<table>
+<tr><th>Pattern</th><th>Implementation</th></tr>
+<tr><td>Circuit breaker</td><td>Per inter-service call. Open after 5 consecutive failures. Half-open retry after 30s.</td></tr>
+<tr><td>Bulkhead</td><td>Independent resource pools per service. Failure isolation.</td></tr>
+<tr><td>Retry</td><td>Exponential backoff: 1s, 5s, 25s (3 attempts)</td></tr>
+<tr><td>Graceful degradation</td><td>AI Classification down → issues accepted, queued for later classification</td></tr>
+<tr><td>Timeout budgets</td><td>Gateway: 10s. Internal: 5s.</td></tr>
+</table>
+
+<h4>Disaster Recovery</h4>
+<table>
+<tr><th>Metric</th><th>Target</th></tr>
+<tr><td>RPO (Recovery Point)</td><td>1 hour (Aurora continuous backup + Kafka replication)</td></tr>
+<tr><td>RTO (Recovery Time)</td><td>4 hours (full region failover to ap-south-2 Delhi)</td></tr>
+<tr><td>Backups</td><td>Aurora 35-day automated, S3 cross-region replication, Kafka MirrorMaker</td></tr>
+<tr><td>DR testing</td><td>Quarterly failover drills</td></tr>
+</table>
+
+<div class="hook">Multi-region active-active, zero-downtime blue-green deploys, chaos engineering (Chaos Monkey), AI anomaly detection for infrastructure.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 14 ═══════════════ -->
+<h2 id="part14"><span class="part-num">Part 14</span>Scaling Plan — 100M+ Users</h2>
+
+<h3>5-Phase Scaling</h3>
+
+<table>
+<tr><th>Phase</th><th>Timeline</th><th>Users</th><th>Key Changes</th></tr>
+<tr><td><strong>1. MVP</strong></td><td>30 days</td><td>100K</td><td>Single region (Mumbai, ap-south-1). Delhi pilot. 2 tasks/service. Aurora db.r6g.large.</td></tr>
+<tr><td><strong>2. Early Growth</strong></td><td>M2-6</td><td>1-10M</td><td>Multi-AZ. Read replicas. Redis cluster (3). CDN Delhi+Chennai+Bangalore.</td></tr>
+<tr><td><strong>3. India Scale</strong></td><td>M6-18</td><td>10-50M</td><td>DB sharding by state (36 shards). Kafka 6 brokers. ES 6 data nodes. Auto-scale 2-20.</td></tr>
+<tr><td><strong>4. 100M+</strong></td><td>M18+</td><td>100M+</td><td>Multi-region (Mumbai+Delhi+Chennai). DB federation. SQS load leveling. Service team ownership.</td></tr>
+<tr><td><strong>5. Global</strong></td><td>Year 2+</td><td>Global</td><td>Region per country (AU, NZ, UK, US, Canada). Data sovereignty. Multi-currency. Localized leader databases + boundary data per country.</td></tr>
+</table>
+
+<h3>Per-Service Scaling Strategy</h3>
+<table>
+<tr><th>Service</th><th>Bottleneck</th><th>Strategy</th></tr>
+<tr><td>Identity & Auth</td><td>Token validation</td><td>Stateless horizontal, Redis sessions</td></tr>
+<tr><td>Geospatial</td><td>Spatial query load</td><td>Read replicas, aggressive cache, pre-computed PIN lookups</td></tr>
+<tr><td>Issue Reporting</td><td>Write throughput</td><td>SQS queue + workers, S3 direct upload, partition by state</td></tr>
+<tr><td>Voices & Content</td><td>Feed generation</td><td>Fan-out-on-write (active), fan-out-on-read (inactive)</td></tr>
+<tr><td>AI Classification</td><td>Inference</td><td>SageMaker auto-scale, batch for non-urgent</td></tr>
+<tr><td>Sentiment</td><td>Stream processing</td><td>Kafka consumer groups, partition by language</td></tr>
+<tr><td>Search</td><td>Query volume</td><td>ES cluster scaling, index sharding</td></tr>
+<tr><td>Notifications</td><td>Fan-out volume</td><td>Kafka consumers, FCM batch, rate limit 10/day</td></tr>
+<tr><td>Messaging</td><td>WebSocket connections</td><td>Connection pooling, Redis pub/sub, horizontal WS servers</td></tr>
+</table>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PART 14B ═══════════════ -->
+<h2 id="part14b"><span class="part-num">Part 14B</span>Monetisation Architecture</h2>
+
+<h3>14B.1 Subscription Tiers</h3>
+<table>
+<tr><th>Plan</th><th>Price</th><th>Features</th></tr>
+<tr><td>Citizen Free</td><td>Free</td><td>Core features: report, view, basic reactions</td></tr>
+<tr><td>Citizen Premium</td><td>Monthly — TBD</td><td>Tagged voices, extended DM, advanced search, ad-free</td></tr>
+<tr><td>Leader Basic</td><td>Monthly — TBD</td><td>Dashboard, issue management, basic analytics</td></tr>
+<tr><td>Leader Pro</td><td>Monthly — TBD</td><td>Full Datamine, polls, campaign tools, staff management</td></tr>
+<tr><td>Party</td><td>Monthly/Annual — TBD</td><td>Full org management, broadcast, party analytics, unlimited leaders</td></tr>
+<tr><td>NGO/RWA</td><td>Monthly — TBD</td><td>Community tools, group management, broadcast, polling</td></tr>
+<tr><td>Government Agency</td><td>Custom — TBD</td><td>API access, white-label dashboards, data feeds, CHI integration</td></tr>
+<tr><td>Media / Research</td><td>Per-license — TBD</td><td>Exit poll data, CHI rankings, anonymized trend data, API access</td></tr>
+</table>
+
+<h3>14B.2 Revenue Streams</h3>
+<table>
+<tr><th>Stream</th><th>Model</th><th>Details</th></tr>
+<tr><td>Subscriptions</td><td>Recurring</td><td>Monthly/annual via Razorpay (India), Stripe (global)</td></tr>
+<tr><td>Datamine Reports</td><td>Pay-per-report</td><td>Priced per scope (ward → multi-state). Bundle packages available. Pricing TBD.</td></tr>
+<tr><td>Advertising</td><td>CPM/CPC</td><td>Self-serve campaign creation. Minimum budget enforced. Pricing TBD per market.</td></tr>
+<tr><td>Exit Poll Licensing</td><td>Per-election</td><td>Licensed to media organizations, research institutes, political consultancies. Pricing TBD.</td></tr>
+<tr><td>NGO Group Plans</td><td>Recurring</td><td>Affordable bulk plans with community tools</td></tr>
+</table>
+
+<h3>14B.3 Feature Gating Architecture</h3>
+<pre><code>API Middleware → check(user_type, subscription_tier, feature_requested)
+  → allowed | not_allowed | upgrade_prompt
+Cached in Redis (TTL 5 min)
+Webhook from payment gateway updates tier on subscription change</code></pre>
+
+<h3>14B.4 Exit Poll Licensing</h3>
+<p>Admin creates exit polls during elections. Results packaged as structured data + visualizations. Licensed to media, research, consultancies. Embargo periods enforced (no results before polls close). Delivered via secure API + downloadable reports.</p>
+
+<div class="hook">Government procurement integration, enterprise API licensing, data marketplace (anonymized civic data for urban planners, insurance, real estate), e-commerce integrations (civic marketplace, government service payments, local business directory), white-label licensing to other countries.</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ CLOSING ═══════════════ -->
+<div style="background:var(--navy);color:#fff;padding:40px;border-radius:20px;margin-top:40px;">
+<h3 style="color:var(--saffron);margin:0 0 16px">Build Sequence</h3>
+<p style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:16px">The architecture will be built as a single codebase, each service developed independently and deployed to the shared event backbone:</p>
+<table style="color:#fff;font-size:13px">
+<tr><th style="background:rgba(255,255,255,0.1)">Part</th><th style="background:rgba(255,255,255,0.1)">Content</th><th style="background:rgba(255,255,255,0.1)">Appends To</th></tr>
+<tr><td>1</td><td>Identity, Vision, Personas, Principles, MVP Waves</td><td>Foundation</td></tr>
+<tr><td>2</td><td>System Architecture Diagram, Communication Patterns</td><td>Part 1</td></tr>
+<tr><td>3</td><td>20 Microservice Definitions (tables, events, endpoints, scaling, hooks)</td><td>Parts 1-2</td></tr>
+<tr><td>4</td><td>Database Schema, Partitioning, Retention, ER Relationships</td><td>Parts 1-3</td></tr>
+<tr><td>5</td><td>Geospatial Mapping (India hierarchy, resolution algorithm, PostGIS)</td><td>Parts 1-4</td></tr>
+<tr><td>6</td><td>Citizen Verification (4-step, leader claims, fraud detection)</td><td>Parts 1-5</td></tr>
+<tr><td>7</td><td>Leader & Staff Workflows, SLA Enforcement, Party Rollup</td><td>Parts 1-6</td></tr>
+<tr><td>8</td><td>6 AI/ML Pipelines (classify, sentiment, promises, CHI, fraud, corruption)</td><td>Parts 1-7</td></tr>
+<tr><td>9</td><td>Abuse Prevention, Rate Limits, Moderation, Anti-Brigading</td><td>Parts 1-8</td></tr>
+<tr><td>9B</td><td>Public Trust & Transparency Framework</td><td>Parts 1-9</td></tr>
+<tr><td>10</td><td>Event Catalog (67 domain events across 12 domains)</td><td>Parts 1-9B</td></tr>
+<tr><td>11</td><td>Real-Time Dashboards (6 role-based views, freshness targets)</td><td>Parts 1-10</td></tr>
+<tr><td>12</td><td>Mobile-First (React Native, offline-first, India network optimization)</td><td>Parts 1-11</td></tr>
+<tr><td>13</td><td>Tech Stack (30+ technologies), Resilience, Disaster Recovery</td><td>Parts 1-12</td></tr>
+<tr><td>14</td><td>5-Phase Scaling (100K → 100M+ → Global)</td><td>Parts 1-13</td></tr>
+<tr><td>14B</td><td>Monetisation (6 tiers, 5 revenue streams, feature gating)</td><td>Parts 1-14</td></tr>
+</table>
+</div>
+
+<div style="text-align:center;padding:40px 0 20px;color:var(--text-m);font-size:13px;">
+<p><strong style="color:var(--saffron)">Civitro</strong> — Enterprise Architecture Document v1.0</p>
+<p>20 microservices · 67 domain events · 6 AI pipelines · 27 enhancement hooks</p>
+<p>Target: India launch in 30 days · Scale: 100M+ users · Global expansion ready</p>
+<p style="margin-top:8px;font-style:italic">"Democracy you can see"</p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

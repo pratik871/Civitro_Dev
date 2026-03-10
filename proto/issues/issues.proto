@@ -1,0 +1,34 @@
+syntax = "proto3";
+package civitro.issues;
+option go_package = "github.com/civitro/proto/issues";
+
+import "common/common.proto";
+
+service IssueService {
+  rpc GetIssue(civitro.common.IDRequest) returns (IssueResponse);
+  rpc GetIssuesByBoundary(BoundaryIssueRequest) returns (IssueList);
+}
+
+message BoundaryIssueRequest {
+  string boundary_id = 1;
+  civitro.common.Pagination pagination = 2;
+}
+
+message IssueResponse {
+  string id = 1;
+  string user_id = 2;
+  string text = 3;
+  repeated string photo_urls = 4;
+  string category = 5;
+  string severity = 6;
+  string status = 7;
+  civitro.common.LatLng gps = 8;
+  string boundary_id = 9;
+  int32 upvotes = 10;
+  civitro.common.Timestamp created_at = 11;
+}
+
+message IssueList {
+  repeated IssueResponse issues = 1;
+  civitro.common.PaginatedResponse pagination = 2;
+}

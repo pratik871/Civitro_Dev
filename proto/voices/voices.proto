@@ -1,0 +1,21 @@
+syntax = "proto3";
+package civitro.voices;
+option go_package = "github.com/civitro/proto/voices";
+
+import "common/common.proto";
+
+service VoiceService {
+  rpc GetVoice(civitro.common.IDRequest) returns (VoiceResponse);
+}
+
+message VoiceResponse {
+  string id = 1;
+  string user_id = 2;
+  string text = 3;
+  repeated string media_urls = 4;
+  repeated string hashtags = 5;
+  string language = 6;
+  int32 likes_count = 7;
+  int32 replies_count = 8;
+  civitro.common.Timestamp created_at = 9;
+}

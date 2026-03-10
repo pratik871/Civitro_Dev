@@ -1,0 +1,29 @@
+syntax = "proto3";
+package civitro.search;
+option go_package = "github.com/civitro/proto/search";
+
+import "common/common.proto";
+
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+
+message SearchRequest {
+  string query = 1;
+  string type = 2;
+  string boundary_id = 3;
+  civitro.common.Pagination pagination = 4;
+}
+
+message SearchResult {
+  string id = 1;
+  string type = 2;
+  string title = 3;
+  string snippet = 4;
+  double relevance = 5;
+}
+
+message SearchResponse {
+  repeated SearchResult results = 1;
+  int32 total = 2;
+}
