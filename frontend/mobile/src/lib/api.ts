@@ -26,7 +26,7 @@ const getBaseUrl = (): string => {
     }
     return `http://${hostIp}:8080`;
   }
-  return 'http://api.civitro.com:8080';
+  return 'https://api.civitro.com';
 };
 
 const BASE_URL = getBaseUrl();
