@@ -90,6 +90,29 @@ type VerifyAadhaarResponse struct {
 	VerificationLevel VerificationLevel `json:"verification_level"`
 }
 
+// UpdateLocationRequest is the payload for updating user location.
+type UpdateLocationRequest struct {
+	Lat float64 `json:"lat" binding:"required"`
+	Lng float64 `json:"lng" binding:"required"`
+}
+
+// UpdateLocationResponse is returned after location update.
+type UpdateLocationResponse struct {
+	Message        string     `json:"message"`
+	BoundaryID     string     `json:"boundary_id,omitempty"`
+	BoundaryName   string     `json:"boundary_name,omitempty"`
+	BoundaryLevel  string     `json:"boundary_level,omitempty"`
+	Boundaries     []Boundary `json:"boundaries,omitempty"`
+}
+
+// Boundary is a simplified boundary for location response.
+type Boundary struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Level string `json:"level"`
+	Track string `json:"track,omitempty"`
+}
+
 // ProfileResponse is the response for user profile retrieval.
 type ProfileResponse struct {
 	ID                string            `json:"id"`
@@ -101,5 +124,9 @@ type ProfileResponse struct {
 	PreferredLanguage string            `json:"preferred_language"`
 	CivicScore        int               `json:"civic_score"`
 	ReputationTier    string            `json:"reputation_tier"`
+	BoundaryID        string            `json:"boundary_id,omitempty"`
+	BoundaryName      string            `json:"boundary_name,omitempty"`
+	Lat               *float64          `json:"lat,omitempty"`
+	Lng               *float64          `json:"lng,omitempty"`
 	CreatedAt         time.Time         `json:"created_at"`
 }

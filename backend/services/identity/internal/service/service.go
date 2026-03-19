@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -280,6 +281,7 @@ func (s *Service) GetProfile(ctx context.Context, userID string) (*model.Profile
 	}
 
 	civicScore, tier := s.repo.GetCivicScore(ctx, userID)
+	lat, lng, boundaryID, boundaryName := s.repo.GetUserLocation(ctx, userID)
 
 	return &model.ProfileResponse{
 		ID:                user.ID,
@@ -291,6 +293,10 @@ func (s *Service) GetProfile(ctx context.Context, userID string) (*model.Profile
 		PreferredLanguage: user.PreferredLanguage,
 		CivicScore:        civicScore,
 		ReputationTier:    tier,
+		BoundaryID:        boundaryID,
+		BoundaryName:      boundaryName,
+		Lat:               lat,
+		Lng:               lng,
 		CreatedAt:         user.CreatedAt,
 	}, nil
 }
@@ -298,6 +304,73 @@ func (s *Service) GetProfile(ctx context.Context, userID string) (*model.Profile
 // UpdateLanguage updates the user's preferred language.
 func (s *Service) UpdateLanguage(ctx context.Context, userID, language string) error {
 	return s.repo.UpdatePreferredLanguage(ctx, userID, language)
+}
+
+// UpdateLocation updates the user's GPS location, resolves boundaries via the geospatial service,
+// and stores the primary (most granular) boundary.
+func (s *Service) UpdateLocation(ctx context.Context, userID string, req *model.UpdateLocationRequest) (*model.UpdateLocationResponse, error) {
+	if req.Lat < -90 || req.Lat > 90 || req.Lng < -180 || req.Lng > 180 {
+		return nil, errors.New("invalid coordinates")
+	}
+
+	// Call geospatial service to resolve boundaries
+	cfg := config.Get()
+	geoHost := cfg.Services.Endpoints["geospatial"]
+	geoURL := fmt.Sprintf("http://%s:%d/api/v1/geo/resolve", geoHost.Host, geoHost.HTTPPort)
+
+	payload, _ := json.Marshal(map[string]float64{"lat": req.Lat, "lng": req.Lng})
+	resp, err := http.Post(geoURL, "application/json", bytes.NewReader(payload))
+
+	var boundaries []model.Boundary
+	var primaryBoundaryID, primaryBoundaryName, primaryBoundaryLevel string
+
+	if err == nil && resp.StatusCode == 200 {
+		defer resp.Body.Close()
+		var geoResp struct {
+			Boundaries []struct {
+				ID    string `json:"id"`
+				Name  string `json:"name"`
+				Level string `json:"level"`
+				Track string `json:"track"`
+			} `json:"boundaries"`
+		}
+		if json.NewDecoder(resp.Body).Decode(&geoResp) == nil {
+			for _, b := range geoResp.Boundaries {
+				boundaries = append(boundaries, model.Boundary{
+					ID: b.ID, Name: b.Name, Level: b.Level, Track: b.Track,
+				})
+			}
+			// Primary = most granular (last in sorted list)
+			if len(geoResp.Boundaries) > 0 {
+				last := geoResp.Boundaries[len(geoResp.Boundaries)-1]
+				primaryBoundaryID = last.ID
+				primaryBoundaryName = last.Name
+				primaryBoundaryLevel = last.Level
+			}
+		}
+	}
+
+	// Store location + primary boundary in users table
+	if err := s.repo.UpdateLocation(ctx, userID, req.Lat, req.Lng, primaryBoundaryID); err != nil {
+		return nil, fmt.Errorf("failed to update location: %w", err)
+	}
+
+	// Publish location event
+	evtPayload, _ := json.Marshal(map[string]interface{}{
+		"user_id":     userID,
+		"lat":         req.Lat,
+		"lng":         req.Lng,
+		"boundary_id": primaryBoundaryID,
+	})
+	_ = s.producer.Publish(ctx, events.TopicUserRegistered, userID, evtPayload)
+
+	return &model.UpdateLocationResponse{
+		Message:       "location updated",
+		BoundaryID:    primaryBoundaryID,
+		BoundaryName:  primaryBoundaryName,
+		BoundaryLevel: primaryBoundaryLevel,
+		Boundaries:    boundaries,
+	}, nil
 }
 
 // VerifyAadhaar processes offline Aadhaar XML verification for a user.

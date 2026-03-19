@@ -1,4 +1,6 @@
 import { useCallback } from 'react';
+import { Platform } from 'react-native';
+import * as Location from 'expo-location';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { saveTokens } from '../lib/auth';
@@ -22,11 +24,16 @@ interface ProfileResponse {
   name: string;
   phone: string;
   email?: string;
+  role?: string;
   verification_level?: string;
   avatar_url?: string;
   civic_score?: number;
   reputation_tier?: string;
   preferred_language?: string;
+  boundary_id?: string;
+  boundary_name?: string;
+  lat?: number;
+  lng?: number;
   created_at: string;
 }
 
@@ -42,6 +49,25 @@ function profileToUser(profile: ProfileResponse): User {
     reputationTier: profile.reputation_tier,
     createdAt: profile.created_at,
   };
+}
+
+/** Request GPS permission and send location to backend. Non-blocking. */
+async function requestAndSendLocation() {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    await api.put('/api/v1/auth/location', {
+      lat: loc.coords.latitude,
+      lng: loc.coords.longitude,
+    });
+  } catch {
+    // Non-critical — user can update location later
+  }
 }
 
 export function useAuth() {
@@ -109,6 +135,10 @@ export function useAuth() {
 
         // Persist user + tokens in store
         login(user, tokens);
+
+        // Request GPS location and send to backend (fire-and-forget)
+        requestAndSendLocation();
+
         return { success: true };
       } catch (error) {
         return {

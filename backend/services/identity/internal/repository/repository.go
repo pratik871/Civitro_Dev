@@ -29,6 +29,10 @@ type Repository interface {
 	GetAadhaarVerificationByUser(ctx context.Context, userID string) (*model.AadhaarVerification, error)
 	GetAadhaarVerificationByUIDHash(ctx context.Context, uidHash string) (*model.AadhaarVerification, error)
 
+	// Location
+	UpdateLocation(ctx context.Context, userID string, lat, lng float64, boundaryID string) error
+	GetUserLocation(ctx context.Context, userID string) (*float64, *float64, string, string)
+
 	// Civic score
 	GetCivicScore(ctx context.Context, userID string) (int, string)
 }
@@ -151,6 +155,48 @@ func (r *PostgresRepository) UpdatePreferredLanguage(ctx context.Context, userID
 		return ErrNotFound
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Location
+// ---------------------------------------------------------------------------
+
+// UpdateLocation updates a user's GPS location and primary boundary.
+func (r *PostgresRepository) UpdateLocation(ctx context.Context, userID string, lat, lng float64, boundaryID string) error {
+	query := `
+		UPDATE users
+		SET location = ST_SetSRID(ST_MakePoint($1, $2), 4326),
+		    primary_boundary_id = NULLIF($3, '')::uuid,
+		    location_updated_at = NOW(),
+		    updated_at = NOW()
+		WHERE id = $4
+	`
+	tag, err := r.pool.Exec(ctx, query, lng, lat, boundaryID, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// GetUserLocation returns lat, lng, boundary_id, boundary_name for a user.
+func (r *PostgresRepository) GetUserLocation(ctx context.Context, userID string) (*float64, *float64, string, string) {
+	var lat, lng *float64
+	var boundaryID, boundaryName string
+	err := r.pool.QueryRow(ctx, `
+		SELECT ST_Y(u.location), ST_X(u.location),
+		       COALESCE(u.primary_boundary_id::text, ''),
+		       COALESCE(b.name, '')
+		FROM users u
+		LEFT JOIN boundaries b ON b.id = u.primary_boundary_id
+		WHERE u.id = $1 AND u.location IS NOT NULL
+	`, userID).Scan(&lat, &lng, &boundaryID, &boundaryName)
+	if err != nil {
+		return nil, nil, "", ""
+	}
+	return lat, lng, boundaryID, boundaryName
 }
 
 // ---------------------------------------------------------------------------

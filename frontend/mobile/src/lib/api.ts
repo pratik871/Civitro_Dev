@@ -6,7 +6,7 @@ import Constants from 'expo-constants';
 
 // For tunnel mode: run `npx ngrok http 8080` and paste the URL here
 // For LAN mode: set to your machine's LAN IP (e.g. '192.168.1.8')
-const DEV_API_TUNNEL = 'https://spotty-kings-march.loca.lt';
+const DEV_API_TUNNEL = 'https://api.civitro.com';
 const DEV_LAN_IP = '192.168.1.8';
 
 const getBaseUrl = (): string => {

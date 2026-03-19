@@ -42,6 +42,7 @@ func (h *Handler) RegisterProtectedRoutes(rg *gin.RouterGroup) {
 	{
 		auth.GET("/me", h.GetProfile)
 		auth.PUT("/language", h.UpdateLanguage)
+		auth.PUT("/location", h.UpdateLocation)
 		auth.POST("/verify-aadhaar", h.VerifyAadhaar)
 	}
 }
@@ -136,6 +137,29 @@ func (h *Handler) UpdateLanguage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "language updated", "language": req.Language})
+}
+
+// UpdateLocation handles PUT /auth/location.
+func (h *Handler) UpdateLocation(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	var req model.UpdateLocationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("invalid request body: "+err.Error()))
+		return
+	}
+
+	resp, err := h.svc.UpdateLocation(c.Request.Context(), userID, &req)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // VerifyAadhaar handles POST /auth/verify-aadhaar (multipart form).
