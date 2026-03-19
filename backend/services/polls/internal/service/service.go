@@ -151,6 +151,35 @@ func (s *PollService) CastVote(ctx context.Context, pollID string, req model.Cas
 	return nil
 }
 
+// RetractVote removes a user's vote from a poll.
+func (s *PollService) RetractVote(ctx context.Context, pollID, userID string) error {
+	// Verify poll exists and is still active.
+	poll, err := s.repo.GetByID(ctx, pollID)
+	if err != nil {
+		return fmt.Errorf("poll not found: %w", err)
+	}
+	if !poll.Active {
+		return fmt.Errorf("cannot retract vote on a closed poll")
+	}
+
+	// Check the user actually voted.
+	voted, err := s.repo.HasVoted(ctx, pollID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to check vote status: %w", err)
+	}
+	if !voted {
+		return fmt.Errorf("no vote to retract")
+	}
+
+	if err := s.repo.RetractVote(ctx, pollID, userID); err != nil {
+		logger.Error().Err(err).Str("poll_id", pollID).Str("user_id", userID).Msg("failed to retract vote")
+		return err
+	}
+
+	logger.Info().Str("poll_id", pollID).Str("user_id", userID).Msg("vote retracted")
+	return nil
+}
+
 // GetResults returns the poll with computed percentages.
 func (s *PollService) GetResults(ctx context.Context, pollID string) (*model.Poll, error) {
 	poll, err := s.repo.GetResults(ctx, pollID)
@@ -171,6 +200,16 @@ func (s *PollService) GetByBoundary(ctx context.Context, boundaryID string) ([]m
 
 	if polls == nil {
 		polls = []model.Poll{}
+	}
+	return polls, nil
+}
+
+// ListPolls returns all polls formatted for the frontend.
+func (s *PollService) ListPolls(ctx context.Context, userID string) ([]model.PollListResponse, error) {
+	polls, err := s.repo.ListAll(ctx, userID)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to list polls")
+		return nil, err
 	}
 	return polls, nil
 }

@@ -269,10 +269,444 @@ services:
       - "8080:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      identity:
+        condition: service_healthy
+      issues:
+        condition: service_healthy
+      ledger:
+        condition: service_healthy
+      rating:
+        condition: service_healthy
+      notifications:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - civitro-network
+
+  # ════════════════════════════════════════════════════════════
+  # Go Backend Services
+  # ════════════════════════════════════════════════════════════
+
+  # ── MVP Services (always start) ────────────────────────────
+
+  identity:
+    build:
+      context: ../backend
+      dockerfile: services/identity/Dockerfile
+    container_name: civitro-identity
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  issues:
+    build:
+      context: ../backend
+      dockerfile: services/issues/Dockerfile
+    container_name: civitro-issues
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  ledger:
+    build:
+      context: ../backend
+      dockerfile: services/ledger/Dockerfile
+    container_name: civitro-ledger
+    restart: unless-stopped
+    ports:
+      - "8006:8006"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8006/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  rating:
+    build:
+      context: ../backend
+      dockerfile: services/rating/Dockerfile
+    container_name: civitro-rating
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8007/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  notifications:
+    build:
+      context: ../backend
+      dockerfile: services/notifications/Dockerfile
+    container_name: civitro-notifications
+    restart: unless-stopped
+    ports:
+      - "8017:8017"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8017/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  # ── Wave 2 Services (start with --profile wave2) ──────────
+
+  geospatial:
+    build:
+      context: ../backend
+      dockerfile: services/geospatial/Dockerfile
+    container_name: civitro-geospatial
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8002:8002"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8002/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  registry:
+    build:
+      context: ../backend
+      dockerfile: services/registry/Dockerfile
+    container_name: civitro-registry
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8003:8003"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8003/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  voices:
+    build:
+      context: ../backend
+      dockerfile: services/voices/Dockerfile
+    container_name: civitro-voices
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8004:8004"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8004/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  reputation:
+    build:
+      context: ../backend
+      dockerfile: services/reputation/Dockerfile
+    container_name: civitro-reputation
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8012:8012"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8012/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  polls:
+    build:
+      context: ../backend
+      dockerfile: services/polls/Dockerfile
+    container_name: civitro-polls
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8013:8013"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8013/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  messaging:
+    build:
+      context: ../backend
+      dockerfile: services/messaging/Dockerfile
+    container_name: civitro-messaging
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8014:8014"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8014/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  search:
+    build:
+      context: ../backend
+      dockerfile: services/search/Dockerfile
+    container_name: civitro-search
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8015:8015"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8015/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  admin:
+    build:
+      context: ../backend
+      dockerfile: services/admin/Dockerfile
+    container_name: civitro-admin
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8018:8018"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8018/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - civitro-network
+
+  party:
+    build:
+      context: ../backend
+      dockerfile: services/party/Dockerfile
+    container_name: civitro-party
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8019:8019"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8019/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - civitro-network

@@ -1,18 +1,20 @@
 export interface User {
   id: string;
   name: string;
-  email: string;
   phone: string;
+  email?: string;
+  verificationLevel?: string;
   avatarUrl?: string;
-  civicScore: number;
-  ward: string;
-  constituency: string;
-  district: string;
-  state: string;
-  issuesReported: number;
-  issuesResolved: number;
-  voicesCreated: number;
-  pollsVoted: number;
+  civicScore?: number;
+  reputationTier?: string;
+  ward?: string;
+  constituency?: string;
+  district?: string;
+  state?: string;
+  issuesReported?: number;
+  issuesResolved?: number;
+  voicesCreated?: number;
+  pollsVoted?: number;
   createdAt: string;
 }
 
@@ -35,6 +37,4 @@ export interface RegisterRequest {
   name: string;
   phone: string;
   email?: string;
-  ward: string;
-  constituency: string;
 }

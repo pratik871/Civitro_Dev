@@ -13,12 +13,23 @@ export type RootStackParamList = {
   Search: undefined;
   CHI: { constituencyId?: string };
   Profile: undefined;
+  IssuesList: undefined;
+  VoiceDetail: { voiceId: string };
+  CreateVoice: undefined;
+  VoicesList: undefined;
+  Language: undefined;
+  NotificationSettings: undefined;
+  Privacy: undefined;
+  HelpSupport: undefined;
+  Terms: undefined;
+  About: undefined;
 };
 
 export type AuthStackParamList = {
   Login: undefined;
   Register: { phone?: string };
   OTPVerify: { phone: string; isRegistering?: boolean };
+  AadhaarVerify: { userId: string };
 };
 
 export type MainTabParamList = {

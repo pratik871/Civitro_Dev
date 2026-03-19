@@ -2,7 +2,7 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-COPY ../../pkg ./pkg
+COPY pkg/ ./pkg/
 COPY services/ledger/go.mod services/ledger/go.sum ./services/ledger/
 WORKDIR /app/services/ledger
 RUN go mod download

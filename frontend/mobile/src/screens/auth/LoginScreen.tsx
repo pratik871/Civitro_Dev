@@ -14,22 +14,29 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAuth } from '../../hooks/useAuth';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginNavProp>();
+  const { sendOTP, isLoading } = useAuth();
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
 
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     if (phone.length !== 10) {
       setError('Please enter a valid 10-digit mobile number');
       return;
     }
     setError('');
-    navigation.navigate('OTPVerify', { phone, isRegistering: false });
+    const result = await sendOTP(phone);
+    if (result.success) {
+      navigation.navigate('OTPVerify', { phone, isRegistering: false });
+    } else {
+      setError(result.error || 'Failed to send OTP');
+    }
   };
 
   return (
@@ -41,6 +48,9 @@ export const LoginScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        bounces={false}
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View style={styles.logoContainer}>
@@ -79,6 +89,7 @@ export const LoginScreen: React.FC = () => {
             onPress={handleSendOTP}
             fullWidth
             size="lg"
+            loading={isLoading}
           />
 
           <View style={styles.registerRow}>
@@ -109,8 +120,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing['5xl'],
   },
   header: {
     alignItems: 'center',

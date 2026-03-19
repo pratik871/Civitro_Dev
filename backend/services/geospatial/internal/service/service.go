@@ -25,7 +25,8 @@ func New(repo repository.Repository, producer *events.Producer) *Service {
 	}
 }
 
-// ResolveLocation resolves a lat/lng coordinate to all containing boundaries.
+// ResolveLocation resolves a lat/lng coordinate to all containing boundaries,
+// grouped by governance track (administrative, electoral, urban/rural local body).
 func (s *Service) ResolveLocation(ctx context.Context, lat, lng float64) (*model.ResolveResponse, error) {
 	if lat < -90 || lat > 90 {
 		return nil, errors.New("latitude must be between -90 and 90")
@@ -39,6 +40,9 @@ func (s *Service) ResolveLocation(ctx context.Context, lat, lng float64) (*model
 		return nil, fmt.Errorf("failed to resolve location: %w", err)
 	}
 
+	// Build governance chain grouped by track
+	chain := buildGovernanceChain(boundaries)
+
 	// Publish location resolved event
 	payload, _ := json.Marshal(map[string]interface{}{
 		"lat":            lat,
@@ -47,7 +51,30 @@ func (s *Service) ResolveLocation(ctx context.Context, lat, lng float64) (*model
 	})
 	_ = s.producer.Publish(ctx, events.TopicLocationResolved, fmt.Sprintf("%.6f,%.6f", lat, lng), payload)
 
-	return &model.ResolveResponse{Boundaries: boundaries}, nil
+	return &model.ResolveResponse{
+		Boundaries:      boundaries,
+		GovernanceChain: chain,
+	}, nil
+}
+
+// buildGovernanceChain groups boundaries into administrative, electoral, and local body tracks.
+func buildGovernanceChain(boundaries []model.Boundary) *model.GovernanceChain {
+	if len(boundaries) == 0 {
+		return nil
+	}
+
+	chain := &model.GovernanceChain{}
+	for _, b := range boundaries {
+		switch b.Track {
+		case model.TrackAdministrative:
+			chain.Administrative = append(chain.Administrative, b)
+		case model.TrackElectoral:
+			chain.Electoral = append(chain.Electoral, b)
+		case model.TrackUrban, model.TrackRural:
+			chain.LocalBody = append(chain.LocalBody, b)
+		}
+	}
+	return chain
 }
 
 // GetBoundary retrieves a boundary by its ID.
@@ -65,7 +92,6 @@ func (s *Service) GetBoundary(ctx context.Context, id string) (*model.BoundaryRe
 
 // GetChildren retrieves all child boundaries of a given boundary.
 func (s *Service) GetChildren(ctx context.Context, parentID string) (*model.ChildrenResponse, error) {
-	// Verify parent exists
 	_, err := s.repo.GetBoundaryByID(ctx, parentID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -104,4 +130,14 @@ func (s *Service) AssignRepresentatives(ctx context.Context, userID string, assi
 		}
 	}
 	return nil
+}
+
+// GetNomenclature retrieves governance naming for a state.
+func (s *Service) GetNomenclature(ctx context.Context, stateCode string) (*model.NomenclatureResponse, error) {
+	entries, err := s.repo.GetNomenclature(ctx, stateCode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get nomenclature: %w", err)
+	}
+
+	return &model.NomenclatureResponse{Entries: entries}, nil
 }

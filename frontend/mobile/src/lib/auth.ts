@@ -1,7 +1,5 @@
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AuthTokens, User } from '../types/user';
-
-const storage = new MMKV({ id: 'civitro-auth' });
 
 const KEYS = {
   ACCESS_TOKEN: 'auth.accessToken',
@@ -10,36 +8,46 @@ const KEYS = {
   USER: 'auth.user',
 } as const;
 
-export function saveTokens(tokens: AuthTokens): void {
-  storage.set(KEYS.ACCESS_TOKEN, tokens.accessToken);
-  storage.set(KEYS.REFRESH_TOKEN, tokens.refreshToken);
-  storage.set(KEYS.EXPIRES_AT, tokens.expiresAt);
+export async function saveTokens(tokens: AuthTokens): Promise<void> {
+  await AsyncStorage.multiSet([
+    [KEYS.ACCESS_TOKEN, tokens.accessToken],
+    [KEYS.REFRESH_TOKEN, tokens.refreshToken],
+    [KEYS.EXPIRES_AT, String(tokens.expiresAt)],
+  ]);
 }
 
-export function getTokens(): AuthTokens | null {
-  const accessToken = storage.getString(KEYS.ACCESS_TOKEN);
-  const refreshToken = storage.getString(KEYS.REFRESH_TOKEN);
-  const expiresAt = storage.getNumber(KEYS.EXPIRES_AT);
+export async function getTokens(): Promise<AuthTokens | null> {
+  const values = await AsyncStorage.multiGet([
+    KEYS.ACCESS_TOKEN,
+    KEYS.REFRESH_TOKEN,
+    KEYS.EXPIRES_AT,
+  ]);
 
-  if (!accessToken || !refreshToken || expiresAt === undefined) {
+  const accessToken = values[0][1];
+  const refreshToken = values[1][1];
+  const expiresAt = values[2][1];
+
+  if (!accessToken || !refreshToken || !expiresAt) {
     return null;
   }
 
-  return { accessToken, refreshToken, expiresAt };
+  return { accessToken, refreshToken, expiresAt: Number(expiresAt) };
 }
 
-export function clearTokens(): void {
-  storage.delete(KEYS.ACCESS_TOKEN);
-  storage.delete(KEYS.REFRESH_TOKEN);
-  storage.delete(KEYS.EXPIRES_AT);
+export async function clearTokens(): Promise<void> {
+  await AsyncStorage.multiRemove([
+    KEYS.ACCESS_TOKEN,
+    KEYS.REFRESH_TOKEN,
+    KEYS.EXPIRES_AT,
+  ]);
 }
 
-export function saveUser(user: User): void {
-  storage.set(KEYS.USER, JSON.stringify(user));
+export async function saveUser(user: User): Promise<void> {
+  await AsyncStorage.setItem(KEYS.USER, JSON.stringify(user));
 }
 
-export function getUser(): User | null {
-  const userJson = storage.getString(KEYS.USER);
+export async function getUser(): Promise<User | null> {
+  const userJson = await AsyncStorage.getItem(KEYS.USER);
   if (!userJson) return null;
   try {
     return JSON.parse(userJson) as User;
@@ -48,17 +56,24 @@ export function getUser(): User | null {
   }
 }
 
-export function clearUser(): void {
-  storage.delete(KEYS.USER);
+export async function clearUser(): Promise<void> {
+  await AsyncStorage.removeItem(KEYS.USER);
 }
 
-export function clearAll(): void {
-  clearTokens();
-  clearUser();
+export async function clearAll(): Promise<void> {
+  await clearTokens();
+  await clearUser();
 }
 
-export function isTokenExpired(): boolean {
-  const tokens = getTokens();
+export async function isTokenExpired(): Promise<boolean> {
+  const tokens = await getTokens();
   if (!tokens) return true;
   return Date.now() > tokens.expiresAt;
+}
+
+export async function getAccessToken(): Promise<string | null> {
+  const tokens = await getTokens();
+  if (!tokens) return null;
+  if (Date.now() > tokens.expiresAt) return null;
+  return tokens.accessToken;
 }

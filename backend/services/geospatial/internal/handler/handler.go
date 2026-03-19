@@ -27,10 +27,12 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		geo.GET("/boundaries/:id", h.GetBoundary)
 		geo.GET("/boundaries/:id/children", h.GetChildren)
 		geo.GET("/user/:id/representatives", h.GetUserRepresentatives)
+		geo.GET("/nomenclature/:state_code", h.GetNomenclature)
 	}
 }
 
 // ResolveLocation handles POST /geo/resolve.
+// Returns all boundaries containing the point, grouped by governance track.
 func (h *Handler) ResolveLocation(c *gin.Context) {
 	var req model.ResolveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -90,6 +92,24 @@ func (h *Handler) GetUserRepresentatives(c *gin.Context) {
 	}
 
 	resp, err := h.svc.GetUserRepresentatives(c.Request.Context(), userID)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// GetNomenclature handles GET /geo/nomenclature/:state_code.
+// Returns the state-specific governance naming (e.g., "Panchayat Samiti" for MH block level).
+func (h *Handler) GetNomenclature(c *gin.Context) {
+	stateCode := c.Param("state_code")
+	if stateCode == "" {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("state_code is required"))
+		return
+	}
+
+	resp, err := h.svc.GetNomenclature(c.Request.Context(), stateCode)
 	if err != nil {
 		errors.HandleError(c, err)
 		return

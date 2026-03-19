@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,10 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Constants from 'expo-constants';
 import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { ScoreRing } from '../../components/ui/ScoreRing';
@@ -18,38 +20,35 @@ import { Button } from '../../components/ui/Button';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import type { RootStackParamList } from '../../navigation/types';
 
 type ProfileNavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const BADGES = [
-  { name: 'Active Reporter', icon: '\u{1F4F0}', earned: true },
-  { name: 'Poll Participant', icon: '\u{1F5F3}', earned: true },
-  { name: 'Community Voice', icon: '\u{1F4E2}', earned: true },
-  { name: 'Verifier', icon: '\u2705', earned: false },
-  { name: 'Top Citizen', icon: '\u{1F3C6}', earned: false },
-  { name: 'Watchdog', icon: '\u{1F440}', earned: false },
-];
-
-const SETTINGS_ITEMS = [
-  { icon: '\u{1F514}', label: 'Notification Settings' },
-  { icon: '\u{1F30D}', label: 'Language' },
-  { icon: '\u{1F512}', label: 'Privacy & Security' },
-  { icon: '\u2753', label: 'Help & Support' },
-  { icon: '\u{1F4CB}', label: 'Terms of Service' },
-  { icon: '\u{2139}\uFE0F', label: 'About Civitro' },
+const SETTINGS_ITEMS: { icon: string; labelKey: string; route: keyof RootStackParamList }[] = [
+  { icon: '\u{1F514}', labelKey: 'settings.notificationSettings', route: 'NotificationSettings' },
+  { icon: '\u{1F30D}', labelKey: 'settings.language', route: 'Language' },
+  { icon: '\u{1F512}', labelKey: 'settings.privacySecurity', route: 'Privacy' },
+  { icon: '\u2753', labelKey: 'settings.helpSupport', route: 'HelpSupport' },
+  { icon: '\u{1F4CB}', labelKey: 'settings.termsOfService', route: 'Terms' },
+  { icon: '\u{2139}\uFE0F', labelKey: 'settings.aboutCivitro', route: 'About' },
 ];
 
 export const ProfileScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<ProfileNavProp>();
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
+  const { refreshProfile } = useAuth();
+
+  // Refresh civic score whenever this screen comes into focus
+  useFocusEffect(useCallback(() => { refreshProfile(); }, [refreshProfile]));
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('profile.logout'), t('profile.logoutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Logout',
+        text: t('profile.logout'),
         style: 'destructive',
         onPress: logout,
       },
@@ -72,100 +71,94 @@ export const ProfileScreen: React.FC = () => {
           backgroundColor={colors.navy}
         />
         <Text style={styles.name}>{user?.name || 'Citizen'}</Text>
-        <Text style={styles.phone}>{user?.phone || '+91 XXXXXXXXXX'}</Text>
-        <Text style={styles.location}>
-          {user?.ward || 'Ward 15 - Koramangala'} | {user?.constituency || 'Bangalore South'}
-        </Text>
+        <Text style={styles.phone}>{user?.phone || ''}</Text>
+        {(user?.ward || user?.constituency) && (
+          <Text style={styles.location}>
+            {[user?.ward, user?.constituency].filter(Boolean).join(' | ')}
+          </Text>
+        )}
       </View>
 
       {/* Civic Score */}
       <Card style={styles.scoreCard}>
         <View style={styles.scoreRow}>
           <ScoreRing
-            score={user?.civicScore || 72}
+            score={user?.civicScore ?? 0}
             size={80}
             strokeWidth={6}
             label="Score"
           />
           <View style={styles.scoreInfo}>
-            <Text style={styles.scoreTitle}>Civic Score</Text>
+            <Text style={styles.scoreTitle}>{t('profile.civicScore')}</Text>
             <Text style={styles.scoreDesc}>
-              Your contribution to civic governance
+              {t('profile.civicScoreDesc')}
             </Text>
-            <Badge
-              text="Active Citizen"
-              backgroundColor={colors.success + '15'}
-              color={colors.success}
-              size="sm"
-              style={styles.scoreBadge}
-            />
+            {(user?.civicScore ?? 0) > 0 && (
+              <Badge
+                text={
+                  (user?.civicScore ?? 0) >= 75
+                    ? t('profile.starCitizen')
+                    : (user?.civicScore ?? 0) >= 50
+                    ? t('profile.activeCitizen')
+                    : t('profile.newCitizen')
+                }
+                backgroundColor={
+                  ((user?.civicScore ?? 0) >= 50 ? colors.success : colors.info) + '15'
+                }
+                color={(user?.civicScore ?? 0) >= 50 ? colors.success : colors.info}
+                size="sm"
+                style={styles.scoreBadge}
+              />
+            )}
           </View>
         </View>
       </Card>
 
       {/* Activity Stats */}
       <Card style={styles.statsCard}>
-        <Text style={styles.sectionTitle}>Your Activity</Text>
+        <Text style={styles.sectionTitle}>{t('profile.yourActivity')}</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              {user?.issuesReported || 14}
+              {user?.issuesReported ?? 0}
             </Text>
-            <Text style={styles.statLabel}>Issues Reported</Text>
+            <Text style={styles.statLabel}>{t('profile.issuesReported')}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: colors.success }]}>
-              {user?.issuesResolved || 9}
+              {user?.issuesResolved ?? 0}
             </Text>
-            <Text style={styles.statLabel}>Resolved</Text>
+            <Text style={styles.statLabel}>{t('profile.issuesResolved')}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              {user?.voicesCreated || 7}
+              {user?.voicesCreated ?? 0}
             </Text>
-            <Text style={styles.statLabel}>Voices</Text>
+            <Text style={styles.statLabel}>{t('profile.voicesCreated')}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              {user?.pollsVoted || 12}
+              {user?.pollsVoted ?? 0}
             </Text>
-            <Text style={styles.statLabel}>Polls Voted</Text>
+            <Text style={styles.statLabel}>{t('profile.pollsVoted')}</Text>
           </View>
         </View>
       </Card>
 
       {/* Badges */}
       <Card style={styles.badgesCard}>
-        <Text style={styles.sectionTitle}>Badges</Text>
-        <View style={styles.badgesGrid}>
-          {BADGES.map(badge => (
-            <View
-              key={badge.name}
-              style={[
-                styles.badgeItem,
-                !badge.earned && styles.badgeItemLocked,
-              ]}
-            >
-              <Text style={styles.badgeIcon}>{badge.icon}</Text>
-              <Text
-                style={[
-                  styles.badgeName,
-                  !badge.earned && styles.badgeNameLocked,
-                ]}
-              >
-                {badge.name}
-              </Text>
-              {!badge.earned && (
-                <Text style={styles.badgeLockIcon}>{'\u{1F512}'}</Text>
-              )}
-            </View>
-          ))}
+        <Text style={styles.sectionTitle}>{t('profile.badges')}</Text>
+        <View style={styles.emptyBadges}>
+          <Text style={styles.emptyBadgesText}>{t('profile.noBadges')}</Text>
+          <Text style={styles.emptyBadgesHint}>
+            {t('profile.earnBadges')}
+          </Text>
         </View>
       </Card>
 
       {/* Settings */}
       <Card style={styles.settingsCard}>
-        <Text style={styles.sectionTitle}>Settings</Text>
+        <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
         {SETTINGS_ITEMS.map((item, index) => (
           <TouchableOpacity
             key={index}
@@ -174,9 +167,10 @@ export const ProfileScreen: React.FC = () => {
               index < SETTINGS_ITEMS.length - 1 && styles.settingRowBorder,
             ]}
             activeOpacity={0.7}
+            onPress={() => navigation.navigate(item.route as any)}
           >
             <Text style={styles.settingIcon}>{item.icon}</Text>
-            <Text style={styles.settingLabel}>{item.label}</Text>
+            <Text style={styles.settingLabel}>{t(item.labelKey)}</Text>
             <Text style={styles.settingArrow}>{'\u203A'}</Text>
           </TouchableOpacity>
         ))}
@@ -184,7 +178,7 @@ export const ProfileScreen: React.FC = () => {
 
       {/* Logout */}
       <Button
-        title="Logout"
+        title={t('profile.logout')}
         onPress={handleLogout}
         variant="outline"
         fullWidth
@@ -193,7 +187,7 @@ export const ProfileScreen: React.FC = () => {
         textStyle={styles.logoutText}
       />
 
-      <Text style={styles.versionText}>Civitro v1.0.0</Text>
+      <Text style={styles.versionText}>Civitro v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
 
       <View style={styles.bottomSpacer} />
     </ScrollView>
@@ -283,42 +277,20 @@ const styles = StyleSheet.create({
   badgesCard: {
     marginBottom: spacing.md,
   },
-  badgesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  badgeItem: {
-    width: '30%',
-    flexGrow: 1,
+  emptyBadges: {
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary + '06',
-    borderRadius: borderRadius.lg,
-    position: 'relative',
+    paddingVertical: spacing.xl,
   },
-  badgeItemLocked: {
-    backgroundColor: colors.backgroundGray,
-    opacity: 0.6,
-  },
-  badgeIcon: {
-    fontSize: 24,
+  emptyBadgesText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textMuted,
     marginBottom: spacing.xs,
   },
-  badgeName: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  badgeNameLocked: {
+  emptyBadgesHint: {
+    fontSize: 13,
     color: colors.textMuted,
-  },
-  badgeLockIcon: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    fontSize: 10,
+    textAlign: 'center',
   },
   settingsCard: {
     marginBottom: spacing.lg,

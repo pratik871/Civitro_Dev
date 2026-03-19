@@ -2,7 +2,7 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-COPY ../../pkg ./pkg
+COPY pkg/ ./pkg/
 COPY services/polls/go.mod services/polls/go.sum ./services/polls/
 WORKDIR /app/services/polls
 RUN go mod download

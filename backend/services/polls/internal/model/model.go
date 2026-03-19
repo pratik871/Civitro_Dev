@@ -63,3 +63,30 @@ type CastVoteRequest struct {
 	UserID   string `json:"user_id" binding:"required"`
 	OptionID string `json:"option_id" binding:"required"`
 }
+
+// PollOptionResponse is the frontend-facing shape for a poll option.
+type PollOptionResponse struct {
+	ID         string  `json:"id"`
+	Text       string  `json:"text"`
+	Votes      int     `json:"votes"`
+	Percentage float64 `json:"percentage"`
+}
+
+// PollListResponse is the frontend-facing shape for a poll in the list endpoint.
+type PollListResponse struct {
+	ID               string               `json:"id"`
+	Title            string               `json:"title"`
+	Description      string               `json:"description"`
+	Category         PollType             `json:"category"`
+	Ward             string               `json:"ward"`
+	Constituency     string               `json:"constituency"`
+	Options          []PollOptionResponse `json:"options"`
+	TotalVotes       int                  `json:"totalVotes"`
+	HasVoted         bool                 `json:"hasVoted"`
+	SelectedOptionID string               `json:"selectedOptionId"`
+	CreatedBy        string               `json:"createdBy"`
+	CreatedByName    string               `json:"createdByName"`
+	ExpiresAt        time.Time            `json:"expiresAt"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	IsActive         bool                 `json:"isActive"`
+}

@@ -113,7 +113,7 @@ export const OTPVerifyScreen: React.FC = () => {
           {otp.map((digit, index) => (
             <TextInput
               key={index}
-              ref={ref => (inputRefs.current[index] = ref)}
+              ref={ref => { inputRefs.current[index] = ref; }}
               style={[
                 styles.otpInput,
                 digit ? styles.otpInputFilled : undefined,
@@ -154,12 +154,6 @@ export const OTPVerifyScreen: React.FC = () => {
               <Text style={styles.resendLink}>Resend OTP</Text>
             </TouchableOpacity>
           )}
-        </View>
-
-        <View style={styles.demoHint}>
-          <Text style={styles.demoText}>
-            Demo: Enter any 6 digits to proceed
-          </Text>
         </View>
       </View>
     </View>
@@ -242,17 +236,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.primary,
-  },
-  demoHint: {
-    marginTop: spacing['3xl'],
-    padding: spacing.md,
-    backgroundColor: colors.info + '10',
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  demoText: {
-    fontSize: 13,
-    color: colors.info,
-    fontWeight: '500',
   },
 });

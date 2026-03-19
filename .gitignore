@@ -50,7 +50,7 @@ pnpm-lock.yaml
 # Config (keep examples, ignore real configs)
 # =========================
 config/local.yaml
-config/production.yaml
+# production.yaml is safe to commit (no secrets, only ${VAR} references)
 
 # =========================
 # AI model files
@@ -68,6 +68,28 @@ vendor/
 tmp/
 bin/
 *.log
+
+# =========================
+# Next.js build output
+# =========================
+.next/
+out/
+
+# =========================
+# Expo / React Native
+# =========================
+.expo/
+frontend/mobile/android/
+frontend/mobile/ios/
+
+# =========================
+# Terraform
+# =========================
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/terraform.tfvars
+infra/terraform/.terraform.lock.hcl
 
 # =========================
 # OS files

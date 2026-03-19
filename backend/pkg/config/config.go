@@ -401,10 +401,12 @@ type OTPConfig struct {
 }
 
 type AadhaarConfig struct {
-	Provider  string `yaml:"provider"   json:"provider"   mapstructure:"provider"`
-	APIKey    string `yaml:"api_key"    json:"api_key"    mapstructure:"api_key"`
-	SecretKey string `yaml:"secret_key" json:"secret_key" mapstructure:"secret_key"`
-	Endpoint  string `yaml:"endpoint"   json:"endpoint"   mapstructure:"endpoint"`
+	Provider    string `yaml:"provider"      json:"provider"      mapstructure:"provider"`
+	APIKey      string `yaml:"api_key"       json:"api_key"       mapstructure:"api_key"`
+	SecretKey   string `yaml:"secret_key"    json:"secret_key"    mapstructure:"secret_key"`
+	Endpoint    string `yaml:"endpoint"      json:"endpoint"      mapstructure:"endpoint"`
+	CertDir     string `yaml:"cert_dir"      json:"cert_dir"      mapstructure:"cert_dir"`
+	MaxFileSize int    `yaml:"max_file_size" json:"max_file_size" mapstructure:"max_file_size"`
 }
 
 // -----------------------------------------------------------------------------
@@ -436,6 +438,7 @@ type SMSConfig struct {
 	Provider string `yaml:"provider"  json:"provider"  mapstructure:"provider"`
 	APIKey   string `yaml:"api_key"   json:"api_key"   mapstructure:"api_key"`
 	SenderID string `yaml:"sender_id" json:"sender_id" mapstructure:"sender_id"`
+	Endpoint string `yaml:"endpoint"  json:"endpoint"  mapstructure:"endpoint"`
 }
 
 // -----------------------------------------------------------------------------

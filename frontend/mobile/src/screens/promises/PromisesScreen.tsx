@@ -6,10 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import api from '../../lib/api';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatDate } from '../../lib/utils';
@@ -26,64 +29,6 @@ interface PromiseItem {
   category: string;
 }
 
-const MOCK_PROMISES: PromiseItem[] = [
-  {
-    id: 'p1',
-    leaderName: 'Raghavendra Rao',
-    leaderRole: 'Ward Councillor',
-    title: 'Complete road repairs in all blocks',
-    description: 'Repair all potholes and damaged roads in Ward 15 within 6 months.',
-    status: 'in_progress',
-    progress: 65,
-    deadline: '2026-03-31',
-    category: 'Infrastructure',
-  },
-  {
-    id: 'p2',
-    leaderName: 'Raghavendra Rao',
-    leaderRole: 'Ward Councillor',
-    title: 'New public park in 3rd Block',
-    description: 'Build a new public park with children\'s play area and walking track.',
-    status: 'in_progress',
-    progress: 90,
-    deadline: '2026-01-15',
-    category: 'Environment',
-  },
-  {
-    id: 'p3',
-    leaderName: 'Kavitha Sharma',
-    leaderRole: 'MLA',
-    title: 'Improve public transport connectivity',
-    description: 'Add 5 new bus routes connecting Koramangala to outer ring road areas.',
-    status: 'pending',
-    progress: 10,
-    deadline: '2026-06-30',
-    category: 'Transport',
-  },
-  {
-    id: 'p4',
-    leaderName: 'Raghavendra Rao',
-    leaderRole: 'Ward Councillor',
-    title: 'Daily garbage collection',
-    description: 'Ensure daily garbage collection in all residential areas.',
-    status: 'fulfilled',
-    progress: 100,
-    deadline: '2025-09-30',
-    category: 'Cleanliness',
-  },
-  {
-    id: 'p5',
-    leaderName: 'Kavitha Sharma',
-    leaderRole: 'MLA',
-    title: '24/7 water supply for all wards',
-    description: 'Ensure uninterrupted water supply to all wards in the constituency.',
-    status: 'broken',
-    progress: 25,
-    deadline: '2025-12-31',
-    category: 'Water',
-  },
-];
-
 const STATUS_CONFIG = {
   pending: { color: colors.textMuted, label: 'Pending', icon: '\u23F3' },
   in_progress: { color: colors.warning, label: 'In Progress', icon: '\u{1F3D7}' },
@@ -93,17 +38,40 @@ const STATUS_CONFIG = {
 
 export const PromisesScreen: React.FC = () => {
   const [filter, setFilter] = useState<string>('all');
+  const { data: promises, isLoading } = useQuery<PromiseItem[]>({
+    queryKey: ['promises'],
+    queryFn: () => api.get('/api/v1/issues/promises'),
+    staleTime: 60000,
+  });
 
   const filters = ['all', 'in_progress', 'fulfilled', 'pending', 'broken'];
 
+  const allPromises = promises ?? [];
+
   const filtered = filter === 'all'
-    ? MOCK_PROMISES
-    : MOCK_PROMISES.filter(p => p.status === filter);
+    ? allPromises
+    : allPromises.filter(p => p.status === filter);
 
   // Summary
-  const total = MOCK_PROMISES.length;
-  const fulfilled = MOCK_PROMISES.filter(p => p.status === 'fulfilled').length;
-  const broken = MOCK_PROMISES.filter(p => p.status === 'broken').length;
+  const total = allPromises.length;
+  const fulfilled = allPromises.filter(p => p.status === 'fulfilled').length;
+  const broken = allPromises.filter(p => p.status === 'broken').length;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (allPromises.length === 0) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.emptyText}>No promises tracked yet</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -236,6 +204,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,

@@ -2,7 +2,7 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-COPY ../../pkg ./pkg
+COPY pkg/ ./pkg/
 COPY services/reputation/go.mod services/reputation/go.sum ./services/reputation/
 WORKDIR /app/services/reputation
 RUN go mod download

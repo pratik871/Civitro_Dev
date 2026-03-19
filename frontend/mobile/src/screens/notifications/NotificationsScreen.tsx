@@ -6,18 +6,20 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
+import { useNotifications, useMarkAllRead } from '../../hooks/useNotifications';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime } from '../../lib/utils';
 
-interface Notification {
+interface NotificationItem {
   id: string;
-  type: 'issue_update' | 'poll' | 'achievement' | 'system' | 'leader';
+  type: string;
   title: string;
   body: string;
-  timestamp: string;
   read: boolean;
+  created_at: string;
 }
 
 const NOTIFICATION_ICONS: Record<string, string> = {
@@ -28,59 +30,13 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   leader: '\u{1F464}',
 };
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'notif-1',
-    type: 'issue_update',
-    title: 'Issue Update',
-    body: 'Your pothole report on 4th Block Junction has been assigned to a maintenance crew.',
-    timestamp: '2025-11-30T14:30:00Z',
-    read: false,
-  },
-  {
-    id: 'notif-2',
-    type: 'poll',
-    title: 'New Poll Available',
-    body: 'Vote on preferred timing for weekly street cleaning in your ward.',
-    timestamp: '2025-11-30T10:00:00Z',
-    read: false,
-  },
-  {
-    id: 'notif-3',
-    type: 'achievement',
-    title: 'Badge Earned!',
-    body: 'You earned the "Active Reporter" badge for reporting 10+ issues. Civic score +5.',
-    timestamp: '2025-11-29T18:00:00Z',
-    read: false,
-  },
-  {
-    id: 'notif-4',
-    type: 'issue_update',
-    title: 'Issue Resolved',
-    body: 'The broken streetlight on 80ft Road has been repaired. Please verify the resolution.',
-    timestamp: '2025-11-28T16:30:00Z',
-    read: true,
-  },
-  {
-    id: 'notif-5',
-    type: 'leader',
-    title: 'Leader Response',
-    body: 'Ward Councillor Raghavendra Rao responded to the community petition on park renovation.',
-    timestamp: '2025-11-27T12:00:00Z',
-    read: true,
-  },
-  {
-    id: 'notif-6',
-    type: 'system',
-    title: 'Water Supply Alert',
-    body: 'Scheduled maintenance: Water supply will be disrupted on Dec 2-3 in Ward 15.',
-    timestamp: '2025-11-26T09:00:00Z',
-    read: true,
-  },
-];
-
 export const NotificationsScreen: React.FC = () => {
-  const renderNotification = ({ item }: { item: Notification }) => (
+  const { data: notifications, isLoading } = useNotifications();
+  const markAllRead = useMarkAllRead();
+
+  const unreadCount = (notifications ?? []).filter(n => !n.read).length;
+
+  const renderNotification = ({ item }: { item: NotificationItem }) => (
     <TouchableOpacity
       style={[styles.notifRow, !item.read && styles.notifUnread]}
       activeOpacity={0.7}
@@ -101,7 +57,7 @@ export const NotificationsScreen: React.FC = () => {
             {item.title}
           </Text>
           <Text style={styles.notifTime}>
-            {formatRelativeTime(item.timestamp)}
+            {formatRelativeTime(item.created_at)}
           </Text>
         </View>
         <Text style={styles.notifBody} numberOfLines={2}>
@@ -111,7 +67,13 @@ export const NotificationsScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -122,19 +84,25 @@ export const NotificationsScreen: React.FC = () => {
           <Text style={styles.unreadBarText}>
             {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => markAllRead.mutate()}>
             <Text style={styles.markAllRead}>Mark all read</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <FlatList
-        data={MOCK_NOTIFICATIONS}
+        data={notifications ?? []}
         renderItem={renderNotification}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
+            <Text style={styles.emptyText}>No notifications yet</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -143,6 +111,12 @@ export const NotificationsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.background,
   },
   unreadBar: {
@@ -222,5 +196,19 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.borderLight,
     marginLeft: 72,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 100,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
   },
 });

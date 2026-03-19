@@ -1,0 +1,18 @@
+# Copy this to terraform.tfvars and fill in your values
+
+aws_region   = "ap-south-1"
+environment  = "dev"
+
+# Instance size: t3.medium (2 vCPU, 4GB) for 1000 testers
+# Upgrade to t3.xlarge (4 vCPU, 16GB) when needed
+instance_type = "t3.medium"
+
+# Disk size in GB (Docker images + data)
+disk_size_gb = 50
+
+# Your SSH public key (cat ~/.ssh/id_rsa.pub)
+ssh_public_key = "ssh-rsa AAAA... your-key-here"
+
+# Restrict SSH to your IP (find yours: curl ifconfig.me)
+# Example: ["203.0.113.42/32"]
+ssh_allowed_cidrs = ["0.0.0.0/0"]

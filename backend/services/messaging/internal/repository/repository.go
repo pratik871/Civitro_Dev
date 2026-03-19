@@ -21,12 +21,12 @@ func NewMessageRepository(db *pgxpool.Pool) *MessageRepository {
 // CreateMessage inserts a new message.
 func (r *MessageRepository) CreateMessage(ctx context.Context, msg *model.Message) error {
 	query := `
-		INSERT INTO messages (id, conversation_id, sender_id, text, media_url, read_by, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+		INSERT INTO messages (id, conversation_id, sender_id, text, media_url, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`
 
 	_, err := r.db.Exec(ctx, query,
 		msg.ID, msg.ConversationID, msg.SenderID,
-		msg.Text, msg.MediaURL, msg.ReadBy, msg.CreatedAt,
+		msg.Text, msg.MediaURL, msg.CreatedAt,
 	)
 	return err
 }
@@ -43,7 +43,7 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 
 	if cursor == "" {
 		query = `
-			SELECT id, conversation_id, sender_id, text, media_url, read_by, created_at
+			SELECT id, conversation_id, sender_id, text, media_url, created_at
 			FROM messages
 			WHERE conversation_id = $1
 			ORDER BY created_at DESC
@@ -51,7 +51,7 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 		args = []interface{}{conversationID, limit}
 	} else {
 		query = `
-			SELECT id, conversation_id, sender_id, text, media_url, read_by, created_at
+			SELECT id, conversation_id, sender_id, text, media_url, created_at
 			FROM messages
 			WHERE conversation_id = $1 AND created_at < (
 				SELECT created_at FROM messages WHERE id = $2
@@ -72,7 +72,7 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 		var m model.Message
 		if err := rows.Scan(
 			&m.ID, &m.ConversationID, &m.SenderID,
-			&m.Text, &m.MediaURL, &m.ReadBy, &m.CreatedAt,
+			&m.Text, &m.MediaURL, &m.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -82,6 +82,7 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 }
 
 // GetConversations returns all conversations for a user with preview information.
+// Uses the conversation_participants join table and last_read_at for unread counts.
 func (r *MessageRepository) GetConversations(ctx context.Context, userID string) ([]model.ConversationPreview, error) {
 	query := `
 		SELECT c.id,
@@ -90,12 +91,13 @@ func (r *MessageRepository) GetConversations(ctx context.Context, userID string)
 		           ''
 		       ) AS last_message,
 		       COALESCE(
-		           (SELECT COUNT(*) FROM messages
-		            WHERE conversation_id = c.id AND NOT ($1 = ANY(read_by))),
+		           (SELECT COUNT(*) FROM messages m
+		            WHERE m.conversation_id = c.id
+		              AND m.created_at > COALESCE(cp.last_read_at, '1970-01-01'::timestamp)),
 		           0
 		       ) AS unread_count
 		FROM conversations c
-		WHERE $1 = ANY(c.participants)
+		JOIN conversation_participants cp ON cp.conversation_id = c.id AND cp.user_id = $1
 		ORDER BY (
 			SELECT MAX(created_at) FROM messages WHERE conversation_id = c.id
 		) DESC NULLS LAST`
@@ -121,42 +123,87 @@ func (r *MessageRepository) GetConversations(ctx context.Context, userID string)
 	return previews, rows.Err()
 }
 
-// CreateConversation inserts a new conversation.
+// CreateConversation inserts a new conversation and its participants.
 func (r *MessageRepository) CreateConversation(ctx context.Context, conv *model.Conversation) error {
-	query := `
-		INSERT INTO conversations (id, type, participants, created_at)
-		VALUES ($1, $2, $3, $4)`
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 
-	_, err := r.db.Exec(ctx, query,
-		conv.ID, conv.Type, conv.Participants, conv.CreatedAt,
-	)
-	return err
+	// Insert the conversation row.
+	convQuery := `
+		INSERT INTO conversations (id, type, created_at)
+		VALUES ($1, $2, $3)`
+
+	_, err = tx.Exec(ctx, convQuery, conv.ID, conv.Type, conv.CreatedAt)
+	if err != nil {
+		return err
+	}
+
+	// Insert each participant into the join table.
+	participantQuery := `
+		INSERT INTO conversation_participants (conversation_id, user_id, joined_at)
+		VALUES ($1, $2, $3)`
+
+	for _, userID := range conv.Participants {
+		_, err = tx.Exec(ctx, participantQuery, conv.ID, userID, conv.CreatedAt)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
-// GetConversationByID returns a conversation by its ID.
+// GetConversationByID returns a conversation by its ID, including its participants.
 func (r *MessageRepository) GetConversationByID(ctx context.Context, id string) (*model.Conversation, error) {
-	query := `
-		SELECT id, type, participants, created_at
+	convQuery := `
+		SELECT id, type, created_at
 		FROM conversations
 		WHERE id = $1`
 
 	var conv model.Conversation
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&conv.ID, &conv.Type, &conv.Participants, &conv.CreatedAt,
+	err := r.db.QueryRow(ctx, convQuery, id).Scan(
+		&conv.ID, &conv.Type, &conv.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	// Fetch participants from the join table.
+	partQuery := `
+		SELECT user_id FROM conversation_participants
+		WHERE conversation_id = $1`
+
+	rows, err := r.db.Query(ctx, partQuery, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID string
+		if err := rows.Scan(&userID); err != nil {
+			return nil, err
+		}
+		conv.Participants = append(conv.Participants, userID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return &conv, nil
 }
 
-// MarkAsRead adds a user to the read_by array for all unread messages in a conversation.
+// MarkAsRead updates the last_read_at timestamp for a user in a conversation,
+// marking all current messages as read.
 func (r *MessageRepository) MarkAsRead(ctx context.Context, conversationID, userID string) error {
 	query := `
-		UPDATE messages
-		SET read_by = array_append(read_by, $1)
-		WHERE conversation_id = $2 AND NOT ($1 = ANY(read_by))`
+		UPDATE conversation_participants
+		SET last_read_at = NOW()
+		WHERE conversation_id = $1 AND user_id = $2`
 
-	_, err := r.db.Exec(ctx, query, userID, conversationID)
+	_, err := r.db.Exec(ctx, query, conversationID, userID)
 	return err
 }

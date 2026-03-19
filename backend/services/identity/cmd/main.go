@@ -14,6 +14,8 @@ import (
 	"github.com/civitro/pkg/events"
 	"github.com/civitro/pkg/logger"
 	"github.com/civitro/pkg/middleware"
+	"github.com/civitro/pkg/sms"
+	"github.com/civitro/pkg/storage"
 	"github.com/civitro/services/identity/internal/handler"
 	"github.com/civitro/services/identity/internal/repository"
 	"github.com/civitro/services/identity/internal/service"
@@ -42,14 +44,32 @@ func main() {
 	defer database.ClosePostgres()
 	log.Info().Msg("connected to database")
 
+	// Connect to Redis
+	rdb, err := database.Redis(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to connect to redis")
+	}
+	defer database.CloseRedis()
+	log.Info().Msg("connected to redis")
+
+	// Initialize S3/MinIO storage (non-fatal if unavailable)
+	store, err := storage.S3(ctx)
+	if err != nil {
+		log.Warn().Err(err).Msg("storage unavailable, photo uploads will be skipped")
+	}
+
 	// Initialize event producer
 	producer := events.NewProducer()
 	defer producer.Close()
 
+	// Initialize SMS provider
+	smsProvider := sms.NewProvider(cfg.Notifications.SMS)
+	log.Info().Str("sms_provider", smsProvider.Name()).Msg("SMS provider initialized")
+
 	// Initialize layers
 	repo := repository.NewPostgresRepository(pool)
-	svc := service.New(repo, producer)
-	h := handler.New(svc)
+	svc := service.New(repo, producer, rdb, smsProvider, store)
+	h := handler.New(svc, cfg.Auth.Aadhaar.MaxFileSize)
 
 	// Set up Gin router
 	if !cfg.App.Debug {
@@ -60,14 +80,25 @@ func main() {
 	router.Use(middleware.CORS())
 	router.Use(middleware.RequestID())
 
+	// Per-route rate limiting
+	limits := map[string]middleware.RateLimitConfig{
+		"/api/v1/auth/register":       {Max: 5, Window: time.Minute},
+		"/api/v1/auth/verify-otp":     {Max: 10, Window: time.Minute},
+		"/api/v1/auth/refresh":        {Max: 20, Window: time.Minute},
+		"/api/v1/auth/verify-aadhaar": {Max: 3, Window: time.Minute},
+	}
+	defaultRL := middleware.RateLimitConfig{Max: 60, Window: time.Minute}
+	router.Use(middleware.PerRouteRateLimit(rdb, limits, defaultRL))
+
 	// Health check (no auth required)
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "identity"})
 	})
 
-	// Public routes (no auth required for registration/login)
-	publicAPI := router.Group("/api/v1")
-	h.RegisterRoutes(publicAPI)
+	// Register routes
+	api := router.Group("/api/v1")
+	h.RegisterPublicRoutes(api)
+	h.RegisterProtectedRoutes(api)
 
 	// Start HTTP server
 	srv := &http.Server{

@@ -56,9 +56,46 @@ func (s *Service) GetByBoundary(ctx context.Context, boundaryID string) (*model.
 	return &model.RepresentativeListResponse{Representatives: reps}, nil
 }
 
+// GetByDesignation retrieves representatives by canonical designation.
+func (s *Service) GetByDesignation(ctx context.Context, designation string, boundaryID string) (*model.RepresentativeListResponse, error) {
+	reps, err := s.repo.GetByDesignation(ctx, designation, boundaryID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get representatives by designation: %w", err)
+	}
+
+	return &model.RepresentativeListResponse{Representatives: reps}, nil
+}
+
+// GetByOfficialType retrieves representatives by type (elected/appointed).
+func (s *Service) GetByOfficialType(ctx context.Context, officialType string, boundaryID string) (*model.RepresentativeListResponse, error) {
+	reps, err := s.repo.GetByOfficialType(ctx, officialType, boundaryID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get representatives by type: %w", err)
+	}
+
+	return &model.RepresentativeListResponse{Representatives: reps}, nil
+}
+
+// CreateRepresentative creates a new representative record.
+func (s *Service) CreateRepresentative(ctx context.Context, req *model.CreateRepresentativeRequest) (*model.RepresentativeResponse, error) {
+	rep, err := s.repo.Create(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create representative: %w", err)
+	}
+
+	// Publish creation event
+	payload, _ := json.Marshal(map[string]string{
+		"rep_id":      rep.ID,
+		"designation": rep.Designation,
+		"level":       rep.Level,
+	})
+	_ = s.producer.Publish(ctx, events.TopicRepClaimed, rep.ID, payload)
+
+	return &model.RepresentativeResponse{Representative: *rep}, nil
+}
+
 // ClaimProfile allows a verified user to claim a representative profile.
 func (s *Service) ClaimProfile(ctx context.Context, repID string, req *model.ClaimRequest) (*model.ClaimResponse, error) {
-	// Verify the representative exists
 	rep, err := s.repo.GetByID(ctx, repID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -78,7 +115,6 @@ func (s *Service) ClaimProfile(ctx context.Context, repID string, req *model.Cla
 		return nil, fmt.Errorf("failed to claim profile: %w", err)
 	}
 
-	// Publish claim event
 	payload, _ := json.Marshal(map[string]string{
 		"rep_id":  repID,
 		"user_id": req.UserID,
@@ -93,7 +129,6 @@ func (s *Service) ClaimProfile(ctx context.Context, repID string, req *model.Cla
 
 // AddStaff adds a staff member to a representative's team.
 func (s *Service) AddStaff(ctx context.Context, repID string, req *model.AddStaffRequest) (*model.StaffAccount, error) {
-	// Verify the representative exists and is claimed
 	rep, err := s.repo.GetByID(ctx, repID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {

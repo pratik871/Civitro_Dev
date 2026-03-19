@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '../../components/ui/Avatar';
 import { StarRating } from '../../components/ui/StarRating';
 import { ScoreRing } from '../../components/ui/ScoreRing';
@@ -8,70 +11,15 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { RatingBreakdown } from '../../components/leaders/RatingBreakdown';
 import { Button } from '../../components/ui/Button';
+import { useLeader } from '../../hooks/useLeaders';
+import api from '../../lib/api';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { GOVERNANCE_LEVEL_LABELS } from '../../types/leader';
 import { formatRelativeTime } from '../../lib/utils';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Leader, LeaderActivity } from '../../types/leader';
 
 type ProfileRouteProp = RouteProp<RootStackParamList, 'LeaderProfile'>;
-
-const MOCK_LEADER: Leader = {
-  id: 'leader-001',
-  name: 'Raghavendra Rao',
-  party: 'Bharatiya Janata Party',
-  partyAbbr: 'BJP',
-  governanceLevel: 'ward_councillor',
-  constituency: 'Bangalore South',
-  ward: 'Ward 15 - Koramangala',
-  overallRating: 3.8,
-  ratingBreakdown: {
-    responsiveness: 4.1,
-    transparency: 3.5,
-    deliveryOnPromises: 3.2,
-    accessibility: 4.5,
-    overallImpact: 3.7,
-  },
-  totalRatings: 342,
-  responseRate: 0.78,
-  chiScore: 68,
-  promisesFulfilled: 8,
-  promisesTotal: 15,
-  issuesResolved: 89,
-  issuesTotal: 142,
-  recentActivity: [
-    {
-      id: 'act-1',
-      type: 'issue_resolved',
-      title: 'Pothole on MG Road repaired',
-      description: 'The large pothole reported 2 weeks ago has been patched.',
-      timestamp: '2025-11-29T14:00:00Z',
-    },
-    {
-      id: 'act-2',
-      type: 'promise_update',
-      title: 'Park renovation 60% complete',
-      description: 'Koramangala park renovation is progressing on schedule.',
-      timestamp: '2025-11-28T10:00:00Z',
-    },
-    {
-      id: 'act-3',
-      type: 'public_statement',
-      title: 'Ward budget allocation announced',
-      description: 'Rs 2 crore allocated for road repairs in Q1 2026.',
-      timestamp: '2025-11-25T16:00:00Z',
-    },
-  ],
-};
-
-const MOCK_PROMISES = [
-  { title: 'Road repairs in all blocks', progress: 65, status: 'in_progress' as const },
-  { title: 'New park in 3rd Block', progress: 90, status: 'in_progress' as const },
-  { title: 'Improve garbage collection', progress: 100, status: 'fulfilled' as const },
-  { title: '24/7 water supply', progress: 30, status: 'in_progress' as const },
-  { title: 'Street lighting upgrade', progress: 0, status: 'pending' as const },
-];
 
 const ACTIVITY_ICONS: Record<string, string> = {
   issue_resolved: '\u2705',
@@ -80,9 +28,42 @@ const ACTIVITY_ICONS: Record<string, string> = {
   meeting: '\u{1F91D}',
 };
 
+type LeaderProfileNavProp = NativeStackNavigationProp<RootStackParamList>;
+
 export const LeaderProfileScreen: React.FC = () => {
   const route = useRoute<ProfileRouteProp>();
-  const leader = MOCK_LEADER; // In production, fetch by route.params.leaderId
+  const navigation = useNavigation<LeaderProfileNavProp>();
+  const { leaderId } = route.params;
+  const { data: leader, isLoading } = useLeader(leaderId);
+  const queryClient = useQueryClient();
+
+  const rateMutation = useMutation({
+    mutationFn: (rating: Record<string, unknown>) =>
+      api.post(`/api/v1/rating/representatives/${leaderId}`, rating),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
+      Alert.alert('Thank You', 'Your rating has been submitted.');
+    },
+    onError: (err: Error) => {
+      Alert.alert('Error', err.message || 'Could not submit rating.');
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!leader) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.notFoundText}>Leader not found</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -133,7 +114,7 @@ export const LeaderProfileScreen: React.FC = () => {
             </Text>
             <Button
               title="View Full CHI"
-              onPress={() => {}}
+              onPress={() => navigation.navigate('CHI', { constituencyId: leader.constituency })}
               variant="ghost"
               size="sm"
             />
@@ -147,10 +128,13 @@ export const LeaderProfileScreen: React.FC = () => {
         <RatingBreakdown breakdown={leader.ratingBreakdown} />
         <Button
           title="Rate This Leader"
-          onPress={() => {}}
+          onPress={() =>
+            rateMutation.mutate({ overall: 4, responsiveness: 4, transparency: 4, delivery_on_promises: 4, accessibility: 4, overall_impact: 4 })
+          }
           variant="outline"
           size="md"
           fullWidth
+          loading={rateMutation.isPending}
           style={styles.rateButton}
         />
       </Card>
@@ -163,37 +147,7 @@ export const LeaderProfileScreen: React.FC = () => {
             {leader.promisesFulfilled}/{leader.promisesTotal} kept
           </Text>
         </View>
-        {MOCK_PROMISES.map((promise, index) => (
-          <View key={index} style={styles.promiseRow}>
-            <View style={styles.promiseInfo}>
-              <Text style={styles.promiseTitle}>{promise.title}</Text>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    {
-                      width: `${promise.progress}%`,
-                      backgroundColor:
-                        promise.progress === 100
-                          ? colors.success
-                          : promise.progress > 0
-                          ? colors.primary
-                          : colors.border,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-            <Text
-              style={[
-                styles.promiseProgress,
-                { color: promise.progress === 100 ? colors.success : colors.textMuted },
-              ]}
-            >
-              {promise.progress}%
-            </Text>
-          </View>
-        ))}
+        <Text style={styles.noPromisesText}>No promises tracked yet</Text>
       </Card>
 
       {/* Key Stats */}
@@ -333,36 +287,6 @@ const styles = StyleSheet.create({
   rateButton: {
     marginTop: spacing.lg,
   },
-  promiseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    gap: spacing.md,
-  },
-  promiseInfo: {
-    flex: 1,
-  },
-  promiseTitle: {
-    fontSize: 14,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: colors.backgroundGray,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  promiseProgress: {
-    fontSize: 14,
-    fontWeight: '600',
-    width: 40,
-    textAlign: 'right',
-  },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -416,5 +340,20 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  notFoundText: {
+    fontSize: 16,
+    color: colors.textMuted,
+  },
+  noPromisesText: {
+    fontSize: 14,
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
 });

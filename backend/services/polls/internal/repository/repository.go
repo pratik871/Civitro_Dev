@@ -42,12 +42,12 @@ func (r *PollRepository) Create(ctx context.Context, poll *model.Poll) error {
 	}
 
 	optionQuery := `
-		INSERT INTO poll_options (id, poll_id, label, votes_count, percentage)
+		INSERT INTO poll_options (id, poll_id, label, votes_count, sort_order)
 		VALUES ($1, $2, $3, $4, $5)`
 
-	for _, opt := range poll.Options {
+	for i, opt := range poll.Options {
 		_, err = tx.Exec(ctx, optionQuery,
-			opt.ID, poll.ID, opt.Label, opt.VotesCount, opt.Percentage,
+			opt.ID, poll.ID, opt.Label, opt.VotesCount, int16(i+1),
 		)
 		if err != nil {
 			return err
@@ -60,8 +60,8 @@ func (r *PollRepository) Create(ctx context.Context, poll *model.Poll) error {
 // GetByID returns a poll with its options.
 func (r *PollRepository) GetByID(ctx context.Context, id string) (*model.Poll, error) {
 	pollQuery := `
-		SELECT id, created_by, boundary_id, type, question, total_votes,
-		       starts_at, ends_at, active, visibility
+		SELECT id, created_by, COALESCE(boundary_id::text, ''), type, question, total_votes,
+		       starts_at, ends_at, active, COALESCE(visibility, 'public')
 		FROM polls
 		WHERE id = $1`
 
@@ -76,10 +76,10 @@ func (r *PollRepository) GetByID(ctx context.Context, id string) (*model.Poll, e
 
 	// Fetch options.
 	optQuery := `
-		SELECT id, poll_id, label, votes_count, percentage
+		SELECT id, poll_id, label, votes_count, sort_order
 		FROM poll_options
 		WHERE poll_id = $1
-		ORDER BY id`
+		ORDER BY sort_order, id`
 
 	rows, err := r.db.Query(ctx, optQuery, id)
 	if err != nil {
@@ -89,8 +89,13 @@ func (r *PollRepository) GetByID(ctx context.Context, id string) (*model.Poll, e
 
 	for rows.Next() {
 		var opt model.PollOption
-		if err := rows.Scan(&opt.ID, &opt.PollID, &opt.Label, &opt.VotesCount, &opt.Percentage); err != nil {
+		var sortOrder int16
+		if err := rows.Scan(&opt.ID, &opt.PollID, &opt.Label, &opt.VotesCount, &sortOrder); err != nil {
 			return nil, err
+		}
+		// Compute percentage
+		if poll.TotalVotes > 0 {
+			opt.Percentage = float64(opt.VotesCount) / float64(poll.TotalVotes) * 100
 		}
 		poll.Options = append(poll.Options, opt)
 	}
@@ -150,6 +155,54 @@ func (r *PollRepository) HasVoted(ctx context.Context, pollID, userID string) (b
 	return exists, err
 }
 
+// RetractVote removes a user's vote from a poll and decrements counts.
+func (r *PollRepository) RetractVote(ctx context.Context, pollID, userID string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Find which option the user voted for.
+	var optionID string
+	err = tx.QueryRow(ctx,
+		`SELECT option_id FROM poll_votes WHERE poll_id = $1 AND user_id = $2`,
+		pollID, userID,
+	).Scan(&optionID)
+	if err != nil {
+		return fmt.Errorf("vote not found")
+	}
+
+	// Delete the vote.
+	_, err = tx.Exec(ctx,
+		`DELETE FROM poll_votes WHERE poll_id = $1 AND user_id = $2`,
+		pollID, userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Decrement option vote count.
+	_, err = tx.Exec(ctx,
+		`UPDATE poll_options SET votes_count = GREATEST(votes_count - 1, 0) WHERE id = $1 AND poll_id = $2`,
+		optionID, pollID,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Decrement total votes on poll.
+	_, err = tx.Exec(ctx,
+		`UPDATE polls SET total_votes = GREATEST(total_votes - 1, 0) WHERE id = $1`,
+		pollID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
 // GetResults returns a poll with updated percentages for each option.
 func (r *PollRepository) GetResults(ctx context.Context, pollID string) (*model.Poll, error) {
 	poll, err := r.GetByID(ctx, pollID)
@@ -170,8 +223,8 @@ func (r *PollRepository) GetResults(ctx context.Context, pollID string) (*model.
 // GetByBoundaryID returns all polls for a boundary, optionally filtered by active status.
 func (r *PollRepository) GetByBoundaryID(ctx context.Context, boundaryID string) ([]model.Poll, error) {
 	query := `
-		SELECT id, created_by, boundary_id, type, question, total_votes,
-		       starts_at, ends_at, active, visibility
+		SELECT id, created_by, COALESCE(boundary_id::text, ''), type, question, total_votes,
+		       starts_at, ends_at, active, COALESCE(visibility, 'public')
 		FROM polls
 		WHERE boundary_id = $1
 		ORDER BY created_at DESC`
@@ -194,6 +247,142 @@ func (r *PollRepository) GetByBoundaryID(ctx context.Context, boundaryID string)
 		polls = append(polls, p)
 	}
 	return polls, rows.Err()
+}
+
+// ListAll returns all polls with their options, ordered by created_at DESC.
+// For each poll, it checks whether the given userID has voted and which option was selected.
+func (r *PollRepository) ListAll(ctx context.Context, userID string) ([]model.PollListResponse, error) {
+	pollQuery := `
+		SELECT p.id, p.created_by, COALESCE(p.boundary_id::text, ''), p.type, p.question, p.total_votes,
+		       p.starts_at, p.ends_at, p.active, COALESCE(p.visibility, 'public'), p.created_at
+		FROM polls p
+		ORDER BY p.created_at DESC`
+
+	rows, err := r.db.Query(ctx, pollQuery)
+	if err != nil {
+		return nil, fmt.Errorf("list polls: %w", err)
+	}
+	defer rows.Close()
+
+	var polls []model.PollListResponse
+	var pollIDs []string
+	pollIndex := make(map[string]int)
+
+	for rows.Next() {
+		var (
+			id, createdBy, boundaryID, visibility string
+			pollType                              model.PollType
+			question                              string
+			totalVotes                            int
+			startsAt, endsAt, createdAt           time.Time
+			active                                bool
+		)
+		if err := rows.Scan(
+			&id, &createdBy, &boundaryID, &pollType, &question,
+			&totalVotes, &startsAt, &endsAt, &active, &visibility, &createdAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan poll: %w", err)
+		}
+
+		resp := model.PollListResponse{
+			ID:            id,
+			Title:         question,
+			Description:   "",
+			Category:      pollType,
+			Ward:          boundaryID,
+			Constituency:  "",
+			Options:       []model.PollOptionResponse{},
+			TotalVotes:    totalVotes,
+			HasVoted:      false,
+			CreatedBy:     createdBy,
+			CreatedByName: "",
+			ExpiresAt:     endsAt,
+			CreatedAt:     createdAt,
+			IsActive:      active,
+		}
+
+		pollIndex[id] = len(polls)
+		pollIDs = append(pollIDs, id)
+		polls = append(polls, resp)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(pollIDs) == 0 {
+		return []model.PollListResponse{}, nil
+	}
+
+	// Fetch options for all polls in one query.
+	optQuery := `
+		SELECT id, poll_id, label, votes_count
+		FROM poll_options
+		WHERE poll_id = ANY($1)
+		ORDER BY id`
+
+	optRows, err := r.db.Query(ctx, optQuery, pollIDs)
+	if err != nil {
+		return nil, fmt.Errorf("list poll options: %w", err)
+	}
+	defer optRows.Close()
+
+	for optRows.Next() {
+		var optID, pollID, label string
+		var votesCount int
+		if err := optRows.Scan(&optID, &pollID, &label, &votesCount); err != nil {
+			return nil, fmt.Errorf("scan option: %w", err)
+		}
+
+		idx, ok := pollIndex[pollID]
+		if !ok {
+			continue
+		}
+
+		pct := float64(0)
+		if polls[idx].TotalVotes > 0 {
+			pct = float64(votesCount) / float64(polls[idx].TotalVotes) * 100
+		}
+
+		polls[idx].Options = append(polls[idx].Options, model.PollOptionResponse{
+			ID:         optID,
+			Text:       label,
+			Votes:      votesCount,
+			Percentage: pct,
+		})
+	}
+	if err := optRows.Err(); err != nil {
+		return nil, err
+	}
+
+	// If a userID was provided, check which polls the user has voted on.
+	if userID != "" {
+		voteQuery := `
+			SELECT poll_id, option_id
+			FROM poll_votes
+			WHERE user_id = $1 AND poll_id = ANY($2)`
+
+		voteRows, err := r.db.Query(ctx, voteQuery, userID, pollIDs)
+		if err != nil {
+			return nil, fmt.Errorf("list user votes: %w", err)
+		}
+		defer voteRows.Close()
+
+		for voteRows.Next() {
+			var pollID, optionID string
+			if err := voteRows.Scan(&pollID, &optionID); err != nil {
+				return nil, fmt.Errorf("scan vote: %w", err)
+			}
+			if idx, ok := pollIndex[pollID]; ok {
+				polls[idx].HasVoted = true
+				polls[idx].SelectedOptionID = optionID
+			}
+		}
+		if err := voteRows.Err(); err != nil {
+			return nil, err
+		}
+	}
+
+	return polls, nil
 }
 
 // Delete removes a poll and its associated options and votes.

@@ -24,6 +24,7 @@ func (h *ReputationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.GET("/reputation/:user_id", h.GetReputation)
 	rg.GET("/reputation/:user_id/history", h.GetHistory)
 	rg.GET("/reputation/leaderboard/:boundary_id", h.GetLeaderboard)
+	rg.POST("/reputation/event", h.ProcessEvent)
 }
 
 // GetReputation returns the civic score for a user.
@@ -84,4 +85,26 @@ func (h *ReputationHandler) GetLeaderboard(c *gin.Context) {
 		"boundary_id": boundaryID,
 		"leaderboard": scores,
 	})
+}
+
+// ProcessEvent handles an incoming score event.
+// POST /reputation/event
+func (h *ReputationHandler) ProcessEvent(c *gin.Context) {
+	var req struct {
+		UserID    string `json:"user_id" binding:"required"`
+		EventType string `json:"event_type" binding:"required"`
+		Points    int    `json:"points" binding:"required"`
+		Reason    string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("invalid request: "+err.Error()))
+		return
+	}
+
+	if err := h.svc.ProcessEvent(c.Request.Context(), req.UserID, req.EventType, req.Points, req.Reason); err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "event processed"})
 }

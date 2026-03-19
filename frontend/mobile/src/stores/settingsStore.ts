@@ -1,0 +1,65 @@
+import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface SettingsState {
+  language: string; // BCP-47 code, default 'en'
+  privacySettings: {
+    showProfilePublicly: boolean;
+    allowAnonymousVoices: boolean;
+    showCivicScore: boolean;
+    locationSharing: boolean;
+    dataAnalytics: boolean;
+  };
+  isLoaded: boolean;
+  setLanguage: (code: string) => Promise<void>;
+  updatePrivacy: (key: string, value: boolean) => Promise<void>;
+  loadSettings: () => Promise<void>;
+}
+
+const SETTINGS_KEY = '@civitro_settings';
+
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  language: 'en',
+  privacySettings: {
+    showProfilePublicly: true,
+    allowAnonymousVoices: false,
+    showCivicScore: true,
+    locationSharing: true,
+    dataAnalytics: true,
+  },
+  isLoaded: false,
+
+  loadSettings: async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SETTINGS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        set({ ...parsed, isLoaded: true });
+      } else {
+        set({ isLoaded: true });
+      }
+    } catch {
+      set({ isLoaded: true });
+    }
+  },
+
+  setLanguage: async (code: string) => {
+    set({ language: code });
+    const state = get();
+    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      language: state.language,
+      privacySettings: state.privacySettings,
+    }));
+  },
+
+  updatePrivacy: async (key: string, value: boolean) => {
+    const current = get().privacySettings;
+    const updated = { ...current, [key]: value };
+    set({ privacySettings: updated });
+    const state = get();
+    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      language: state.language,
+      privacySettings: updated,
+    }));
+  },
+}));

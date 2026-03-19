@@ -1,49 +1,46 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, StatusBar, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { PollCard } from '../../components/polls/PollCard';
 import { Card } from '../../components/ui/Card';
+import { usePoll, useVotePoll, useRetractVote } from '../../hooks/usePolls';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatDate, formatNumber } from '../../lib/utils';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Poll } from '../../types/poll';
 
 type PollDetailRouteProp = RouteProp<RootStackParamList, 'PollDetail'>;
 
-const MOCK_POLL: Poll = {
-  id: 'poll-001',
-  title: 'Should the ward prioritize road repairs or park development?',
-  description: 'Help us decide how to allocate the Q1 2026 ward budget. Your vote directly influences the spending priorities.',
-  category: 'Budget',
-  ward: 'Ward 15',
-  options: [
-    { id: 'opt-1', text: 'Road Repairs', votes: 234, percentage: 52 },
-    { id: 'opt-2', text: 'Park Development', votes: 156, percentage: 35 },
-    { id: 'opt-3', text: 'Both Equally', votes: 58, percentage: 13 },
-  ],
-  totalVotes: 448,
-  hasVoted: true,
-  selectedOptionId: 'opt-1',
-  createdBy: 'leader-001',
-  createdByName: 'Ward Councillor Office',
-  expiresAt: '2025-12-15T23:59:00Z',
-  createdAt: '2025-11-28T10:00:00Z',
-  isActive: true,
-};
-
 export const PollDetailScreen: React.FC = () => {
   const route = useRoute<PollDetailRouteProp>();
-  const [poll, setPoll] = useState(MOCK_POLL);
+  const { pollId } = route.params;
+  const { data: poll, isLoading } = usePoll(pollId);
+  const voteMutation = useVotePoll();
+  const retractMutation = useRetractVote();
 
   const handleVote = (optionId: string) => {
-    Alert.alert('Vote Cast', 'Your vote has been recorded!');
-    setPoll(prev => ({
-      ...prev,
-      hasVoted: true,
-      selectedOptionId: optionId,
-    }));
+    voteMutation.mutate({ pollId, optionId });
   };
+
+  const handleRetract = () => {
+    retractMutation.mutate(pollId);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!poll) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.emptyText}>Poll not found</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -53,7 +50,12 @@ export const PollDetailScreen: React.FC = () => {
     >
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      <PollCard poll={poll} onVote={handleVote} />
+      <PollCard
+        poll={poll}
+        onVote={handleVote}
+        onRetract={handleRetract}
+        voting={voteMutation.isPending || retractMutation.isPending}
+      />
 
       <Card style={styles.infoCard}>
         <Text style={styles.infoTitle}>Poll Information</Text>
@@ -94,6 +96,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   content: {
     padding: spacing.lg,

@@ -26,7 +26,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
     const filled = index < Math.floor(rating);
     const halfFilled = !filled && index < rating;
     const starChar = filled ? '\u2605' : halfFilled ? '\u2605' : '\u2606';
-    const starColor = filled || halfFilled ? '#F59E0B' : colors.border;
+    const starColor = filled || halfFilled ? colors.star : colors.border;
 
     const StarContent = (
       <Text

@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/civitro/pkg/errors"
+	"github.com/civitro/pkg/middleware"
 	"github.com/civitro/services/identity/internal/model"
 	"github.com/civitro/services/identity/internal/service"
 	"github.com/gin-gonic/gin"
@@ -11,22 +13,35 @@ import (
 
 // Handler holds the HTTP handlers for the identity service.
 type Handler struct {
-	svc *service.Service
+	svc         *service.Service
+	maxFileSize int
 }
 
 // New creates a new Handler.
-func New(svc *service.Service) *Handler {
-	return &Handler{svc: svc}
+func New(svc *service.Service, maxFileSize int) *Handler {
+	if maxFileSize <= 0 {
+		maxFileSize = 2 << 20 // 2MB default
+	}
+	return &Handler{svc: svc, maxFileSize: maxFileSize}
 }
 
-// RegisterRoutes registers all identity HTTP routes on the given router group.
-func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
+// RegisterPublicRoutes registers unauthenticated routes.
+func (h *Handler) RegisterPublicRoutes(rg *gin.RouterGroup) {
 	auth := rg.Group("/auth")
 	{
 		auth.POST("/register", h.Register)
 		auth.POST("/verify-otp", h.VerifyOTP)
 		auth.POST("/refresh", h.RefreshToken)
+	}
+}
+
+// RegisterProtectedRoutes registers routes that require JWT authentication.
+func (h *Handler) RegisterProtectedRoutes(rg *gin.RouterGroup) {
+	auth := rg.Group("/auth")
+	auth.Use(middleware.JWTAuth())
+	{
 		auth.GET("/me", h.GetProfile)
+		auth.PUT("/language", h.UpdateLanguage)
 		auth.POST("/verify-aadhaar", h.VerifyAadhaar)
 	}
 }
@@ -84,13 +99,13 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 
 // GetProfile handles GET /auth/me.
 func (h *Handler) GetProfile(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
 		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
 		return
 	}
 
-	resp, err := h.svc.GetProfile(c.Request.Context(), userID.(string))
+	resp, err := h.svc.GetProfile(c.Request.Context(), userID)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -99,24 +114,68 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// VerifyAadhaar handles POST /auth/verify-aadhaar.
-func (h *Handler) VerifyAadhaar(c *gin.Context) {
+// UpdateLanguage handles PUT /auth/language.
+func (h *Handler) UpdateLanguage(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
 		return
 	}
 
-	var req model.VerifyAadhaarRequest
+	var req struct {
+		Language string `json:"language" binding:"required"`
+	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("invalid request body: "+err.Error()))
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("invalid request"))
 		return
 	}
 
-	if err := h.svc.VerifyAadhaar(c.Request.Context(), userID.(string), &req); err != nil {
+	if err := h.svc.UpdateLanguage(c.Request.Context(), userID.(string), req.Language); err != nil {
 		errors.HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "aadhaar verification successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "language updated", "language": req.Language})
+}
+
+// VerifyAadhaar handles POST /auth/verify-aadhaar (multipart form).
+func (h *Handler) VerifyAadhaar(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	// Parse multipart form with size limit.
+	if err := c.Request.ParseMultipartForm(int64(h.maxFileSize)); err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("file too large or invalid multipart form"))
+		return
+	}
+
+	shareCode := c.Request.FormValue("share_code")
+	if len(shareCode) != 4 {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("share_code must be exactly 4 digits"))
+		return
+	}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("missing file upload"))
+		return
+	}
+	defer file.Close()
+
+	zipData, err := io.ReadAll(io.LimitReader(file, int64(h.maxFileSize)))
+	if err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("failed to read uploaded file"))
+		return
+	}
+
+	resp, err := h.svc.VerifyAadhaar(c.Request.Context(), userID, zipData, shareCode)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

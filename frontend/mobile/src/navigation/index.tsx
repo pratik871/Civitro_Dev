@@ -13,6 +13,16 @@ import { NotificationsScreen } from '../screens/notifications/NotificationsScree
 import { SearchScreen } from '../screens/search/SearchScreen';
 import { CHIScreen } from '../screens/chi/CHIScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { IssuesListScreen } from '../screens/issues/IssuesListScreen';
+import { VoicesListScreen } from '../screens/voices/VoicesListScreen';
+import { VoiceDetailScreen } from '../screens/voices/VoiceDetailScreen';
+import { CreateVoiceScreen } from '../screens/voices/CreateVoiceScreen';
+import { LanguageScreen } from '../screens/settings/LanguageScreen';
+import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
+import { PrivacyScreen } from '../screens/settings/PrivacyScreen';
+import { HelpSupportScreen } from '../screens/settings/HelpSupportScreen';
+import { TermsScreen } from '../screens/settings/TermsScreen';
+import { AboutScreen } from '../screens/settings/AboutScreen';
 import { useAuthStore } from '../stores/authStore';
 import { colors } from '../theme/colors';
 import type { RootStackParamList } from './types';
@@ -143,6 +153,66 @@ export const RootNavigator: React.FC = () => {
                 headerTintColor: colors.textPrimary,
                 headerStyle: { backgroundColor: colors.background },
               }}
+            />
+            <Stack.Screen
+              name="IssuesList"
+              component={IssuesListScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'All Issues',
+                headerTintColor: colors.textPrimary,
+                headerStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
+              name="VoicesList"
+              component={VoicesListScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Community Voices',
+                headerTintColor: colors.textPrimary,
+                headerStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
+              name="VoiceDetail"
+              component={VoiceDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CreateVoice"
+              component={CreateVoiceScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Language"
+              component={LanguageScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="NotificationSettings"
+              component={NotificationSettingsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Privacy"
+              component={PrivacyScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="HelpSupport"
+              component={HelpSupportScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Terms"
+              component={TermsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="About"
+              component={AboutScreen}
+              options={{ headerShown: false }}
             />
           </>
         )}

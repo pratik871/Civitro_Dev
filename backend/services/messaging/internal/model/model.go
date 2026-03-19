@@ -15,7 +15,7 @@ const (
 type Conversation struct {
 	ID           string           `json:"id" db:"id"`
 	Type         ConversationType `json:"type" db:"type"`
-	Participants []string         `json:"participants" db:"participants"`
+	Participants []string         `json:"participants"` // populated from conversation_participants table
 	CreatedAt    time.Time        `json:"created_at" db:"created_at"`
 }
 
@@ -26,7 +26,6 @@ type Message struct {
 	SenderID       string    `json:"sender_id" db:"sender_id"`
 	Text           string    `json:"text" db:"text"`
 	MediaURL       string    `json:"media_url,omitempty" db:"media_url"`
-	ReadBy         []string  `json:"read_by" db:"read_by"`
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 }
 

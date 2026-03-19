@@ -22,12 +22,28 @@ func NewPollHandler(svc *service.PollService) *PollHandler {
 
 // RegisterRoutes registers poll routes on the given Gin router group.
 func (h *PollHandler) RegisterRoutes(rg *gin.RouterGroup) {
+	rg.GET("/polls", h.ListPolls)
 	rg.POST("/polls", h.CreatePoll)
 	rg.GET("/polls/:id", h.GetPoll)
 	rg.POST("/polls/:id/vote", h.CastVote)
 	rg.GET("/polls/:id/results", h.GetResults)
 	rg.GET("/polls/boundary/:boundary_id", h.GetByBoundary)
 	rg.DELETE("/polls/:id", h.DeletePoll)
+}
+
+// ListPolls returns all polls formatted for the frontend.
+// GET /polls
+func (h *PollHandler) ListPolls(c *gin.Context) {
+	uid, _ := c.Get("user_id")
+	userID, _ := uid.(string)
+
+	polls, err := h.svc.ListPolls(c.Request.Context(), userID)
+	if err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, polls)
 }
 
 // CreatePoll creates a new poll.
@@ -69,16 +85,29 @@ func (h *PollHandler) GetPoll(c *gin.Context) {
 // CastVote records a user's vote on a poll.
 // POST /polls/:id/vote
 func (h *PollHandler) CastVote(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		apperrors.AbortWithError(c, apperrors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
 	pollID := c.Param("id")
 	if pollID == "" {
 		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("poll id is required"))
 		return
 	}
 
-	var req model.CastVoteRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var body struct {
+		OptionID string `json:"option_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
 		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("invalid request body: "+err.Error()))
 		return
+	}
+
+	req := model.CastVoteRequest{
+		UserID:   userID.(string),
+		OptionID: body.OptionID,
 	}
 
 	if err := h.svc.CastVote(c.Request.Context(), pollID, req); err != nil {
@@ -87,6 +116,29 @@ func (h *PollHandler) CastVote(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "vote recorded"})
+}
+
+// RetractVote removes a user's vote from a poll.
+// DELETE /polls/:id/vote
+func (h *PollHandler) RetractVote(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		apperrors.AbortWithError(c, apperrors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	pollID := c.Param("id")
+	if pollID == "" {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("poll id is required"))
+		return
+	}
+
+	if err := h.svc.RetractVote(c.Request.Context(), pollID, userID.(string)); err != nil {
+		apperrors.AbortWithError(c, apperrors.ErrConflict.WithMessage(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "vote retracted"})
 }
 
 // GetResults returns the poll results with percentages.

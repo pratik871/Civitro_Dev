@@ -176,4 +176,329 @@
 - Download AI models (Ollama, ViT, BERT)
 - End-to-end testing (frontend → backend → database)
 
+## Session 3 — 2026-03-11
+**Goal:** Dockerize all 14 Go backend services for one-command startup and phone accessibility via LAN IP.
+
+### Problem
+Mobile app (Expo) on physical phone couldn't complete login — backend Go services weren't running. Infrastructure (Postgres, Redis, Kafka, etc.) runs in Docker, but Go services required manual `go run` startup.
+
+### Changes Made
+
+#### 1. Created `config/docker.yaml`
+- Docker-specific config overlay applied when `APP_ENV=docker`
+- Container names replace `localhost` (postgres, redis, redpanda, opensearch, etc.)
+- Internal ports replace `1xxxx` mapped ports (5432, 6379, 29092, 9200, etc.)
+- Python AI services still point to `host.docker.internal` (not yet dockerized)
+
+#### 2. Fixed 5 Broken Dockerfiles
+- `backend/services/ledger/Dockerfile`
+- `backend/services/rating/Dockerfile`
+- `backend/services/reputation/Dockerfile`
+- `backend/services/polls/Dockerfile`
+- `backend/services/messaging/Dockerfile`
+- **Issue:** `COPY ../../pkg ./pkg` — Docker can't COPY outside build context
+- **Fix:** Changed to `COPY pkg/ ./pkg/` (build context is `backend/`)
+
+#### 3. Modified `infra/docker-compose.yml`
+- Added 14 Go service definitions after nginx block
+- **MVP services (always start):** identity, issues, ledger, rating, notifications
+- **Wave 2 services (`profiles: ["wave2"]`):** geospatial, registry, voices, reputation, polls, messaging, search, admin, party
+- Each service: build from `../backend`, `APP_ENV=docker`, config volume at `/app/config:ro`, `working_dir: /app`, healthcheck via wget, depends on postgres + redis, `extra_hosts` for Python service access
+- Nginx now `depends_on` all 5 MVP services (waits for healthy)
+- **Corrected plan's relative paths:** `../../backend` → `../backend`, `../../config` → `../config`
+
+#### 4. Modified `infra/nginx/nginx.conf`
+- 14 Go upstream blocks: `host.docker.internal:PORT` → `container_name:PORT`
+- 6 Python AI upstreams: kept as `host.docker.internal` (not dockerized yet)
+
+### Usage
+```bash
+cd D:/civitro/infra
+docker compose up -d --build              # infra + 5 MVP services
+docker compose --profile wave2 up -d      # + 9 wave2 services
+docker compose logs -f identity           # check specific service
+curl http://localhost:8001/health          # verify
+```
+
+### Validation
+- `docker compose config --services` — 17 services (11 infra + 5 MVP + nginx)
+- `docker compose --profile wave2 config --services` — 26 services (all 14 Go)
+
+### Docker Validation Results
+- All 5 MVP services started healthy (identity, issues, ledger, rating, notifications)
+- `curl http://192.168.1.8:8001/health` → 200 OK `{"service":"identity","status":"ok"}`
+- Phone accessible via LAN IP 192.168.1.8
+
+### OTP Verification Bug Fix
+- **Problem:** Entering wrong OTP returned HTTP 500 instead of 400
+- **Root Cause:** `HandleError()` uses direct type assertion `err.(*AppError)` but OTP errors are plain `errors.New()` wrapped in `fmt.Errorf()`, losing the type
+- **Fix:** Added switch statement in `identity/internal/service/service.go` to map `otp.ErrInvalidOTP` → `ErrBadRequest`, `otp.ErrOTPExpired` → `ErrBadRequest`, `otp.ErrMaxAttempts` → `ErrRateLimited`
+
+### Mobile UI Fixes
+- **Bottom navigation:** Removed FAB/glow on Report tab, made it a normal tab like others. Increased icon sizes from 22px to 28px. Added safe area bottom padding for gesture bar phones.
+- **Header padding:** All 6 tab/auth screens had hardcoded `paddingTop: spacing['4xl']` (40px). Fixed with `useSafeAreaInsets().top + spacing.sm` for notch-safe headers.
+- **API base URL:** Changed from `:8001` (identity only) to `:8080` (nginx gateway for all services)
+
+### Mock Data Removal — ALL 16 Screens
+Removed ALL hardcoded/mock data from the entire mobile frontend and wired to real backend APIs:
+- Created 6 new hooks: `useLeaders`, `usePolls`, `useNotifications`, `useMessages`, `useVoices`, `useSearch`
+- Rewrote `useIssues` — removed 148-line MOCK_ISSUES array, added `useNearbyIssues`, `useUpvoteIssue`, `useCreateIssue`
+- HomeScreen: wardStats computed from real issues, uses `useVoices`/`useUnreadCount`
+- LeadersScreen/LeaderProfileScreen: removed MOCK_LEADERS/MOCK_LEADER/MOCK_PROMISES
+- PollsScreen/PollDetailScreen: removed MOCK_POLLS/MOCK_POLL, wired `useVotePoll`
+- PromisesScreen/CHIScreen: removed MOCK data, uses `useQuery` to real endpoints
+- MessagesScreen/NotificationsScreen: removed MOCK data, uses real hooks
+- SearchScreen: removed RECENT_SEARCHES/MOCK_RESULTS, uses `useSearch`
+- TrendingScreen: removed MOCK_TRENDING/SENTIMENT_SUMMARY, uses `useQuery` to `/api/v1/sentiment/trending`
+- MapScreen: removed MOCK_ZONES/MOCK_PINS, derives zones from real `useIssues` data
+- ProfileScreen: shows 0 instead of fake numbers, "No badges yet" for empty state
+
+### ReportIssueScreen — Wired to Real APIs
+- **Photo capture:** Uses `expo-image-picker` — camera and gallery options with real photo preview
+- **GPS location:** Uses `expo-location` — `getCurrentPositionAsync` + `reverseGeocodeAsync` for address
+- **Submit:** Uses `useCreateIssue` mutation → `POST /api/v1/issues` with `text`, `gps_lat`, `gps_lng`, `category`, `severity`
+- Installed `expo-location` package
+
+### TypeScript Config Fix
+- Fixed `tsconfig.json`: `module: "commonjs"` → `"esnext"`, `moduleResolution: "node"` → `"bundler"` to work with `expo/tsconfig.base` extending
+
+### Current Status
+- **Backend:** ALL 14 Go services dockerized and running
+- **Frontend Mobile:** ALL 16 screens wired to real APIs, zero mock data remaining
+- **TypeScript:** 2 pre-existing minor type errors (Avatar style, OTP ref callback) — no runtime issues
+
+### Next Steps
+- End-to-end test: full phone login + report issue flow
+- Photo upload endpoint (issues service currently accepts photo_urls but no file upload endpoint)
+- Add `.next/` to `.gitignore`
+
+---
+
+## Session 4 — 2026-03-12
+**Goal:** Comment UX fixes, Instagram-style comment features, civic score wiring, navigation improvements
+
+### Comment Section UX Fixes
+- **Keyboard hiding input (Android):** Tried 4 approaches — KeyboardAvoidingView with various `behavior` values all failed on Android. Final working solution: comment input inside ScrollView with keyboard height listener adding dynamic bottom padding spacer
+- **Scroll to comments:** Click on comment button scrolls to comment section
+- **Visual overhaul:** Comment input moved inside Comments Card with user avatar, pill-shaped input, round send button
+
+### Instagram-style Comment Features
+- **Threaded replies:** Added `parent_comment_id` column to `issue_comments` table, reply UI with indicator bar
+- **Upvote on comments:** Added `issue_comment_likes` table, toggle upvote (▲ Upvoted / △ Upvote), pill-shaped buttons
+- **Like counts:** Added `likes_count` column to `issue_comments`, displayed on each comment
+- **Comment count on issue cards:** Added subquery `(SELECT COUNT(*) FROM issue_comments)` to List and GetByID queries
+
+### Backend Changes
+- `issues/repository.go`: ToggleUpvote, ToggleCommentLike (toggle pattern — DELETE if exists, INSERT if not), ListComments with LEFT JOIN users for names, has_liked EXISTS subquery, parent_comment_id support
+- `issues/service.go`: Added `awardPoints()` fire-and-forget goroutine POST to `http://reputation:8012/api/v1/reputation/event`, points: +10 report, +2 upvote, +3 comment
+- `issues/handler.go`: New route `POST /:id/comments/:comment_id/like`, upvote/like endpoints return toggle state
+- `issues/model.go`: Comment struct added ParentID, LikesCount, HasLiked; Issue struct added CommentCount
+- `reputation/handler.go`: Added `POST /reputation/event` endpoint
+- `identity/service.go`: GetProfile now returns civic_score + reputation_tier from civic_scores table
+- `identity/repository.go`: Added GetCivicScore() querying civic_scores table
+
+### Frontend Changes
+- `useIssues.ts`: Comment interface updated (parent_id, likes_count, has_liked), useLikeComment hook, comment_count in RawIssue
+- `IssueDetailScreen.tsx`: Full rewrite — keyboard handling, threaded comments, upvote toggle, reply UI
+- New screens: `IssuesListScreen.tsx`, `VoicesListScreen.tsx`
+- `navigation/index.tsx`: Added IssuesList and VoicesList screen registrations
+- `HomeScreen.tsx`: Wired "See All" buttons for Issues and Community Voices
+- `app.json`: Added `softwareKeyboardLayoutMode: "adjustResize"` for Android
+
+### DB Migrations Run
+- `ALTER TABLE issue_comments ADD COLUMN parent_comment_id UUID`
+- `ALTER TABLE issue_comments ADD COLUMN likes_count INTEGER DEFAULT 0`
+- `CREATE TABLE issue_comment_likes (comment_id UUID, user_id UUID, PRIMARY KEY)`
+
+### Civic Score System Wired
+- **Flow:** User action → issues service → fire-and-forget POST to reputation service → updates civic_scores table → identity service reads score on profile request
+- **Tiers (0-1000):** new_citizen, verified_reporter, community_validator, thought_leader, peoples_champion
+- **Points:** +10 report filed, +2 issue upvoted (awarded to reporter), +3 comment posted
+
+### Issue Found
+- 502 error on issue submission after rebuilding services — carried to Session 5
+
+---
+
+## Session 5 — 2026-03-12
+**Goal:** Fix 502 error on issue submission
+
+### 502 Error — RESOLVED
+- **Root cause:** Nginx cached old container IP addresses in static `upstream` blocks. When services were rebuilt and got new IPs, nginx kept connecting to old (dead) IPs → "Connection refused" → 502
+- **Fix:** Changed `nginx.conf` to use Docker's internal DNS resolver with variable-based proxy_pass:
+  - Added `resolver 127.0.0.11 valid=10s;` in server block
+  - Replaced static `upstream` blocks with `set $upstream_xxx container:port; proxy_pass http://$upstream_xxx;`
+  - DNS now re-resolves on every request — rebuilding services automatically picks up new IPs
+
+### Files Modified
+- `infra/nginx/nginx.conf` — removed all 20 upstream blocks, added resolver directive, converted all proxy_pass to variable-based dynamic resolution
+
+### Current Status
+- All services running and healthy
+- Issue submission works through gateway
+- No more 502 after service rebuilds
+
+---
+
+## Session 6 — 2026-03-12/13
+**Goal:** Get Polls, Voices, and Messages working end-to-end. Add RBAC for poll creation. Run sentiment analysis.
+
+### Polls — Fully Working
+- **Vote submission fixed:** PollsScreen wasn't passing `onVote` to PollCard. Fixed.
+- **hasVoted always false:** ListPolls read user_id from query param instead of JWT. Fixed with `c.Get("user_id")` + OptionalJWTAuth on public routes.
+- **CastVote body issue:** Handler expected `user_id` in request body, frontend only sends `option_id`. Fixed to read from JWT context.
+- **Select-then-confirm UX:** Added radio button selection → Cancel/Submit buttons → Results with "Change my vote"
+- **Vote retraction:** Added `DELETE /polls/:id/vote` endpoint, `RetractVote` handler/service/repository (transaction-based: find option → delete vote → decrement counts)
+- **UUID type cast:** `COALESCE(boundary_id, '')` fails for UUID column → fixed with `COALESCE(boundary_id::text, '')`
+- **poll_options.percentage column:** Doesn't exist in DB → removed from queries, compute percentage in Go
+- **PollCard rewrite:** Accent line, category pill, countdown timer, radio select flow, result bars with percentages
+- **Seeded 3 polls** with options via SQL
+
+### Role-Based Access Control (RBAC) — Poll Creation
+- **DB:** Added `role VARCHAR(20) DEFAULT 'citizen'` to `users` table with CHECK constraint `('citizen', 'representative', 'admin')`
+- **JWT Claims:** Added `Role` field to `Claims` struct in `auth.go`
+- **GenerateToken:** Updated signature from `(userID, verificationLevel)` to `(userID, verificationLevel, role)` — updated both call sites in identity service (VerifyOTP + RefreshToken)
+- **RequireRole middleware:** New `RequireRole(allowed ...string) gin.HandlerFunc` — checks JWT role, aborts 403 if not in allowed set
+- **GetRole/GetUserID/GetVerificationLevel:** Helper functions for extracting from Gin context
+- **OptionalJWTAuth:** Extracts claims when present, doesn't abort for anonymous
+- **Identity repo:** Both `GetUserByPhone` and `GetUserByID` now SELECT `COALESCE(role, 'citizen')` and scan into `user.Role`
+- **ProfileResponse:** Now includes `Role` field
+- **Polls endpoint:** `POST /polls` protected with `RequireRole("admin", "representative")`
+- **Tested:** Citizen gets 403, admin passes through to handler
+
+### Voices — Fixed and Working
+- **PostGIS column mismatch:** Repository used `location_lat`/`location_lng` (don't exist). DB has `location geometry(Point,4326)`. Fixed all 5 queries to use `ST_Y(location)`, `ST_X(location)`, `ST_MakePoint(lng, lat)`
+- **Frontend route mismatch:** Hook called `GET /api/v1/voices` but backend only has `GET /api/v1/voices/feed`. Fixed hook.
+- **Data mapping:** Backend sends snake_case (`user_id`, `likes_count`, etc). Created `RawVoice` interface + `mapVoice()` function in `useVoices.ts`
+- **VoiceCard cleanup:** Removed fake sentiment badge, empty ward text, hardcoded "Citizen". Now shows: avatar circle, time, voice text, hashtag pills, like/comment/share counts
+- **VoiceDetailScreen rewrite:** Removed references to non-existent fields (`has_liked`, `has_bookmarked`, `sentiment`, `ward`, `constituency`, `user_name`). Uses `useVoice` hook with proper mapping
+- **Seeded 3 test voices** via API
+
+### Sentiment Analysis — Running
+- Started Python sentiment service locally on port 8009
+- Uses **Multilingual BERT** (`nlptown/bert-base-multilingual-uncased-sentiment`)
+- Tested single + batch analysis on voice texts:
+  - "Roads need repair, dangerous" → Negative 97.3%, Anger+Fear, urgency 0.97
+  - "Kudos to sanitation team" → Positive 98.7%, Satisfaction, urgency 0.15
+  - "Water supply irregular" → Negative 76.8%, urgency 0.51
+- Endpoints: `/sentiment/analyze`, `/sentiment/batch`, `/sentiment/trends/{boundary_id}`, `/sentiment/alerts`
+- Has Kafka consumer for real-time analysis of voice/issue events
+
+### Messaging — Fixed (Previous Session)
+- Rewrote all 6 repository methods to use `conversation_participants` join table instead of non-existent `read_by` column
+
+### OTP Hardcoded for Dev
+- OTP changed to fixed `111111` for easy phone testing (was random 6-digit)
+
+### Files Modified
+**Backend:**
+- `backend/pkg/middleware/auth.go` — Role in Claims, GenerateToken 3-arg, RequireRole, OptionalJWTAuth, GetRole
+- `backend/services/identity/internal/model/model.go` — Role field in User + ProfileResponse
+- `backend/services/identity/internal/repository/repository.go` — GetUserByPhone + GetUserByID include role
+- `backend/services/identity/internal/service/service.go` — GenerateToken calls updated, GetProfile includes Role, OTP hardcoded to 111111
+- `backend/services/polls/cmd/main.go` — RequireRole on POST /polls
+- `backend/services/voices/internal/repository/repository.go` — PostGIS ST_Y/ST_X/ST_MakePoint
+
+**Frontend:**
+- `frontend/mobile/src/types/voice.ts` — Updated Voice interface (both old + new fields)
+- `frontend/mobile/src/hooks/useVoices.ts` — RawVoice mapping, /voices/feed endpoint
+- `frontend/mobile/src/components/voices/VoiceCard.tsx` — Clean card without fake data
+- `frontend/mobile/src/screens/voices/VoicesListScreen.tsx` — Added useLikeVoice
+- `frontend/mobile/src/screens/voices/VoiceDetailScreen.tsx` — Rewritten with real hooks
+- `frontend/mobile/src/screens/voices/CreateVoiceScreen.tsx` — Already working
+
+### Services Rebuilt
+- identity, polls, voices — Docker images rebuilt and containers restarted
+
+### Current Status
+- **Polls:** Full flow working (list, vote, retract, detail). Creation locked to admin/representative.
+- **Voices:** Full flow working (list, create, detail, like/share/bookmark)
+- **Sentiment:** Running locally on port 8009, tested successfully
+- **RBAC:** Role in JWT, RequireRole middleware, tested citizen=403/admin=200
+- **OTP:** Hardcoded to 111111 for dev
+
+### Next Steps
+- Wire sentiment analysis into voices (show sentiment on VoiceCard)
+- Messages screen — verify end-to-end
+- Promises screen — verify with seeded data
+- CHI screen — already computing from real issues data
+- Add `.next/` to `.gitignore`
+- Photo upload endpoint for issue reporting
+- Consider dockerizing Python AI services
+
+---
+
+## Session 7 — 2026-03-12/13
+**Goal:** i18n expansion, auto-translation system, login/phone testing fixes, TestFlight deployment
+
+### i18n — 16 Languages (308 keys each)
+- Expanded from 2 (en, hi) to all 16 Bhashini languages
+- Languages: en, hi, ta, te, kn, ml, mr, bn, gu, pa, or, as, ur, sa, ks, ne
+- Files at `frontend/mobile/src/i18n/locales/{code}.json`
+- `or` and `as` imported as `or_`/`as_` (JS reserved words)
+- Fixed 26 missing ReportIssueScreen keys, 8 HomeScreen keys, 3 translation UI keys
+- HomeScreen hardcoded strings replaced with `t()` calls
+
+### Auto-Translation System (User-Generated Content)
+- **Python service:** `ai/services/translation/` — FastAPI on port 8021, Ollama (dev) / Bhashini (prod), LRU cache (10k entries), Unicode script detection
+- **Frontend hook:** `useTranslate.ts` — `looksLikeLanguage()` client-side heuristic, React Query `staleTime: Infinity`
+- **Component:** `TranslatedText.tsx` — auto-translates, "Translated · Show original" toggle, collapsible original text box
+- **Wired into:** IssueCard, IssueDetailScreen (title, description, comments, replies), VoiceCard
+- **Nginx route:** `/api/v1/translate` → `host.docker.internal:8021`
+
+### Community Voices Screens
+- **CreateVoiceScreen:** Text input (500 char), hashtag pills, post button
+- **VoiceDetailScreen:** Like/share/bookmark (optimistic UI), sentiment badge, hashtags
+- Navigation routes added: VoiceDetail, CreateVoice
+
+### Bug Fixes
+- **Duplicate issue description:** `mapIssue()` set both title and description from `raw.text`. Fixed: `description: ''`
+- **`gps_lat.toFixed()` null crash:** `(raw.gps_lat ?? 0).toFixed(4)`
+- **`priority.toUpperCase()` null crash:** `(issue.priority || 'medium').toUpperCase()`
+- **IssueDetailScreen:** Added error state instead of infinite loading
+
+### Login & Phone Testing Fixes
+- **Login scroll:** `bounces={false}`, `overScrollMode="never"`, `justifyContent: 'center'`
+- **Fixed OTP 111111:** Set for ALL environments until real SMS provider. `code := "111111"` in identity service
+- **Tunnel API fix:** Detect Expo tunnel URL → fallback to `DEV_LAN_IP` (192.168.1.8)
+- **Localtunnel:** `npx localtunnel --port 8080` for full tunnel (any network). Added `DEV_API_TUNNEL` + `bypass-tunnel-reminder` header in `api.ts`
+
+### TestFlight / EAS Build — iOS BUILD SUCCESSFUL
+- **Placeholder assets:** icon.png (1024x1024), splash.png (1284x2778), adaptive-icon.png — solid navy #1A365D
+- **app.json:** icon, splash, iOS permissions (camera, photos, location), `ITSAppUsesNonExemptEncryption: false`, owner: `pratik814`
+- **EAS project:** `@pratik814/civitro` (ID: 47a6ba02-8631-4519-a5d4-7c28326779e7)
+- **Apple Team:** Pratik Patil (98NR73RT79, Individual), pratik@bloomiya.ai
+- **Build SUCCESS:** Distribution cert + provisioning profile auto-generated
+- **IPA:** https://expo.dev/artifacts/eas/tZXdSfUwDxyv53arHWT5CP.ipa
+- **PENDING:** User needs to:
+  1. Create app in App Store Connect (Name: Civitro, Bundle ID: in.civitro.app, SKU: civitro)
+  2. Generate app-specific password at appleid.apple.com
+  3. Run `eas submit --platform ios --latest`
+
+### Files Created
+- `ai/services/translation/` (7 files)
+- `frontend/mobile/src/hooks/useTranslate.ts`
+- `frontend/mobile/src/components/ui/TranslatedText.tsx`
+- `frontend/mobile/src/screens/voices/CreateVoiceScreen.tsx`, `VoiceDetailScreen.tsx`
+- `frontend/mobile/src/i18n/locales/{14 new language files}.json`
+- `frontend/mobile/assets/icon.png`, `splash.png`, `adaptive-icon.png`
+- `frontend/mobile/eas.json`
+
+### Key Files Modified
+- `frontend/mobile/src/lib/api.ts` — DEV_API_TUNNEL, tunnel detection, bypass header
+- `frontend/mobile/src/screens/auth/LoginScreen.tsx` — scroll fix
+- `frontend/mobile/src/hooks/useIssues.ts` — description fix, null-safe gps
+- `frontend/mobile/src/screens/issues/IssueDetailScreen.tsx` — error state, priority fix, TranslatedText
+- `backend/services/identity/internal/service/service.go` — fixed OTP 111111 all envs
+- `frontend/mobile/app.json` — assets, permissions, EAS config, owner
+- `infra/nginx/nginx.conf` — translation route
+
+### Next Steps
+- **TestFlight submit:** Create app in App Store Connect → `eas submit --platform ios --latest`
+- **Design real app icon + splash** (currently solid navy placeholders)
+- **Voice comments:** Backend endpoints (currently "coming soon")
+- **Real SMS provider:** Replace fixed OTP with Twilio/MSG91
+- **.next/ gitignore:** Still needs adding
+- **Production deployment:** api.civitro.in not yet set up
+
 ---

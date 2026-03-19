@@ -7,9 +7,11 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSearch } from '../../hooks/useSearch';
 import { Badge } from '../../components/ui/Badge';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -21,73 +23,20 @@ interface SearchResult {
   id: string;
   type: 'issue' | 'leader' | 'poll' | 'voice';
   title: string;
-  subtitle: string;
-  icon: string;
+  description: string;
 }
 
-const RECENT_SEARCHES = [
-  'pothole koramangala',
-  'water supply',
-  'ward councillor',
-  'garbage collection',
-];
-
-const MOCK_RESULTS: SearchResult[] = [
-  {
-    id: 'issue-001',
-    type: 'issue',
-    title: 'Large pothole near 4th Block Junction',
-    subtitle: 'Issue - Koramangala',
-    icon: '\u{1F6A7}',
-  },
-  {
-    id: 'issue-004',
-    type: 'issue',
-    title: 'Water supply disruption in 3rd Block',
-    subtitle: 'Issue - Koramangala',
-    icon: '\u{1F4A7}',
-  },
-  {
-    id: 'leader-001',
-    type: 'leader',
-    title: 'Raghavendra Rao',
-    subtitle: 'Ward Councillor - Ward 15',
-    icon: '\u{1F464}',
-  },
-  {
-    id: 'poll-001',
-    type: 'poll',
-    title: 'Road repairs vs park development priority',
-    subtitle: 'Active Poll - 448 votes',
-    icon: '\u{1F5F3}',
-  },
-  {
-    id: 'leader-002',
-    type: 'leader',
-    title: 'Kavitha Sharma',
-    subtitle: 'MLA - Bangalore South',
-    icon: '\u{1F464}',
-  },
-];
+const TYPE_ICONS: Record<string, string> = {
+  issue: '\u{1F6A7}',
+  leader: '\u{1F464}',
+  poll: '\u{1F5F3}',
+  voice: '\u{1F399}',
+};
 
 export const SearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchNavProp>();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-
-  const handleSearch = (text: string) => {
-    setQuery(text);
-    if (text.length > 1) {
-      const filtered = MOCK_RESULTS.filter(
-        r =>
-          r.title.toLowerCase().includes(text.toLowerCase()) ||
-          r.subtitle.toLowerCase().includes(text.toLowerCase()),
-      );
-      setResults(filtered);
-    } else {
-      setResults([]);
-    }
-  };
+  const { data: results, isLoading } = useSearch(query);
 
   const handleResultPress = (result: SearchResult) => {
     switch (result.type) {
@@ -110,16 +59,18 @@ export const SearchScreen: React.FC = () => {
       activeOpacity={0.7}
     >
       <View style={styles.resultIcon}>
-        <Text style={styles.resultEmoji}>{item.icon}</Text>
+        <Text style={styles.resultEmoji}>{TYPE_ICONS[item.type] || '\u{1F50D}'}</Text>
       </View>
       <View style={styles.resultContent}>
         <Text style={styles.resultTitle} numberOfLines={1}>
           {item.title}
         </Text>
-        <Text style={styles.resultSubtitle}>{item.subtitle}</Text>
+        <Text style={styles.resultSubtitle}>{item.description}</Text>
       </View>
     </TouchableOpacity>
   );
+
+  const resultsList = results ?? [];
 
   return (
     <View style={styles.container}>
@@ -132,12 +83,12 @@ export const SearchScreen: React.FC = () => {
           placeholder="Search issues, leaders, polls..."
           placeholderTextColor={colors.textMuted}
           value={query}
-          onChangeText={handleSearch}
+          onChangeText={setQuery}
           autoFocus
           returnKeyType="search"
         />
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => handleSearch('')}>
+          <TouchableOpacity onPress={() => setQuery('')}>
             <Text style={styles.clearIcon}>{'\u2715'}</Text>
           </TouchableOpacity>
         )}
@@ -145,32 +96,28 @@ export const SearchScreen: React.FC = () => {
 
       {query.length === 0 ? (
         <View style={styles.recentSection}>
-          <Text style={styles.recentTitle}>Recent Searches</Text>
-          {RECENT_SEARCHES.map((search, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.recentRow}
-              onPress={() => handleSearch(search)}
-            >
-              <Text style={styles.recentIcon}>{'\u{1F552}'}</Text>
-              <Text style={styles.recentText}>{search}</Text>
-            </TouchableOpacity>
-          ))}
-
           <Text style={[styles.recentTitle, styles.categoriesTitle]}>
             Browse Categories
           </Text>
           <View style={styles.categoryChips}>
             {['Issues', 'Leaders', 'Polls', 'Voices'].map(cat => (
-              <TouchableOpacity key={cat} style={styles.categoryChip}>
+              <TouchableOpacity
+                key={cat}
+                style={styles.categoryChip}
+                onPress={() => setQuery(cat.toLowerCase())}
+              >
                 <Text style={styles.categoryChipText}>{cat}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
+      ) : isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       ) : (
         <FlatList
-          data={results}
+          data={resultsList}
           renderItem={renderResult}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.resultsList}
@@ -179,7 +126,7 @@ export const SearchScreen: React.FC = () => {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>{'\u{1F50E}'}</Text>
               <Text style={styles.emptyText}>
-                No results for "{query}"
+                No results found
               </Text>
               <Text style={styles.emptyHint}>
                 Try different keywords or browse categories
@@ -187,9 +134,9 @@ export const SearchScreen: React.FC = () => {
             </View>
           }
           ListHeaderComponent={
-            results.length > 0 ? (
+            resultsList.length > 0 ? (
               <Text style={styles.resultCount}>
-                {results.length} result{results.length !== 1 ? 's' : ''}
+                {resultsList.length} result{resultsList.length !== 1 ? 's' : ''}
               </Text>
             ) : null
           }
@@ -203,6 +150,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchBar: {
     flexDirection: 'row',
@@ -243,21 +195,6 @@ const styles = StyleSheet.create({
   },
   categoriesTitle: {
     marginTop: spacing.xl,
-  },
-  recentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
-  },
-  recentIcon: {
-    fontSize: 14,
-  },
-  recentText: {
-    fontSize: 15,
-    color: colors.textSecondary,
   },
   categoryChips: {
     flexDirection: 'row',

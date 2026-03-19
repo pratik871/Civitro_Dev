@@ -11,10 +11,26 @@ import (
 
 // Repository defines the data access interface for the identity service.
 type Repository interface {
+	// Users
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByPhone(ctx context.Context, phone string) (*model.User, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	UpdateVerificationLevel(ctx context.Context, userID string, level model.VerificationLevel, aadhaarHash string) error
+	UpdatePreferredLanguage(ctx context.Context, userID string, language string) error
+
+	// Refresh tokens
+	CreateRefreshToken(ctx context.Context, token *model.RefreshToken) error
+	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*model.RefreshToken, error)
+	DeleteRefreshToken(ctx context.Context, id string) error
+	DeleteRefreshTokensByUser(ctx context.Context, userID string) error
+
+	// Aadhaar verifications
+	CreateAadhaarVerification(ctx context.Context, v *model.AadhaarVerification) error
+	GetAadhaarVerificationByUser(ctx context.Context, userID string) (*model.AadhaarVerification, error)
+	GetAadhaarVerificationByUIDHash(ctx context.Context, uidHash string) (*model.AadhaarVerification, error)
+
+	// Civic score
+	GetCivicScore(ctx context.Context, userID string) (int, string)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -30,15 +46,20 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 	return &PostgresRepository{pool: pool}
 }
 
+// ---------------------------------------------------------------------------
+// Users
+// ---------------------------------------------------------------------------
+
 // CreateUser inserts a new user into the database.
 func (r *PostgresRepository) CreateUser(ctx context.Context, user *model.User) error {
 	query := `
-		INSERT INTO users (id, phone, name, email, verification_level, aadhaar_hash, device_fingerprint, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO users (id, phone, name, email, verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 	_, err := r.pool.Exec(ctx, query,
 		user.ID, user.Phone, user.Name, user.Email,
 		user.VerificationLevel, user.AadhaarHash, user.DeviceFingerprint,
+		user.PreferredLanguage,
 		user.CreatedAt, user.UpdatedAt,
 	)
 	return err
@@ -47,13 +68,14 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *model.User) e
 // GetUserByPhone retrieves a user by their phone number.
 func (r *PostgresRepository) GetUserByPhone(ctx context.Context, phone string) (*model.User, error) {
 	query := `
-		SELECT id, phone, name, email, verification_level, aadhaar_hash, device_fingerprint, created_at, updated_at
+		SELECT id, phone, name, email, COALESCE(role, 'citizen'), verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at
 		FROM users WHERE phone = $1
 	`
 	user := &model.User{}
 	err := r.pool.QueryRow(ctx, query, phone).Scan(
-		&user.ID, &user.Phone, &user.Name, &user.Email,
+		&user.ID, &user.Phone, &user.Name, &user.Email, &user.Role,
 		&user.VerificationLevel, &user.AadhaarHash, &user.DeviceFingerprint,
+		&user.PreferredLanguage,
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -68,13 +90,14 @@ func (r *PostgresRepository) GetUserByPhone(ctx context.Context, phone string) (
 // GetUserByID retrieves a user by their ID.
 func (r *PostgresRepository) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	query := `
-		SELECT id, phone, name, email, verification_level, aadhaar_hash, device_fingerprint, created_at, updated_at
+		SELECT id, phone, name, email, COALESCE(role, 'citizen'), verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at
 		FROM users WHERE id = $1
 	`
 	user := &model.User{}
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&user.ID, &user.Phone, &user.Name, &user.Email,
+		&user.ID, &user.Phone, &user.Name, &user.Email, &user.Role,
 		&user.VerificationLevel, &user.AadhaarHash, &user.DeviceFingerprint,
+		&user.PreferredLanguage,
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -84,6 +107,21 @@ func (r *PostgresRepository) GetUserByID(ctx context.Context, id string) (*model
 		return nil, err
 	}
 	return user, nil
+}
+
+// GetCivicScore fetches the user's civic score from the civic_scores table.
+// Returns (score, tier). Returns (0, "new_citizen") if no record exists.
+func (r *PostgresRepository) GetCivicScore(ctx context.Context, userID string) (int, string) {
+	var score int
+	var tier string
+	err := r.pool.QueryRow(ctx,
+		`SELECT COALESCE(credibility_score, 0), COALESCE(tier, 'new_citizen') FROM civic_scores WHERE user_id = $1`,
+		userID,
+	).Scan(&score, &tier)
+	if err != nil {
+		return 0, "new_citizen"
+	}
+	return score, tier
 }
 
 // UpdateVerificationLevel updates a user's verification level and aadhaar hash.
@@ -100,4 +138,127 @@ func (r *PostgresRepository) UpdateVerificationLevel(ctx context.Context, userID
 		return ErrNotFound
 	}
 	return nil
+}
+
+// UpdatePreferredLanguage updates a user's preferred language.
+func (r *PostgresRepository) UpdatePreferredLanguage(ctx context.Context, userID string, language string) error {
+	query := `UPDATE users SET preferred_language = $1, updated_at = NOW() WHERE id = $2`
+	tag, err := r.pool.Exec(ctx, query, language, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Refresh Tokens
+// ---------------------------------------------------------------------------
+
+// CreateRefreshToken inserts a new refresh token.
+func (r *PostgresRepository) CreateRefreshToken(ctx context.Context, token *model.RefreshToken) error {
+	query := `
+		INSERT INTO refresh_tokens (id, user_id, token_hash, device_info, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	_, err := r.pool.Exec(ctx, query,
+		token.ID, token.UserID, token.TokenHash, token.DeviceInfo,
+		token.ExpiresAt, token.CreatedAt,
+	)
+	return err
+}
+
+// GetRefreshTokenByHash retrieves a refresh token by its SHA256 hash.
+func (r *PostgresRepository) GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*model.RefreshToken, error) {
+	query := `
+		SELECT id, user_id, token_hash, device_info, expires_at, created_at
+		FROM refresh_tokens WHERE token_hash = $1
+	`
+	t := &model.RefreshToken{}
+	err := r.pool.QueryRow(ctx, query, tokenHash).Scan(
+		&t.ID, &t.UserID, &t.TokenHash, &t.DeviceInfo,
+		&t.ExpiresAt, &t.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return t, nil
+}
+
+// DeleteRefreshToken removes a single refresh token by ID.
+func (r *PostgresRepository) DeleteRefreshToken(ctx context.Context, id string) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM refresh_tokens WHERE id = $1`, id)
+	return err
+}
+
+// DeleteRefreshTokensByUser removes all refresh tokens for a user.
+func (r *PostgresRepository) DeleteRefreshTokensByUser(ctx context.Context, userID string) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM refresh_tokens WHERE user_id = $1`, userID)
+	return err
+}
+
+// ---------------------------------------------------------------------------
+// Aadhaar Verifications
+// ---------------------------------------------------------------------------
+
+// CreateAadhaarVerification inserts a new Aadhaar verification record.
+func (r *PostgresRepository) CreateAadhaarVerification(ctx context.Context, v *model.AadhaarVerification) error {
+	query := `
+		INSERT INTO aadhaar_verifications
+			(id, user_id, reference_id, uid_hash, name, dob, gender, address, photo_key, signature_valid, xml_timestamp, verified_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+	_, err := r.pool.Exec(ctx, query,
+		v.ID, v.UserID, v.ReferenceID, v.UIDHash,
+		v.Name, v.DOB, v.Gender, v.Address, v.PhotoKey,
+		v.SignatureValid, v.XMLTimestamp, v.VerifiedAt,
+	)
+	return err
+}
+
+// GetAadhaarVerificationByUser retrieves the Aadhaar verification for a user.
+func (r *PostgresRepository) GetAadhaarVerificationByUser(ctx context.Context, userID string) (*model.AadhaarVerification, error) {
+	query := `
+		SELECT id, user_id, reference_id, uid_hash, name, dob, gender, address, photo_key, signature_valid, xml_timestamp, verified_at
+		FROM aadhaar_verifications WHERE user_id = $1
+	`
+	v := &model.AadhaarVerification{}
+	err := r.pool.QueryRow(ctx, query, userID).Scan(
+		&v.ID, &v.UserID, &v.ReferenceID, &v.UIDHash,
+		&v.Name, &v.DOB, &v.Gender, &v.Address, &v.PhotoKey,
+		&v.SignatureValid, &v.XMLTimestamp, &v.VerifiedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return v, nil
+}
+
+// GetAadhaarVerificationByUIDHash checks for existing verification by UID hash (dedup).
+func (r *PostgresRepository) GetAadhaarVerificationByUIDHash(ctx context.Context, uidHash string) (*model.AadhaarVerification, error) {
+	query := `
+		SELECT id, user_id, reference_id, uid_hash, name, dob, gender, address, photo_key, signature_valid, xml_timestamp, verified_at
+		FROM aadhaar_verifications WHERE uid_hash = $1
+	`
+	v := &model.AadhaarVerification{}
+	err := r.pool.QueryRow(ctx, query, uidHash).Scan(
+		&v.ID, &v.UserID, &v.ReferenceID, &v.UIDHash,
+		&v.Name, &v.DOB, &v.Gender, &v.Address, &v.PhotoKey,
+		&v.SignatureValid, &v.XMLTimestamp, &v.VerifiedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return v, nil
 }

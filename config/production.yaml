@@ -1,0 +1,100 @@
+# Civitro — Production/EC2 config overlay
+# Applied on top of default.yaml when APP_ENV=production
+# Single EC2 instance running Docker Compose (same as local dev)
+# All services communicate via Docker container names (same as docker.yaml)
+
+app:
+  environment: production
+  debug: false
+
+databases:
+  postgres:
+    host: postgres
+    port: 5432
+    password: "${DB_PASSWORD}"
+    ssl: false
+    pool_size: 30
+
+  mongodb:
+    uri: "mongodb://mongodb:27017"
+
+  redis:
+    host: redis
+    port: 6379
+
+  opensearch:
+    host: opensearch
+    port: 9200
+
+  timescaledb:
+    host: timescaledb
+    port: 5432
+    password: "${DB_PASSWORD}"
+
+storage:
+  provider: s3
+  region: ap-south-1
+  bucket: "${S3_BUCKET:-civitro-dev-media}"
+  access_key: "${AWS_ACCESS_KEY_ID}"
+  secret_key: "${AWS_SECRET_ACCESS_KEY}"
+  cdn_url: ""
+
+events:
+  brokers:
+    - redpanda:29092
+  schema_registry: "http://redpanda:8081"
+
+ai:
+  llm:
+    endpoint: "http://ollama:11434"
+  moderation:
+    text_endpoint: "http://ollama:11434"
+
+auth:
+  jwt:
+    secret: "${JWT_SECRET}"
+    expiry: 24h
+    refresh_expiry: 720h
+  otp:
+    provider: console
+
+notifications:
+  push:
+    provider: console
+  email:
+    provider: console
+  sms:
+    provider: console
+
+monitoring:
+  tracing:
+    endpoint: "http://jaeger:14268"
+    otlp_grpc: "jaeger:4317"
+    otlp_http: "http://jaeger:4318"
+  logging:
+    level: info
+    format: json
+    output: stdout
+
+services:
+  endpoints:
+    identity:       { host: identity,       grpc_port: 50051, http_port: 8001 }
+    geospatial:     { host: geospatial,     grpc_port: 50052, http_port: 8002 }
+    registry:       { host: registry,       grpc_port: 50053, http_port: 8003 }
+    voices:         { host: voices,         grpc_port: 50054, http_port: 8004 }
+    issues:         { host: issues,         grpc_port: 50055, http_port: 8005 }
+    ledger:         { host: ledger,         grpc_port: 50056, http_port: 8006 }
+    rating:         { host: rating,         grpc_port: 50057, http_port: 8007 }
+    classification: { host: classification, grpc_port: 50058, http_port: 8008 }
+    sentiment:      { host: sentiment,      grpc_port: 50059, http_port: 8009 }
+    promises:       { host: promises,       grpc_port: 50060, http_port: 8010 }
+    chi:            { host: chi,            grpc_port: 50061, http_port: 8011 }
+    reputation:     { host: reputation,     grpc_port: 50062, http_port: 8012 }
+    polls:          { host: polls,          grpc_port: 50063, http_port: 8013 }
+    messaging:      { host: messaging,      grpc_port: 50064, http_port: 8014 }
+    search:         { host: search,         grpc_port: 50065, http_port: 8015 }
+    datamine:       { host: datamine,       grpc_port: 50066, http_port: 8016 }
+    notifications:  { host: notifications,  grpc_port: 50067, http_port: 8017 }
+    admin:          { host: admin,          grpc_port: 50068, http_port: 8018 }
+    party:          { host: party,          grpc_port: 50069, http_port: 8019 }
+    advertising:    { host: advertising,    grpc_port: 50070, http_port: 8020 }

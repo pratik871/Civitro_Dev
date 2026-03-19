@@ -5,9 +5,10 @@ option go_package = "github.com/civitro/proto/geospatial";
 import "common/common.proto";
 
 service GeospatialService {
-  rpc ResolveLocation(civitro.common.LatLng) returns (BoundaryList);
+  rpc ResolveLocation(civitro.common.LatLng) returns (ResolveResponse);
   rpc GetBoundary(civitro.common.IDRequest) returns (BoundaryResponse);
   rpc GetUserRepresentatives(civitro.common.IDRequest) returns (RepresentativeList);
+  rpc GetNomenclature(NomenclatureRequest) returns (NomenclatureResponse);
 }
 
 message BoundaryResponse {
@@ -15,10 +16,25 @@ message BoundaryResponse {
   string name = 2;
   string level = 3;
   string parent_id = 4;
+  string track = 5;
+  string urban_rural = 6;
+  string code = 7;
+  string state_local_name = 8;
 }
 
 message BoundaryList {
   repeated BoundaryResponse boundaries = 1;
+}
+
+message GovernanceChain {
+  repeated BoundaryResponse administrative = 1;
+  repeated BoundaryResponse electoral = 2;
+  repeated BoundaryResponse local_body = 3;
+}
+
+message ResolveResponse {
+  repeated BoundaryResponse boundaries = 1;
+  GovernanceChain governance_chain = 2;
 }
 
 message RepresentativeInfo {
@@ -27,8 +43,27 @@ message RepresentativeInfo {
   string party = 3;
   string position = 4;
   string boundary_id = 5;
+  string official_type = 6;
+  string designation = 7;
+  string track = 8;
 }
 
 message RepresentativeList {
   repeated RepresentativeInfo representatives = 1;
+}
+
+message NomenclatureRequest {
+  string state_code = 1;
+}
+
+message NomenclatureEntry {
+  string state_code = 1;
+  string state_name = 2;
+  string canonical_level = 3;
+  string local_name = 4;
+  string head_title = 5;
+}
+
+message NomenclatureResponse {
+  repeated NomenclatureEntry entries = 1;
 }

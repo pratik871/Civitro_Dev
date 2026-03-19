@@ -1,13 +1,16 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/civitro/pkg/events"
+	"github.com/civitro/pkg/logger"
 	"github.com/civitro/services/issues/internal/model"
 	"github.com/civitro/services/issues/internal/repository"
 )
@@ -73,17 +76,49 @@ func (s *Service) CreateIssue(ctx context.Context, userID string, req *model.Cre
 	})
 	_ = s.producer.Publish(ctx, events.TopicIssueCreated, issue.ID, payload)
 
+	// Award civic score points for reporting an issue
+	awardPoints(userID, "report_filed", 10, "Reported issue: "+issue.ID)
+
 	return &model.IssueResponse{Issue: *issue}, nil
 }
 
+// ListIssues retrieves a paginated list of issues.
+func (s *Service) ListIssues(ctx context.Context, userID string, limit, offset int) (*model.IssueListResponse, error) {
+	issues, total, err := s.repo.List(ctx, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list issues: %w", err)
+	}
+
+	if issues == nil {
+		issues = []model.Issue{}
+	}
+
+	// Populate HasUpvoted for each issue
+	if userID != "" {
+		for i := range issues {
+			upvoted, _ := s.repo.HasUpvoted(ctx, issues[i].ID, userID)
+			issues[i].HasUpvoted = upvoted
+		}
+	}
+
+	return &model.IssueListResponse{
+		Issues: issues,
+		Count:  total,
+	}, nil
+}
+
 // GetIssue retrieves an issue by ID.
-func (s *Service) GetIssue(ctx context.Context, id string) (*model.IssueResponse, error) {
+func (s *Service) GetIssue(ctx context.Context, id, userID string) (*model.IssueResponse, error) {
 	issue, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, errors.New("issue not found")
 		}
 		return nil, fmt.Errorf("failed to get issue: %w", err)
+	}
+
+	if userID != "" {
+		issue.HasUpvoted, _ = s.repo.HasUpvoted(ctx, issue.ID, userID)
 	}
 
 	return &model.IssueResponse{Issue: *issue}, nil
@@ -132,15 +167,21 @@ func (s *Service) GetByBoundary(ctx context.Context, boundaryID string) (*model.
 	}, nil
 }
 
-// UpvoteIssue increments the upvote count for an issue.
-func (s *Service) UpvoteIssue(ctx context.Context, issueID string) error {
-	if err := s.repo.IncrementUpvotes(ctx, issueID); err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return errors.New("issue not found")
-		}
-		return fmt.Errorf("failed to upvote issue: %w", err)
+// UpvoteIssue toggles the upvote for an issue. Returns the new upvoted state.
+func (s *Service) UpvoteIssue(ctx context.Context, issueID, userID string) (bool, error) {
+	upvoted, err := s.repo.ToggleUpvote(ctx, issueID, userID)
+	if err != nil {
+		return false, fmt.Errorf("failed to toggle upvote: %w", err)
 	}
-	return nil
+
+	// Award points to the issue reporter when upvoted
+	if upvoted {
+		if issue, err := s.repo.GetByID(ctx, issueID); err == nil && issue.UserID != userID {
+			awardPoints(issue.UserID, "voice_upvoted", 2, "Issue upvoted: "+issueID)
+		}
+	}
+
+	return upvoted, nil
 }
 
 // ConfirmIssue records a citizen confirmation of issue resolution.
@@ -196,6 +237,112 @@ func (s *Service) GetNearby(ctx context.Context, query *model.NearbyQuery) (*mod
 	}, nil
 }
 
+// CreateComment adds a comment to an issue.
+func (s *Service) CreateComment(ctx context.Context, issueID, userID, content, parentID string) (*model.Comment, error) {
+	if content == "" {
+		return nil, errors.New("comment content is required")
+	}
+
+	// Verify issue exists
+	if _, err := s.repo.GetByID(ctx, issueID); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, errors.New("issue not found")
+		}
+		return nil, fmt.Errorf("failed to get issue: %w", err)
+	}
+
+	comment := &model.Comment{
+		IssueID:  issueID,
+		UserID:   userID,
+		Content:  content,
+		ParentID: parentID,
+	}
+
+	if err := s.repo.CreateComment(ctx, comment); err != nil {
+		return nil, fmt.Errorf("failed to create comment: %w", err)
+	}
+
+	// Award points for commenting
+	awardPoints(userID, "survey_completed", 3, "Commented on issue: "+issueID)
+
+	return comment, nil
+}
+
+// ListComments retrieves comments for an issue.
+func (s *Service) ListComments(ctx context.Context, issueID, userID string, limit int) (*model.CommentListResponse, error) {
+	comments, err := s.repo.ListComments(ctx, issueID, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list comments: %w", err)
+	}
+	if comments == nil {
+		comments = []model.Comment{}
+	}
+	return &model.CommentListResponse{
+		Comments: comments,
+		Count:    len(comments),
+	}, nil
+}
+
+// GetTrending returns trending topics computed from issue data.
+func (s *Service) GetTrending(ctx context.Context) ([]model.TrendingTopic, error) {
+	topics, err := s.repo.GetTrending(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get trending: %w", err)
+	}
+	if topics == nil {
+		topics = []model.TrendingTopic{}
+	}
+	return topics, nil
+}
+
+// ListPromises returns promises joined with representative info.
+func (s *Service) ListPromises(ctx context.Context) ([]model.PromiseResponse, error) {
+	promises, err := s.repo.ListPromises(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list promises: %w", err)
+	}
+	if promises == nil {
+		promises = []model.PromiseResponse{}
+	}
+	return promises, nil
+}
+
+// GetCHI returns the Civic Health Index data.
+func (s *Service) GetCHI(ctx context.Context) (*model.CHIResponse, error) {
+	chi, err := s.repo.GetCHI(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get CHI: %w", err)
+	}
+	return chi, nil
+}
+
+// LikeComment toggles a like on a comment.
+func (s *Service) LikeComment(ctx context.Context, commentID, userID string) (bool, error) {
+	liked, err := s.repo.ToggleCommentLike(ctx, commentID, userID)
+	if err != nil {
+		return false, fmt.Errorf("failed to toggle comment like: %w", err)
+	}
+	return liked, nil
+}
+
+// awardPoints sends a score event to the reputation service (fire-and-forget).
+func awardPoints(userID, eventType string, points int, reason string) {
+	go func() {
+		payload, _ := json.Marshal(map[string]interface{}{
+			"user_id":    userID,
+			"event_type": eventType,
+			"points":     points,
+			"reason":     reason,
+		})
+		resp, err := http.Post("http://reputation:8012/api/v1/reputation/event", "application/json", bytes.NewReader(payload))
+		if err != nil {
+			logger.Error().Err(err).Str("user_id", userID).Msg("failed to award reputation points")
+			return
+		}
+		resp.Body.Close()
+	}()
+}
+
 // isValidCategory checks if a category is valid.
 func isValidCategory(cat model.IssueCategory) bool {
 	validCategories := map[model.IssueCategory]bool{
@@ -211,6 +358,13 @@ func isValidCategory(cat model.IssueCategory) bool {
 		model.CategoryTransport:    true,
 		model.CategoryHealthcare:   true,
 		model.CategoryOther:        true,
+		model.CategoryPothole:      true,
+		model.CategoryStreetlight:  true,
+		model.CategoryWaterSupply:  true,
+		model.CategoryRoadDamage:   true,
+		model.CategoryConstruction: true,
+		model.CategoryTraffic:      true,
+		model.CategoryEducation:    true,
 	}
 	return validCategories[cat]
 }

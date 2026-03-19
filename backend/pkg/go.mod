@@ -11,8 +11,11 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/spf13/viper v1.18.2
+	github.com/yeka/zip v0.0.0-20231116150916-03d6312748a9
 	go.mongodb.org/mongo-driver v1.14.0
 )
+
+require github.com/google/uuid v1.6.0 // indirect
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
@@ -30,7 +33,6 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect

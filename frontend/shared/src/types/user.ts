@@ -109,7 +109,8 @@ export interface RefreshRequest {
   refreshToken: string;
 }
 
-export interface VerifyAadhaarRequest {
-  aadhaarNumber: string;
-  otp: string;
+export interface VerifyAadhaarResponse {
+  message: string;
+  name: string;
+  verificationLevel: VerificationLevel;
 }

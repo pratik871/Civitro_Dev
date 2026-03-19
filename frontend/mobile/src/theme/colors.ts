@@ -29,6 +29,7 @@ export const colors = {
   // Misc
   overlay: 'rgba(0, 0, 0, 0.5)',
   transparent: 'transparent',
+  star: '#F59E0B',
 
   // Issue category colors
   issueCategories: {

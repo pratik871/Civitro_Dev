@@ -57,7 +57,6 @@ func (s *MessagingService) SendMessage(ctx context.Context, req model.SendMessag
 		SenderID:       req.SenderID,
 		Text:           req.Text,
 		MediaURL:       req.MediaURL,
-		ReadBy:         []string{req.SenderID}, // Sender has read their own message.
 		CreatedAt:      time.Now().UTC(),
 	}
 

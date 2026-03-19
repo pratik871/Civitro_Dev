@@ -19,6 +19,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 	UserID            string `json:"user_id"`
 	VerificationLevel string `json:"verification_level"` // e.g. "phone", "aadhaar", "full"
+	Role              string `json:"role,omitempty"`      // e.g. "citizen", "representative", "admin"
 }
 
 // JWTAuth returns a Gin middleware that validates a Bearer JWT token in the
@@ -49,6 +50,7 @@ func JWTAuth() gin.HandlerFunc {
 		// Populate context for downstream handlers.
 		c.Set("user_id", claims.UserID)
 		c.Set("verification_level", claims.VerificationLevel)
+		c.Set("role", claims.Role)
 		c.Set("claims", claims)
 
 		c.Next()
@@ -84,7 +86,7 @@ func validateToken(tokenString string) (*Claims, error) {
 
 // GenerateToken creates a signed JWT for the given user. This is a convenience
 // used by the auth service; other services only validate tokens.
-func GenerateToken(userID, verificationLevel string) (string, error) {
+func GenerateToken(userID, verificationLevel, role string) (string, error) {
 	cfg := config.Get()
 	secret := cfg.Auth.JWT.Secret
 	if secret == "" {
@@ -106,10 +108,36 @@ func GenerateToken(userID, verificationLevel string) (string, error) {
 		},
 		UserID:            userID,
 		VerificationLevel: verificationLevel,
+		Role:              role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+// RequireRole returns middleware that checks the user's role from the JWT.
+// Aborts with 403 Forbidden if the role does not match any of the allowed roles.
+// Must be used after JWTAuth middleware.
+func RequireRole(allowed ...string) gin.HandlerFunc {
+	roleSet := make(map[string]bool, len(allowed))
+	for _, r := range allowed {
+		roleSet[r] = true
+	}
+	return func(c *gin.Context) {
+		role := GetRole(c)
+		if !roleSet[role] {
+			apperrors.AbortWithError(c, apperrors.ErrForbidden.WithMessage("insufficient permissions"))
+			return
+		}
+		c.Next()
+	}
+}
+
+// GetRole extracts the user role from the Gin context.
+func GetRole(c *gin.Context) string {
+	v, _ := c.Get("role")
+	s, _ := v.(string)
+	return s
 }
 
 // OptionalJWTAuth is like JWTAuth but does NOT abort the request when no token
@@ -132,6 +160,7 @@ func OptionalJWTAuth() gin.HandlerFunc {
 		if err == nil {
 			c.Set("user_id", claims.UserID)
 			c.Set("verification_level", claims.VerificationLevel)
+			c.Set("role", claims.Role)
 			c.Set("claims", claims)
 		}
 

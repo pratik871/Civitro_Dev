@@ -42,9 +42,11 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 func (r *PostgresRepository) Create(ctx context.Context, voice *model.Voice) error {
 	query := `
 		INSERT INTO voices (id, user_id, text, media_urls, hashtags, mentions,
-		                     location_lat, location_lng, language, likes_count,
+		                     location, language, likes_count,
 		                     replies_count, shares_count, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		VALUES ($1, $2, $3, $4, $5, $6,
+		        CASE WHEN $7::float8 IS NOT NULL THEN ST_SetSRID(ST_MakePoint($8::float8, $7::float8), 4326) ELSE NULL END,
+		        $9, $10, $11, $12, $13)
 	`
 
 	var lat, lng *float64
@@ -65,7 +67,7 @@ func (r *PostgresRepository) Create(ctx context.Context, voice *model.Voice) err
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.Voice, error) {
 	query := `
 		SELECT id, user_id, text, media_urls, hashtags, mentions,
-		       location_lat, location_lng, language, likes_count,
+		       ST_Y(location), ST_X(location), language, likes_count,
 		       replies_count, shares_count, created_at
 		FROM voices WHERE id = $1
 	`
@@ -103,7 +105,7 @@ func (r *PostgresRepository) GetFeed(ctx context.Context, boundaryID string, cur
 	if cursor != "" {
 		query = `
 			SELECT id, user_id, text, media_urls, hashtags, mentions,
-			       location_lat, location_lng, language, likes_count,
+			       ST_Y(location), ST_X(location), language, likes_count,
 			       replies_count, shares_count, created_at
 			FROM voices
 			WHERE created_at < (SELECT created_at FROM voices WHERE id = $1)
@@ -114,7 +116,7 @@ func (r *PostgresRepository) GetFeed(ctx context.Context, boundaryID string, cur
 	} else {
 		query = `
 			SELECT id, user_id, text, media_urls, hashtags, mentions,
-			       location_lat, location_lng, language, likes_count,
+			       ST_Y(location), ST_X(location), language, likes_count,
 			       replies_count, shares_count, created_at
 			FROM voices
 			ORDER BY created_at DESC
@@ -223,7 +225,7 @@ func (r *PostgresRepository) GetByHashtag(ctx context.Context, hashtag string, l
 
 	query := `
 		SELECT id, user_id, text, media_urls, hashtags, mentions,
-		       location_lat, location_lng, language, likes_count,
+		       ST_Y(location), ST_X(location), language, likes_count,
 		       replies_count, shares_count, created_at
 		FROM voices
 		WHERE $1 = ANY(hashtags)

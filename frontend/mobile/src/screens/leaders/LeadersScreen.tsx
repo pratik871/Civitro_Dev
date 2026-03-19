@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,140 +6,18 @@ import {
   ScrollView,
   RefreshControl,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LeaderCard } from '../../components/leaders/LeaderCard';
+import { useLeaders } from '../../hooks/useLeaders';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import type { Leader } from '../../types/leader';
 import type { RootStackParamList } from '../../navigation/types';
 
 type LeadersNavProp = NativeStackNavigationProp<RootStackParamList>;
-
-const MOCK_LEADERS: Leader[] = [
-  {
-    id: 'leader-001',
-    name: 'Raghavendra Rao',
-    party: 'Bharatiya Janata Party',
-    partyAbbr: 'BJP',
-    governanceLevel: 'ward_councillor',
-    constituency: 'Bangalore South',
-    ward: 'Ward 15 - Koramangala',
-    overallRating: 3.8,
-    ratingBreakdown: {
-      responsiveness: 4.1,
-      transparency: 3.5,
-      deliveryOnPromises: 3.2,
-      accessibility: 4.5,
-      overallImpact: 3.7,
-    },
-    totalRatings: 342,
-    responseRate: 0.78,
-    chiScore: 68,
-    promisesFulfilled: 8,
-    promisesTotal: 15,
-    issuesResolved: 89,
-    issuesTotal: 142,
-    recentActivity: [],
-  },
-  {
-    id: 'leader-002',
-    name: 'Kavitha Sharma',
-    party: 'Indian National Congress',
-    partyAbbr: 'INC',
-    governanceLevel: 'mla',
-    constituency: 'Bangalore South',
-    overallRating: 4.1,
-    ratingBreakdown: {
-      responsiveness: 4.3,
-      transparency: 4.0,
-      deliveryOnPromises: 3.8,
-      accessibility: 4.2,
-      overallImpact: 4.2,
-    },
-    totalRatings: 1256,
-    responseRate: 0.82,
-    chiScore: 74,
-    promisesFulfilled: 12,
-    promisesTotal: 18,
-    issuesResolved: 234,
-    issuesTotal: 340,
-    recentActivity: [],
-  },
-  {
-    id: 'leader-003',
-    name: 'Sunil Gowda',
-    party: 'Bharatiya Janata Party',
-    partyAbbr: 'BJP',
-    governanceLevel: 'mayor',
-    constituency: 'Bangalore',
-    overallRating: 3.5,
-    ratingBreakdown: {
-      responsiveness: 3.2,
-      transparency: 3.8,
-      deliveryOnPromises: 3.1,
-      accessibility: 3.5,
-      overallImpact: 3.9,
-    },
-    totalRatings: 4521,
-    responseRate: 0.65,
-    chiScore: 62,
-    promisesFulfilled: 15,
-    promisesTotal: 30,
-    issuesResolved: 567,
-    issuesTotal: 980,
-    recentActivity: [],
-  },
-  {
-    id: 'leader-004',
-    name: 'Arun Kumar Singh',
-    party: 'Indian National Congress',
-    partyAbbr: 'INC',
-    governanceLevel: 'mp',
-    constituency: 'Bangalore South',
-    overallRating: 3.9,
-    ratingBreakdown: {
-      responsiveness: 3.7,
-      transparency: 4.2,
-      deliveryOnPromises: 3.6,
-      accessibility: 3.8,
-      overallImpact: 4.2,
-    },
-    totalRatings: 8932,
-    responseRate: 0.71,
-    chiScore: 71,
-    promisesFulfilled: 22,
-    promisesTotal: 35,
-    issuesResolved: 890,
-    issuesTotal: 1450,
-    recentActivity: [],
-  },
-  {
-    id: 'leader-005',
-    name: 'Meera Natarajan',
-    party: 'Indian National Congress',
-    partyAbbr: 'INC',
-    governanceLevel: 'cm',
-    constituency: 'Karnataka',
-    overallRating: 4.0,
-    ratingBreakdown: {
-      responsiveness: 3.9,
-      transparency: 4.1,
-      deliveryOnPromises: 3.7,
-      accessibility: 3.5,
-      overallImpact: 4.8,
-    },
-    totalRatings: 45230,
-    responseRate: 0.55,
-    chiScore: 69,
-    promisesFulfilled: 35,
-    promisesTotal: 60,
-    issuesResolved: 4500,
-    issuesTotal: 8200,
-    recentActivity: [],
-  },
-];
 
 const GOVERNANCE_SECTIONS = [
   { level: 'ward_councillor', title: 'Ward Councillor', icon: '\u{1F3D8}' },
@@ -151,24 +29,31 @@ const GOVERNANCE_SECTIONS = [
 
 export const LeadersScreen: React.FC = () => {
   const navigation = useNavigation<LeadersNavProp>();
-  const [refreshing, setRefreshing] = useState(false);
+  const { data: leaders, isLoading, refetch } = useLeaders();
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setRefreshing(false);
-  }, []);
+    await refetch();
+  }, [refetch]);
 
+  const insets = useSafeAreaInsets();
   const groupedLeaders = GOVERNANCE_SECTIONS.map(section => ({
     ...section,
-    leaders: MOCK_LEADERS.filter(l => l.governanceLevel === section.level),
+    leaders: (leaders ?? []).filter(l => l.governanceLevel === section.level),
   })).filter(section => section.leaders.length > 0);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <Text style={styles.headerTitle}>Your Governance Chain</Text>
         <Text style={styles.headerSubtitle}>
           From your ward to the nation - rate and track your representatives
@@ -180,7 +65,7 @@ export const LeadersScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={false}
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
@@ -188,23 +73,29 @@ export const LeadersScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        {groupedLeaders.map(section => (
-          <View key={section.level} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionIcon}>{section.icon}</Text>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-            </View>
-            {section.leaders.map(leader => (
-              <LeaderCard
-                key={leader.id}
-                leader={leader}
-                onPress={() =>
-                  navigation.navigate('LeaderProfile', { leaderId: leader.id })
-                }
-              />
-            ))}
+        {groupedLeaders.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No representatives found</Text>
           </View>
-        ))}
+        ) : (
+          groupedLeaders.map(section => (
+            <View key={section.level} style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionIcon}>{section.icon}</Text>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+              </View>
+              {section.leaders.map(leader => (
+                <LeaderCard
+                  key={leader.id}
+                  leader={leader}
+                  onPress={() =>
+                    navigation.navigate('LeaderProfile', { leaderId: leader.id })
+                  }
+                />
+              ))}
+            </View>
+          ))
+        )}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -219,7 +110,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['4xl'],
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
   },
   headerTitle: {
@@ -258,5 +149,21 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
   },
 });

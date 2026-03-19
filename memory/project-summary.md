@@ -157,11 +157,20 @@ All civitro Docker services use 1xxxx host ports to avoid conflicts with local P
 - MinIO: **19000/19001**, Ollama: 11434, Jaeger: 16686/**14317**/**14318**
 - OpenSearch Dashboards: **15601**, Redpanda Console: **18888**
 
-## Current Status (Updated 2026-03-10)
-- **Backend: FULLY OPERATIONAL** — All 14 Go services compile, start, and respond to /health
-- **Infrastructure: ALL RUNNING** — 11 Docker containers with correct port mappings
-- **Database: MIGRATED** — 36 tables created in PostgreSQL
-- **Frontend: BEING SCAFFOLDED** — Next.js web + React Native mobile + shared package
-- **Python AI services:** Scaffolded, partially tested (advertising works)
-- **Config system:** Fully wired up (centralized YAML, provider pattern)
-- **Next:** Complete frontend, init git repo, test Python services, download AI models
+## Current Status (Updated 2026-03-13)
+- **Backend: FULLY DOCKERIZED** — All 14 Go services in Docker Compose (5 MVP + 9 wave2 profile)
+- **Infrastructure: ALL RUNNING** — 11 Docker containers + 14 Go services + nginx gateway
+- **Database: MIGRATED** — 36 tables + comment threading + role column on users
+- **Frontend Web:** Next.js 14, 67 files, 24 pages, builds successfully
+- **Frontend Mobile:** React Native 0.76, 18+ screens, ALL wired to real APIs, ZERO mock data
+- **Polls:** Full flow — list, vote (select→confirm), retract, detail. Creation locked to admin/representative via RequireRole middleware.
+- **Voices:** Full flow — list (feed), create, detail, like/share/bookmark. PostGIS location queries fixed.
+- **Comment System:** Threaded replies, upvote toggle, like counts, comment counts on issue cards
+- **Civic Score:** End-to-end wired (issues→reputation→identity), 5 tiers, points for actions
+- **RBAC:** Role field in JWT claims (citizen/representative/admin), RequireRole middleware, tested
+- **Sentiment AI:** Python service running locally (port 8009), Multilingual BERT, single+batch analysis working
+- **API Gateway:** Nginx with dynamic DNS resolution (resolver 127.0.0.11), no more 502 on service rebuild
+- **Python AI:** Sentiment tested + working. 4/6 pass health check. Not yet dockerized — accessed via host.docker.internal
+- **Phone Testing:** LAN IP 192.168.1.8, OTP hardcoded to 111111 for dev, full login flow works
+- **Seeded Data:** 3 polls with options, 3 voices, 3 representatives, 6 promises
+- **Next:** Wire sentiment into voices UI, messages e2e, photo upload, dockerize Python AI, add .next to .gitignore

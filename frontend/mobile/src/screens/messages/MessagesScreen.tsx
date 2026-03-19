@@ -6,82 +6,43 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { Avatar } from '../../components/ui/Avatar';
+import { useMessages } from '../../hooks/useMessages';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime } from '../../lib/utils';
 
 interface Message {
   id: string;
-  senderName: string;
-  senderRole: string;
+  sender_name: string;
+  sender_role: string;
   preview: string;
-  timestamp: string;
+  created_at: string;
   unread: boolean;
 }
 
-const MOCK_MESSAGES: Message[] = [
-  {
-    id: 'msg-1',
-    senderName: 'BBMP Roads Division',
-    senderRole: 'Government',
-    preview: 'Your reported pothole on 4th Block Junction has been assigned to our maintenance team...',
-    timestamp: '2025-11-30T14:30:00Z',
-    unread: true,
-  },
-  {
-    id: 'msg-2',
-    senderName: 'Ward Councillor Office',
-    senderRole: 'Ward 15',
-    preview: 'Thank you for your participation in the recent budget allocation poll. Results will be...',
-    timestamp: '2025-11-29T10:00:00Z',
-    unread: true,
-  },
-  {
-    id: 'msg-3',
-    senderName: 'Civitro Community',
-    senderRole: 'System',
-    preview: 'Congratulations! Your civic score has increased to 72. Keep participating to earn more...',
-    timestamp: '2025-11-28T16:00:00Z',
-    unread: false,
-  },
-  {
-    id: 'msg-4',
-    senderName: 'BWSSB',
-    senderRole: 'Government',
-    preview: 'Water supply maintenance scheduled for Dec 2-3 in your area. Please store water...',
-    timestamp: '2025-11-27T09:00:00Z',
-    unread: false,
-  },
-  {
-    id: 'msg-5',
-    senderName: 'Kavitha Sharma',
-    senderRole: 'MLA, Bangalore South',
-    preview: 'Dear residents, I am happy to announce that the metro phase 3 work in our constituency...',
-    timestamp: '2025-11-25T12:00:00Z',
-    unread: false,
-  },
-];
-
 export const MessagesScreen: React.FC = () => {
+  const { data: messages, isLoading } = useMessages();
+
   const renderMessage = ({ item }: { item: Message }) => (
     <TouchableOpacity style={styles.messageRow} activeOpacity={0.7}>
       <Avatar
-        name={item.senderName}
+        name={item.sender_name}
         size={48}
         backgroundColor={item.unread ? colors.primary : colors.navyLight}
       />
       <View style={styles.messageContent}>
         <View style={styles.messageHeader}>
           <Text style={[styles.senderName, item.unread && styles.unreadText]}>
-            {item.senderName}
+            {item.sender_name}
           </Text>
           <Text style={styles.timestamp}>
-            {formatRelativeTime(item.timestamp)}
+            {formatRelativeTime(item.created_at)}
           </Text>
         </View>
-        <Text style={styles.senderRole}>{item.senderRole}</Text>
+        <Text style={styles.senderRole}>{item.sender_role}</Text>
         <Text
           style={[styles.preview, item.unread && styles.unreadText]}
           numberOfLines={2}
@@ -93,11 +54,19 @@ export const MessagesScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <FlatList
-        data={MOCK_MESSAGES}
+        data={messages ?? []}
         renderItem={renderMessage}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
@@ -117,6 +86,12 @@ export const MessagesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.background,
   },
   listContent: {

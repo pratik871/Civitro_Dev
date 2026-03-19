@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
+import { TranslatedText } from '../ui/TranslatedText';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { getCategoryColor, formatRelativeTime, formatNumber } from '../../lib/utils';
@@ -38,13 +39,19 @@ export const IssueCard: React.FC<IssueCardProps> = ({
         </Text>
       </View>
 
-      <Text style={styles.title} numberOfLines={2}>
-        {issue.title}
-      </Text>
+      <TranslatedText
+        text={issue.title}
+        style={styles.title}
+        numberOfLines={2}
+      />
 
-      <Text style={styles.description} numberOfLines={2}>
-        {issue.description}
-      </Text>
+      {issue.description ? (
+        <TranslatedText
+          text={issue.description}
+          style={styles.description}
+          numberOfLines={2}
+        />
+      ) : null}
 
       <View style={styles.locationRow}>
         <Text style={styles.locationIcon}>{'\u{1F4CD}'}</Text>

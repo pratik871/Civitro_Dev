@@ -8,20 +8,24 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAuth } from '../../hooks/useAuth';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type RegisterNavProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 type RegisterRouteProp = RouteProp<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<RegisterNavProp>();
   const route = useRoute<RegisterRouteProp>();
+  const { sendOTP, isLoading } = useAuth();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState(route.params?.phone || '');
@@ -34,15 +38,18 @@ export const RegisterScreen: React.FC = () => {
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = 'Name is required';
     if (phone.length !== 10) newErrors.phone = 'Enter a valid 10-digit number';
-    if (!ward.trim()) newErrors.ward = 'Ward is required';
-    if (!constituency.trim()) newErrors.constituency = 'Constituency is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!validate()) return;
-    navigation.navigate('OTPVerify', { phone, isRegistering: true });
+    const result = await sendOTP(phone, name.trim());
+    if (result.success) {
+      navigation.navigate('OTPVerify', { phone, isRegistering: true });
+    } else {
+      setErrors({ phone: result.error || 'Registration failed' });
+    }
   };
 
   return (
@@ -55,7 +62,7 @@ export const RegisterScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
           <Text style={styles.title}>Create your account</Text>
           <Text style={styles.subtitle}>
             Join the civic revolution. Your voice matters.
@@ -94,7 +101,7 @@ export const RegisterScreen: React.FC = () => {
 
           <Input
             label="Ward"
-            placeholder="e.g., Ward 15 - Koramangala"
+            placeholder="e.g., Ward 15"
             value={ward}
             onChangeText={setWard}
             error={errors.ward}
@@ -103,7 +110,7 @@ export const RegisterScreen: React.FC = () => {
 
           <Input
             label="Constituency"
-            placeholder="e.g., Bangalore South"
+            placeholder="e.g., South Delhi"
             value={constituency}
             onChangeText={setConstituency}
             error={errors.constituency}
@@ -115,6 +122,7 @@ export const RegisterScreen: React.FC = () => {
             onPress={handleRegister}
             fullWidth
             size="lg"
+            loading={isLoading}
             style={styles.submitButton}
           />
 
@@ -141,7 +149,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing['4xl'],
+    paddingTop: spacing.lg,
     paddingBottom: spacing['3xl'],
   },
   header: {

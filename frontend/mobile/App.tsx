@@ -1,16 +1,13 @@
-import React from 'react';
-import { StatusBar, StyleSheet, LogBox } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootNavigator } from './src/navigation';
 import { colors } from './src/theme/colors';
-
-// Suppress known warnings in development
-LogBox.ignoreLogs([
-  'ViewPropTypes will be removed',
-  'ColorPropType will be removed',
-]);
+import { useSettingsStore } from './src/stores/settingsStore';
+import './src/i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,15 +23,14 @@ const queryClient = new QueryClient({
 });
 
 const App: React.FC = () => {
+  const loadSettings = useSettingsStore(state => state.loadSettings);
+  useEffect(() => { loadSettings(); }, [loadSettings]);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar
-            barStyle="dark-content"
-            backgroundColor={colors.background}
-            translucent={false}
-          />
+          <StatusBar style="dark" />
           <RootNavigator />
         </QueryClientProvider>
       </SafeAreaProvider>

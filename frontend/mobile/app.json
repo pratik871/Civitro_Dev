@@ -1,4 +1,49 @@
 {
-  "name": "CivitroMobile",
-  "displayName": "Civitro"
+  "expo": {
+    "name": "Civitro",
+    "slug": "civitro",
+    "owner": "pratik814",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "civitro",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A365D"
+    },
+    "android": {
+      "package": "in.civitro.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1A365D"
+      },
+      "softwareKeyboardLayoutMode": "adjustResize"
+    },
+    "ios": {
+      "bundleIdentifier": "in.civitro.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Civitro needs camera access to capture issue photos",
+        "NSPhotoLibraryUsageDescription": "Civitro needs photo library access to attach images to issues",
+        "NSLocationWhenInUseUsageDescription": "Civitro needs your location to show nearby civic issues",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "47a6ba02-8631-4519-a5d4-7c28326779e7"
+      }
+    }
+  }
 }

@@ -5,11 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import { Card } from '../../components/ui/Card';
 import { ScoreRing } from '../../components/ui/ScoreRing';
+import api from '../../lib/api';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import type { RootStackParamList } from '../../navigation/types';
 
 interface CHICategory {
   name: string;
@@ -19,20 +24,12 @@ interface CHICategory {
   change: number;
 }
 
-const MOCK_CHI_SCORE = 68;
-
-const MOCK_CATEGORIES: CHICategory[] = [
-  { name: 'Infrastructure', score: 72, icon: '\u{1F3D7}', trend: 'up', change: 3 },
-  { name: 'Cleanliness', score: 65, icon: '\u{1F9F9}', trend: 'down', change: -2 },
-  { name: 'Water & Sanitation', score: 58, icon: '\u{1F4A7}', trend: 'stable', change: 0 },
-  { name: 'Healthcare', score: 71, icon: '\u{1F3E5}', trend: 'up', change: 5 },
-  { name: 'Education', score: 78, icon: '\u{1F393}', trend: 'up', change: 2 },
-  { name: 'Public Safety', score: 62, icon: '\u{1F6E1}', trend: 'down', change: -1 },
-  { name: 'Transport', score: 55, icon: '\u{1F68C}', trend: 'stable', change: 1 },
-  { name: 'Environment', score: 70, icon: '\u{1F333}', trend: 'up', change: 4 },
-  { name: 'Governance Response', score: 68, icon: '\u{1F3DB}', trend: 'up', change: 6 },
-  { name: 'Citizen Engagement', score: 75, icon: '\u{1F465}', trend: 'up', change: 8 },
-];
+interface CHIData {
+  overallScore: number;
+  categories: CHICategory[];
+  constituency?: string;
+  trend?: { change: number; period: string };
+}
 
 const TREND_ICONS = {
   up: '\u2191',
@@ -47,6 +44,38 @@ const TREND_COLORS = {
 };
 
 export const CHIScreen: React.FC = () => {
+  const route = useRoute<RouteProp<RootStackParamList>>();
+  const constituencyId = (route.params as { constituencyId?: string } | undefined)?.constituencyId;
+
+  const { data: chiData, isLoading } = useQuery<CHIData>({
+    queryKey: ['chi', constituencyId],
+    queryFn: () => api.get(constituencyId ? `/api/v1/issues/chi?constituency=${constituencyId}` : '/api/v1/issues/chi'),
+    staleTime: 60000,
+  });
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!chiData) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.emptyText}>CHI data not available yet</Text>
+      </View>
+    );
+  }
+
+  const overallScore = chiData.overallScore;
+  const categories = chiData.categories ?? [];
+  const trendChange = chiData.trend?.change ?? 0;
+  const trendPeriod = chiData.trend?.period ?? 'vs last month';
+  const trendColor = trendChange >= 0 ? colors.success : colors.error;
+  const trendArrow = trendChange >= 0 ? '\u2191' : '\u2193';
+
   return (
     <ScrollView
       style={styles.container}
@@ -59,7 +88,7 @@ export const CHIScreen: React.FC = () => {
       <Card style={styles.overallCard}>
         <View style={styles.overallContent}>
           <ScoreRing
-            score={MOCK_CHI_SCORE}
+            score={overallScore}
             size={100}
             strokeWidth={7}
             label="CHI"
@@ -69,17 +98,17 @@ export const CHIScreen: React.FC = () => {
               Constituency Health Index
             </Text>
             <Text style={styles.overallSubtitle}>
-              Bangalore South - Ward 15
+              {chiData.constituency ?? ''}
             </Text>
             <Text style={styles.overallDesc}>
               Composite score measuring the overall health and governance quality
               of your constituency.
             </Text>
             <View style={styles.trendRow}>
-              <Text style={[styles.trendText, { color: colors.success }]}>
-                {'\u2191'} +3.2 pts
+              <Text style={[styles.trendText, { color: trendColor }]}>
+                {trendArrow} {trendChange > 0 ? '+' : ''}{trendChange} pts
               </Text>
-              <Text style={styles.trendPeriod}>vs last month</Text>
+              <Text style={styles.trendPeriod}>{trendPeriod}</Text>
             </View>
           </View>
         </View>
@@ -88,10 +117,10 @@ export const CHIScreen: React.FC = () => {
       {/* Score Breakdown */}
       <Text style={styles.sectionTitle}>Score Breakdown</Text>
       <Text style={styles.sectionSubtitle}>
-        10 key areas that determine your constituency health
+        {categories.length} key areas that determine your constituency health
       </Text>
 
-      {MOCK_CATEGORIES.map(category => {
+      {categories.map(category => {
         const scoreColor =
           category.score >= 75
             ? colors.success
@@ -157,6 +186,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   content: {
     paddingHorizontal: spacing.lg,

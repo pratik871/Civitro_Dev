@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,67 +7,121 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { useQuery } from '@tanstack/react-query';
 import type { IssueCategory, ReportStepData } from '../../types';
 import { ISSUE_CATEGORY_LABELS } from '../../types/issue';
+import { useCreateIssue } from '../../hooks/useIssues';
+import apiClient from '../../lib/api';
 
 const CATEGORY_CONFIG: Array<{
   key: IssueCategory;
   icon: string;
   color: string;
 }> = [
-  { key: 'pothole', icon: '\u{1F6A7}', color: '#DC2626' },
-  { key: 'garbage', icon: '\u{1F5D1}', color: '#EA580C' },
-  { key: 'streetlight', icon: '\u{1F4A1}', color: '#EAB308' },
-  { key: 'water_supply', icon: '\u{1F4A7}', color: '#2563EB' },
-  { key: 'road_damage', icon: '\u26A0\uFE0F', color: '#D97706' },
-  { key: 'construction', icon: '\u{1F3D7}', color: '#7C3AED' },
-  { key: 'drainage', icon: '\u{1F327}', color: '#0D9488' },
-  { key: 'traffic', icon: '\u{1F6A6}', color: '#DC2626' },
-  { key: 'healthcare', icon: '\u{1F3E5}', color: '#16A34A' },
-  { key: 'education', icon: '\u{1F4DA}', color: '#2563EB' },
-  { key: 'public_safety', icon: '\u{1F6E1}', color: '#1E293B' },
-  { key: 'other', icon: '\u2699\uFE0F', color: '#6B7280' },
+  { key: 'pothole', icon: '\u{1F6A7}', color: colors.issueCategories.pothole },
+  { key: 'garbage', icon: '\u{1F5D1}', color: colors.issueCategories.garbage },
+  { key: 'streetlight', icon: '\u{1F4A1}', color: colors.issueCategories.streetlight },
+  { key: 'water_supply', icon: '\u{1F4A7}', color: colors.issueCategories.water_supply },
+  { key: 'road_damage', icon: '\u26A0\uFE0F', color: colors.issueCategories.road_damage },
+  { key: 'construction', icon: '\u{1F3D7}', color: colors.issueCategories.construction },
+  { key: 'drainage', icon: '\u{1F327}', color: colors.issueCategories.drainage },
+  { key: 'traffic', icon: '\u{1F6A6}', color: colors.issueCategories.traffic },
+  { key: 'healthcare', icon: '\u{1F3E5}', color: colors.issueCategories.healthcare },
+  { key: 'education', icon: '\u{1F4DA}', color: colors.issueCategories.education },
+  { key: 'public_safety', icon: '\u{1F6E1}', color: colors.issueCategories.public_safety },
+  { key: 'other', icon: '\u2699\uFE0F', color: colors.issueCategories.other },
 ];
 
-const DEPARTMENT_MAP: Partial<Record<IssueCategory, string>> = {
-  pothole: 'BBMP Roads Division',
-  garbage: 'BBMP Solid Waste Management',
-  streetlight: 'BESCOM',
-  water_supply: 'BWSSB',
-  road_damage: 'BBMP Roads Division',
-  construction: 'BBMP Engineering',
-  drainage: 'BBMP Storm Water Drain',
-  traffic: 'Traffic Police',
-  healthcare: 'BBMP Health Division',
-  education: 'Dept. of Public Instruction',
-  public_safety: 'City Police',
-  other: 'BBMP General',
-};
+// Department mappings fetched from API; falls back to generic label
+type DepartmentMap = Partial<Record<IssueCategory, string>>;
 
 export const ReportIssueScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<ReportStepData>({
-    latitude: 12.9352,
-    longitude: 77.6245,
-    address: 'Koramangala 4th Block, Bangalore',
-    suggestedCategory: 'pothole',
-  });
+  const [data, setData] = useState<ReportStepData>({});
   const [description, setDescription] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const createIssue = useCreateIssue();
 
-  const handleTakePhoto = () => {
-    // Simulate photo capture
-    setData(prev => ({
-      ...prev,
-      photoUri: 'mock-photo-uri',
-    }));
-    Alert.alert('Camera', 'Photo captured successfully (simulated)');
+  const { data: departmentMap } = useQuery<DepartmentMap>({
+    queryKey: ['departments'],
+    queryFn: () => apiClient.get('/api/v1/issues/departments'),
+    staleTime: 300_000,
+  });
+  const DEPARTMENT_MAP: DepartmentMap = departmentMap ?? {};
+
+  // Fetch real GPS location on mount
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to report issues.');
+        setLocationLoading(false);
+        return;
+      }
+      try {
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        const [geo] = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        const address = geo
+          ? [geo.name, geo.street, geo.subregion, geo.city].filter(Boolean).join(', ')
+          : `${loc.coords.latitude.toFixed(4)}, ${loc.coords.longitude.toFixed(4)}`;
+        setData(prev => ({
+          ...prev,
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          address,
+        }));
+      } catch {
+        Alert.alert('Location Error', 'Could not determine your location. Please try again.');
+      } finally {
+        setLocationLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: true,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setData(prev => ({ ...prev, photoUri: result.assets[0].uri }));
+    }
+  };
+
+  const handlePickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: true,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setData(prev => ({ ...prev, photoUri: result.assets[0].uri }));
+    }
   };
 
   const handleSelectCategory = (category: IssueCategory) => {
@@ -78,117 +132,196 @@ export const ReportIssueScreen: React.FC = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    const selectedCategory = data.category || data.suggestedCategory || 'other';
+    if (!data.latitude || !data.longitude) {
+      Alert.alert('Location Required', 'Please wait for your location to be detected.');
+      return;
+    }
+
     setSubmitting(true);
-    // Simulate submission
-    setTimeout(() => {
-      setSubmitting(false);
-      Alert.alert(
-        'Issue Reported!',
-        'Your issue has been submitted successfully. You can track its progress in the Issues section.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setStep(1);
-              setData({
-                latitude: 12.9352,
-                longitude: 77.6245,
-                address: 'Koramangala 4th Block, Bangalore',
-                suggestedCategory: 'pothole',
-              });
-              setDescription('');
-            },
+    try {
+      // Upload photo first if one was captured
+      let photoUrls: string[] = [];
+      if (data.photoUri) {
+        const formData = new FormData();
+        const uri = data.photoUri;
+        const filename = uri.split('/').pop() || 'photo.jpg';
+        formData.append('photo', {
+          uri,
+          name: filename,
+          type: 'image/jpeg',
+        } as any);
+        const uploadRes = await apiClient.upload<{ url: string }>('/api/v1/issues/upload', formData);
+        photoUrls = [uploadRes.url];
+      }
+
+      createIssue.mutate(
+        {
+          text: description || ISSUE_CATEGORY_LABELS[selectedCategory],
+          gps_lat: data.latitude,
+          gps_lng: data.longitude,
+          category: selectedCategory,
+          severity: 'medium',
+          photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
+        },
+        {
+          onSuccess: () => {
+            setSubmitting(false);
+            Alert.alert(
+              'Issue Reported!',
+              'Your issue has been submitted successfully. You can track its progress in the Issues section.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    setStep(1);
+                    setData(prev => ({
+                      latitude: prev.latitude,
+                      longitude: prev.longitude,
+                      address: prev.address,
+                    }));
+                    setDescription('');
+                  },
+                },
+              ],
+            );
           },
-        ],
+          onError: (err) => {
+            setSubmitting(false);
+            Alert.alert('Submission Failed', err.message || 'Could not submit the issue. Please try again.');
+          },
+        },
       );
-    }, 1500);
+    } catch (err: any) {
+      setSubmitting(false);
+      Alert.alert('Upload Failed', err.message || 'Could not upload photo. Please try again.');
+    }
   };
+
+  const STEP_LABELS = [t('issues.photo'), t('issues.describe'), t('issues.classify'), t('issues.review')];
+  const TOTAL_STEPS = STEP_LABELS.length;
 
   const renderStepIndicator = () => (
     <View style={styles.stepIndicator}>
-      {[1, 2, 3].map(s => (
-        <View key={s} style={styles.stepRow}>
-          <View
-            style={[
-              styles.stepDot,
-              s <= step ? styles.stepDotActive : styles.stepDotInactive,
-            ]}
-          >
-            <Text style={[styles.stepNumber, s <= step && styles.stepNumberActive]}>
-              {s}
-            </Text>
-          </View>
-          <Text
-            style={[
-              styles.stepLabel,
-              s <= step ? styles.stepLabelActive : styles.stepLabelInactive,
-            ]}
-          >
-            {s === 1 ? 'Photo' : s === 2 ? 'Classify' : 'Review'}
-          </Text>
-          {s < 3 && (
-            <View
-              style={[
-                styles.stepLine,
-                s < step ? styles.stepLineActive : styles.stepLineInactive,
-              ]}
-            />
-          )}
-        </View>
-      ))}
+      {STEP_LABELS.map((label, i) => {
+        const s = i + 1;
+        return (
+          <React.Fragment key={s}>
+            <View style={styles.stepItem}>
+              <View
+                style={[
+                  styles.stepDot,
+                  s <= step ? styles.stepDotActive : styles.stepDotInactive,
+                ]}
+              >
+                <Text style={[styles.stepNumber, s <= step && styles.stepNumberActive]}>
+                  {s}
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  s <= step ? styles.stepLabelActive : styles.stepLabelInactive,
+                ]}
+              >
+                {label}
+              </Text>
+            </View>
+            {s < TOTAL_STEPS && (
+              <View
+                style={[
+                  styles.stepLine,
+                  s < step ? styles.stepLineActive : styles.stepLineInactive,
+                ]}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
     </View>
   );
 
   const renderStep1 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Capture the Issue</Text>
+      <Text style={styles.stepTitle}>{t('issues.captureTheIssue')}</Text>
       <Text style={styles.stepSubtitle}>
-        Take a photo and we will auto-detect your location
+        {t('issues.takePhotoAutoDetect')}
       </Text>
 
-      <TouchableOpacity
-        style={styles.cameraPlaceholder}
-        onPress={handleTakePhoto}
-        activeOpacity={0.8}
-      >
-        {data.photoUri ? (
-          <View style={styles.photoTaken}>
-            <Text style={styles.photoTakenIcon}>{'\u2705'}</Text>
-            <Text style={styles.photoTakenText}>Photo captured</Text>
-            <Text style={styles.photoRetake}>Tap to retake</Text>
+      {data.photoUri ? (
+        <TouchableOpacity
+          style={styles.cameraPlaceholder}
+          onPress={handleTakePhoto}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={{ uri: data.photoUri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+          <View style={styles.photoOverlay}>
+            <Text style={styles.photoRetake}>{t('issues.tapToRetake')}</Text>
           </View>
-        ) : (
-          <>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.photoButtons}>
+          <TouchableOpacity
+            style={styles.cameraPlaceholder}
+            onPress={handleTakePhoto}
+            activeOpacity={0.8}
+          >
             <View style={styles.cameraIconContainer}>
               <Text style={styles.cameraIcon}>{'\u{1F4F7}'}</Text>
             </View>
-            <Text style={styles.cameraText}>Tap to take photo</Text>
+            <Text style={styles.cameraText}>{t('issues.takePhoto')}</Text>
             <Text style={styles.cameraHint}>
-              Capture a clear photo of the issue
+              {t('issues.capturePhotoHint')}
             </Text>
-          </>
-        )}
-      </TouchableOpacity>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.galleryButton}
+            onPress={handlePickPhoto}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.galleryButtonText}>{t('issues.chooseFromGallery')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Card style={styles.locationCard}>
         <View style={styles.locationRow}>
           <Text style={styles.locationIcon}>{'\u{1F4CD}'}</Text>
           <View style={styles.locationInfo}>
-            <Text style={styles.locationTitle}>Location Detected</Text>
-            <Text style={styles.locationAddress}>{data.address}</Text>
-            <Text style={styles.locationCoords}>
-              {data.latitude?.toFixed(4)}, {data.longitude?.toFixed(4)}
-            </Text>
+            {locationLoading ? (
+              <>
+                <Text style={styles.locationTitle}>{t('issues.detectingLocation')}</Text>
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 4 }} />
+              </>
+            ) : data.latitude ? (
+              <>
+                <Text style={styles.locationTitle}>{t('issues.locationDetected')}</Text>
+                <Text style={styles.locationAddress}>{data.address}</Text>
+                <Text style={styles.locationCoords}>
+                  {data.latitude?.toFixed(4)}, {data.longitude?.toFixed(4)}
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.locationTitle}>{t('issues.locationUnavailable')}</Text>
+            )}
           </View>
-          <View style={styles.gpsIndicator}>
-            <Text style={styles.gpsText}>GPS</Text>
-          </View>
+          {data.latitude && (
+            <View style={styles.gpsIndicator}>
+              <Text style={styles.gpsText}>GPS</Text>
+            </View>
+          )}
         </View>
       </Card>
 
       <Button
-        title="Next: Classify Issue"
+        title={t('issues.nextDescribe')}
         onPress={() => setStep(2)}
         fullWidth
         size="lg"
@@ -199,13 +332,48 @@ export const ReportIssueScreen: React.FC = () => {
 
   const renderStep2 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Classify the Issue</Text>
+      <Text style={styles.stepTitle}>{t('issues.describeTheIssue')}</Text>
       <Text style={styles.stepSubtitle}>
-        AI suggests:{' '}
+        {t('issues.describeSubtitle')}
+      </Text>
+
+      <Input
+        label={t('issues.whatsTheProblem')}
+        placeholder={t('issues.descriptionPlaceholder')}
+        value={description}
+        onChangeText={setDescription}
+        multiline
+        numberOfLines={5}
+        containerStyle={styles.descriptionInput}
+      />
+
+      <View style={styles.buttonRow}>
+        <Button
+          title={t('issues.back')}
+          onPress={() => setStep(1)}
+          variant="outline"
+          size="md"
+          style={styles.backButton}
+        />
+        <Button
+          title={t('issues.nextClassify')}
+          onPress={() => setStep(3)}
+          size="md"
+          style={styles.nextButtonFlex}
+        />
+      </View>
+    </View>
+  );
+
+  const renderStep3 = () => (
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>{t('issues.classifyTheIssue')}</Text>
+      <Text style={styles.stepSubtitle}>
+        {t('issues.aiSuggests')}{' '}
         <Text style={styles.aiSuggestion}>
-          {ISSUE_CATEGORY_LABELS[data.suggestedCategory || 'other']}
+          {t(`issues.${data.suggestedCategory || 'other'}`)}
         </Text>
-        . Tap to change.
+        {t('issues.tapToChange')}
       </Text>
 
       <View style={styles.categoryGrid}>
@@ -238,7 +406,7 @@ export const ReportIssueScreen: React.FC = () => {
                 ]}
                 numberOfLines={1}
               >
-                {ISSUE_CATEGORY_LABELS[cat.key]}
+                {t(`issues.${cat.key}`)}
               </Text>
               {isSuggested && !data.category && (
                 <Text style={styles.aiTag}>AI</Text>
@@ -248,26 +416,16 @@ export const ReportIssueScreen: React.FC = () => {
         })}
       </View>
 
-      <Input
-        label="Description (Optional)"
-        placeholder="Add more details about the issue..."
-        value={description}
-        onChangeText={setDescription}
-        multiline
-        numberOfLines={3}
-        containerStyle={styles.descriptionInput}
-      />
-
       <View style={styles.buttonRow}>
         <Button
-          title="Back"
-          onPress={() => setStep(1)}
+          title={t('issues.back')}
+          onPress={() => setStep(2)}
           variant="outline"
           size="md"
           style={styles.backButton}
         />
         <Button
-          title="Next: Review"
+          title={t('issues.nextReview')}
           onPress={() => {
             if (!data.category && data.suggestedCategory) {
               setData(prev => ({
@@ -276,7 +434,7 @@ export const ReportIssueScreen: React.FC = () => {
                 department: DEPARTMENT_MAP[prev.suggestedCategory!],
               }));
             }
-            setStep(3);
+            setStep(4);
           }}
           size="md"
           style={styles.nextButtonFlex}
@@ -285,27 +443,34 @@ export const ReportIssueScreen: React.FC = () => {
     </View>
   );
 
-  const renderStep3 = () => {
+  const renderStep4 = () => {
     const selectedCategory = data.category || data.suggestedCategory || 'other';
     const categoryConfig = CATEGORY_CONFIG.find(c => c.key === selectedCategory);
 
     return (
       <View style={styles.stepContent}>
-        <Text style={styles.stepTitle}>Review & Submit</Text>
+        <Text style={styles.stepTitle}>{t('issues.reviewAndSubmit')}</Text>
         <Text style={styles.stepSubtitle}>
-          Confirm the details before submitting
+          {t('issues.confirmDetails')}
         </Text>
 
         <Card style={styles.reviewCard}>
-          {/* Photo preview placeholder */}
-          <View style={styles.reviewPhoto}>
-            <Text style={styles.reviewPhotoIcon}>{'\u{1F4F8}'}</Text>
-            <Text style={styles.reviewPhotoText}>Photo attached</Text>
-          </View>
+          {data.photoUri ? (
+            <Image
+              source={{ uri: data.photoUri }}
+              style={styles.reviewPhotoImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.reviewPhoto}>
+              <Text style={styles.reviewPhotoIcon}>{'\u{1F4F8}'}</Text>
+              <Text style={styles.reviewPhotoText}>{t('issues.noPhotoAttached')}</Text>
+            </View>
+          )}
 
           <View style={styles.reviewDetails}>
             <View style={styles.reviewRow}>
-              <Text style={styles.reviewLabel}>Category</Text>
+              <Text style={styles.reviewLabel}>{t('issues.category')}</Text>
               <View style={styles.reviewCategoryBadge}>
                 <Text style={styles.reviewCategoryIcon}>
                   {categoryConfig?.icon}
@@ -316,7 +481,7 @@ export const ReportIssueScreen: React.FC = () => {
                     { color: categoryConfig?.color },
                   ]}
                 >
-                  {ISSUE_CATEGORY_LABELS[selectedCategory]}
+                  {t(`issues.${selectedCategory}`)}
                 </Text>
               </View>
             </View>
@@ -324,16 +489,16 @@ export const ReportIssueScreen: React.FC = () => {
             <View style={styles.reviewDivider} />
 
             <View style={styles.reviewRow}>
-              <Text style={styles.reviewLabel}>Location</Text>
+              <Text style={styles.reviewLabel}>{t('issues.location')}</Text>
               <Text style={styles.reviewValue}>{data.address}</Text>
             </View>
 
             <View style={styles.reviewDivider} />
 
             <View style={styles.reviewRow}>
-              <Text style={styles.reviewLabel}>Auto-Routed To</Text>
+              <Text style={styles.reviewLabel}>{t('issues.autoRoutedTo')}</Text>
               <Text style={[styles.reviewValue, styles.departmentText]}>
-                {data.department || DEPARTMENT_MAP[selectedCategory]}
+                {data.department || DEPARTMENT_MAP[selectedCategory] || t('issues.autoDetermined')}
               </Text>
             </View>
 
@@ -341,7 +506,7 @@ export const ReportIssueScreen: React.FC = () => {
               <>
                 <View style={styles.reviewDivider} />
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Description</Text>
+                  <Text style={styles.reviewLabel}>{t('issues.description')}</Text>
                   <Text style={styles.reviewValue}>{description}</Text>
                 </View>
               </>
@@ -352,24 +517,23 @@ export const ReportIssueScreen: React.FC = () => {
         <View style={styles.routingInfo}>
           <Text style={styles.routingIcon}>{'\u2699\uFE0F'}</Text>
           <Text style={styles.routingText}>
-            This issue will be automatically routed to the relevant department
-            and tracked on the blockchain ledger.
+            {t('issues.routingInfo')}
           </Text>
         </View>
 
         <View style={styles.buttonRow}>
           <Button
-            title="Back"
-            onPress={() => setStep(2)}
+            title={t('issues.back')}
+            onPress={() => setStep(3)}
             variant="outline"
             size="md"
             style={styles.backButton}
           />
           <Button
-            title="Submit Issue"
+            title={t('issues.submitReport')}
             onPress={handleSubmit}
             size="lg"
-            loading={submitting}
+            loading={submitting || createIssue.isPending}
             style={styles.nextButtonFlex}
           />
         </View>
@@ -381,8 +545,8 @@ export const ReportIssueScreen: React.FC = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Report an Issue</Text>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
+        <Text style={styles.headerTitle}>{t('issues.reportIssue')}</Text>
       </View>
 
       {renderStepIndicator()}
@@ -396,6 +560,7 @@ export const ReportIssueScreen: React.FC = () => {
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
+        {step === 4 && renderStep4()}
       </ScrollView>
     </View>
   );
@@ -408,7 +573,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['4xl'],
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
   },
   headerTitle: {
@@ -420,17 +585,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing['2xl'],
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
   },
-  stepRow: {
-    flexDirection: 'row',
+  stepItem: {
     alignItems: 'center',
   },
   stepDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -441,7 +605,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   stepNumber: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
     color: colors.textMuted,
   },
@@ -449,9 +613,9 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   stepLabel: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '500',
-    marginLeft: spacing.xs,
+    marginTop: 3,
   },
   stepLabelActive: {
     color: colors.primary,
@@ -460,9 +624,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   stepLine: {
-    width: 24,
+    flex: 1,
     height: 2,
-    marginHorizontal: spacing.sm,
+    marginHorizontal: spacing.xs,
+    marginBottom: spacing.lg,
   },
   stepLineActive: {
     backgroundColor: colors.primary,
@@ -529,22 +694,40 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: spacing.xs,
   },
-  photoTaken: {
+  photoButtons: {
+    marginBottom: spacing.lg,
+  },
+  photoOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingVertical: spacing.sm,
     alignItems: 'center',
-  },
-  photoTakenIcon: {
-    fontSize: 36,
-    marginBottom: spacing.sm,
-  },
-  photoTakenText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.success,
   },
   photoRetake: {
     fontSize: 13,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
+    color: colors.white,
+    fontWeight: '500',
+  },
+  galleryButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  galleryButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  reviewPhotoImage: {
+    height: 180,
+    width: '100%',
   },
   locationCard: {
     marginBottom: spacing.xl,

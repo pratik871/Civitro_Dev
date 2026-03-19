@@ -6,6 +6,7 @@ export interface Voice {
   userName: string;
   userAvatarUrl?: string;
   content: string;
+  text?: string;
   category: string;
   sentiment: VoiceSentiment;
   ward: string;
@@ -13,6 +14,13 @@ export interface Voice {
   upvotes: number;
   commentCount: number;
   hasUpvoted: boolean;
+  hasBookmarked?: boolean;
   tags: string[];
+  hashtags?: string[];
+  mediaUrls?: string[];
+  language?: string;
+  likesCount?: number;
+  repliesCount?: number;
+  sharesCount?: number;
   createdAt: string;
 }

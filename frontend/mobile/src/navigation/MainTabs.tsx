@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { ReportIssueScreen } from '../screens/report/ReportIssueScreen';
@@ -16,21 +18,9 @@ interface TabIconProps {
   icon: string;
   label: string;
   focused: boolean;
-  isReport?: boolean;
 }
 
-const TabIcon: React.FC<TabIconProps> = ({ icon, label, focused, isReport }) => {
-  if (isReport) {
-    return (
-      <View style={styles.reportContainer}>
-        <View style={styles.reportButton}>
-          <Text style={styles.reportIcon}>{icon}</Text>
-        </View>
-        <Text style={[styles.tabLabel, styles.reportLabel]}>{label}</Text>
-      </View>
-    );
-  }
-
+const TabIcon: React.FC<TabIconProps> = ({ icon, label, focused }) => {
   return (
     <View style={styles.tabIconContainer}>
       <Text
@@ -55,11 +45,13 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, label, focused, isReport }) => 
 };
 
 export const MainTabs: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { paddingBottom: Math.max(insets.bottom, 8), height: 56 + Math.max(insets.bottom, 8) }],
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -70,7 +62,7 @@ export const MainTabs: React.FC = () => {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon={'\u{1F3E0}'} label="Home" focused={focused} />
+            <TabIcon icon={'\u{1F3E0}'} label={t('tabs.home')} focused={focused} />
           ),
         }}
       />
@@ -79,12 +71,7 @@ export const MainTabs: React.FC = () => {
         component={ReportIssueScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              icon={'\u{1F4F7}'}
-              label="Report"
-              focused={focused}
-              isReport
-            />
+            <TabIcon icon={'\u{1F4F7}'} label={t('tabs.report')} focused={focused} />
           ),
         }}
       />
@@ -93,7 +80,7 @@ export const MainTabs: React.FC = () => {
         component={LeadersScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon={'\u{1F465}'} label="Leaders" focused={focused} />
+            <TabIcon icon={'\u{1F465}'} label={t('tabs.leaders')} focused={focused} />
           ),
         }}
       />
@@ -102,7 +89,7 @@ export const MainTabs: React.FC = () => {
         component={MapScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon={'\u{1F4CD}'} label="Map" focused={focused} />
+            <TabIcon icon={'\u{1F4CD}'} label={t('tabs.map')} focused={focused} />
           ),
         }}
       />
@@ -111,7 +98,7 @@ export const MainTabs: React.FC = () => {
         component={TrendingScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon={'\u{1F4C8}'} label="Trending" focused={focused} />
+            <TabIcon icon={'\u{1F4C8}'} label={t('tabs.trending')} focused={focused} />
           ),
         }}
       />
@@ -124,7 +111,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
-    height: 70,
     paddingBottom: 8,
     paddingTop: 8,
     shadowColor: '#000',
@@ -139,7 +125,7 @@ const styles = StyleSheet.create({
     minWidth: 50,
   },
   tabIcon: {
-    fontSize: 22,
+    fontSize: 28,
     marginBottom: 2,
   },
   tabLabel: {
@@ -147,32 +133,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   tabLabelActive: {
-    fontWeight: '600',
-  },
-  reportContainer: {
-    alignItems: 'center',
-    marginTop: -16,
-  },
-  reportButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  reportIcon: {
-    fontSize: 22,
-    color: colors.white,
-  },
-  reportLabel: {
-    marginTop: 4,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

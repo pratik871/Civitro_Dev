@@ -60,7 +60,10 @@ func main() {
 	})
 
 	// Public routes -- poll results are publicly readable.
+	// OptionalJWTAuth extracts user_id when token present (for hasVoted check).
 	public := router.Group("/api/v1")
+	public.Use(middleware.OptionalJWTAuth())
+	public.GET("/polls", h.ListPolls)
 	public.GET("/polls/:id", h.GetPoll)
 	public.GET("/polls/:id/results", h.GetResults)
 	public.GET("/polls/boundary/:boundary_id", h.GetByBoundary)
@@ -68,8 +71,9 @@ func main() {
 	// Authenticated routes -- creating polls and voting requires auth.
 	authed := router.Group("/api/v1")
 	authed.Use(middleware.JWTAuth())
-	authed.POST("/polls", h.CreatePoll)
+	authed.POST("/polls", middleware.RequireRole("admin", "representative"), h.CreatePoll)
 	authed.POST("/polls/:id/vote", h.CastVote)
+	authed.DELETE("/polls/:id/vote", h.RetractVote)
 	authed.DELETE("/polls/:id", h.DeletePoll)
 
 	// Start HTTP server.

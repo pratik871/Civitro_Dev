@@ -9,10 +9,10 @@ interface AuthState {
   isInitialized: boolean;
 
   // Actions
-  initialize: () => void;
-  login: (user: User, tokens: AuthTokens) => void;
-  logout: () => void;
-  updateUser: (user: Partial<User>) => void;
+  initialize: () => Promise<void>;
+  login: (user: User, tokens: AuthTokens) => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (user: Partial<User>) => Promise<void>;
   setLoading: (loading: boolean) => void;
 }
 
@@ -22,9 +22,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   isInitialized: false,
 
-  initialize: () => {
-    const user = getUser();
-    const tokens = getTokens();
+  initialize: async () => {
+    const user = await getUser();
+    const tokens = await getTokens();
     set({
       user,
       isAuthenticated: !!user && !!tokens,
@@ -32,22 +32,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  login: (user: User, tokens: AuthTokens) => {
-    saveTokens(tokens);
-    saveUser(user);
+  login: async (user: User, tokens: AuthTokens) => {
+    await saveTokens(tokens);
+    await saveUser(user);
     set({ user, isAuthenticated: true });
   },
 
-  logout: () => {
-    clearAll();
+  logout: async () => {
+    await clearAll();
     set({ user: null, isAuthenticated: false });
   },
 
-  updateUser: (updates: Partial<User>) => {
+  updateUser: async (updates: Partial<User>) => {
     const currentUser = get().user;
     if (currentUser) {
       const updatedUser = { ...currentUser, ...updates };
-      saveUser(updatedUser);
+      await saveUser(updatedUser);
       set({ user: updatedUser });
     }
   },

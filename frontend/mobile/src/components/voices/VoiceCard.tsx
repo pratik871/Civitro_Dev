@@ -1,55 +1,55 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from '../ui/Card';
-import { Avatar } from '../ui/Avatar';
-import { Badge } from '../ui/Badge';
 import { colors } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
 import type { Voice } from '../../types/voice';
 
 interface VoiceCardProps {
   voice: Voice;
   onPress?: () => void;
-  onUpvote?: () => void;
+  onLike?: () => void;
 }
-
-const SENTIMENT_CONFIG = {
-  positive: { color: colors.success, label: 'Positive', icon: '\u{1F44D}' },
-  negative: { color: colors.error, label: 'Negative', icon: '\u{1F44E}' },
-  neutral: { color: colors.info, label: 'Neutral', icon: '\u{1F4AD}' },
-};
 
 export const VoiceCard: React.FC<VoiceCardProps> = ({
   voice,
   onPress,
-  onUpvote,
+  onLike,
 }) => {
-  const sentiment = SENTIMENT_CONFIG[voice.sentiment];
+  const tags = voice.tags ?? voice.hashtags ?? [];
+  const likes = voice.likesCount ?? voice.upvotes ?? 0;
+  const replies = voice.repliesCount ?? voice.commentCount ?? 0;
+  const shares = voice.sharesCount ?? 0;
+  const text = voice.text ?? voice.content ?? '';
 
   return (
     <Card onPress={onPress} style={styles.card}>
+      {/* Header: avatar circle + time */}
       <View style={styles.header}>
-        <Avatar name={voice.userName} size={36} />
-        <View style={styles.headerInfo}>
-          <Text style={styles.userName}>{voice.userName}</Text>
-          <Text style={styles.time}>
-            {formatRelativeTime(voice.createdAt)} · {voice.ward}
+        <View style={styles.avatarCircle}>
+          <Text style={styles.avatarText}>
+            {(voice.userName ?? 'C').charAt(0).toUpperCase()}
           </Text>
         </View>
-        <Badge
-          text={`${sentiment.icon} ${sentiment.label}`}
-          backgroundColor={sentiment.color + '15'}
-          color={sentiment.color}
-          size="sm"
-        />
+        <View style={styles.headerInfo}>
+          <Text style={styles.userName}>{voice.userName ?? 'Citizen'}</Text>
+          <Text style={styles.time}>{formatRelativeTime(voice.createdAt)}</Text>
+        </View>
+        {voice.language && voice.language !== 'en' && (
+          <View style={styles.langBadge}>
+            <Text style={styles.langText}>{voice.language.toUpperCase()}</Text>
+          </View>
+        )}
       </View>
 
-      <Text style={styles.content}>{voice.content}</Text>
+      {/* Voice text */}
+      <Text style={styles.content}>{text}</Text>
 
-      {voice.tags.length > 0 && (
+      {/* Hashtags */}
+      {tags.length > 0 && (
         <View style={styles.tagsRow}>
-          {voice.tags.map(tag => (
+          {tags.map(tag => (
             <View key={tag} style={styles.tag}>
               <Text style={styles.tagText}>#{tag}</Text>
             </View>
@@ -57,23 +57,25 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
         </View>
       )}
 
+      {/* Footer: like, comment, share counts */}
       <View style={styles.footer}>
         <TouchableOpacity
-          onPress={onUpvote}
+          onPress={onLike}
           style={styles.actionButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={[styles.actionIcon, voice.hasUpvoted && styles.upvoted]}>
-            {voice.hasUpvoted ? '\u25B2' : '\u25B3'}
-          </Text>
-          <Text style={[styles.actionText, voice.hasUpvoted && styles.upvoted]}>
-            {formatNumber(voice.upvotes)}
-          </Text>
+          <Text style={styles.actionIcon}>{'\u2661'}</Text>
+          <Text style={styles.actionText}>{formatNumber(likes)}</Text>
         </TouchableOpacity>
 
         <View style={styles.actionButton}>
           <Text style={styles.actionIcon}>{'\u{1F4AC}'}</Text>
-          <Text style={styles.actionText}>{voice.commentCount}</Text>
+          <Text style={styles.actionText}>{formatNumber(replies)}</Text>
+        </View>
+
+        <View style={styles.actionButton}>
+          <Text style={styles.actionIcon}>{'\u{1F4E4}'}</Text>
+          <Text style={styles.actionText}>{formatNumber(shares)}</Text>
         </View>
       </View>
     </Card>
@@ -89,6 +91,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
+  avatarCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
+  },
   headerInfo: {
     flex: 1,
     marginLeft: spacing.sm,
@@ -103,6 +118,17 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 1,
   },
+  langBadge: {
+    backgroundColor: colors.info + '15',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  langText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.info,
+  },
   content: {
     fontSize: 15,
     color: colors.textPrimary,
@@ -116,14 +142,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   tag: {
-    backgroundColor: colors.info + '10',
+    backgroundColor: colors.primary + '10',
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: borderRadius.full,
   },
   tagText: {
     fontSize: 12,
-    color: colors.info,
+    color: colors.primary,
     fontWeight: '500',
   },
   footer: {
@@ -147,8 +173,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     fontWeight: '500',
-  },
-  upvoted: {
-    color: colors.primary,
   },
 });

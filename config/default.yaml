@@ -158,7 +158,8 @@ auth:
   otp:
     provider: console
   aadhaar:
-    provider: mock
+    provider: offline-dev
+    max_file_size: 2097152
 
 notifications:
   push:
@@ -167,6 +168,7 @@ notifications:
     provider: console
   sms:
     provider: console
+    endpoint: ""
 
 payments:
   provider: mock

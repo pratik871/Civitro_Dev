@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { OTPVerifyScreen } from '../screens/auth/OTPVerifyScreen';
+import { AadhaarVerifyScreen } from '../screens/auth/AadhaarVerifyScreen';
 import type { AuthStackParamList } from './types';
 import { colors } from '../theme/colors';
 
@@ -20,6 +21,7 @@ export const AuthStack: React.FC = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="OTPVerify" component={OTPVerifyScreen} />
+      <Stack.Screen name="AadhaarVerify" component={AadhaarVerifyScreen} />
     </Stack.Navigator>
   );
 };

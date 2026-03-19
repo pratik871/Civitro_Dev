@@ -9,7 +9,7 @@ import type {
   VerifyOTPRequest,
   AuthTokenResponse,
   RefreshRequest,
-  VerifyAadhaarRequest,
+  VerifyAadhaarResponse,
   UserProfile,
 } from '../types';
 import { AUTH } from './endpoints';
@@ -49,11 +49,36 @@ export function createAuthApi(client: ApiClient) {
     },
 
     /**
-     * Verify Aadhaar identity for enhanced trust level.
+     * Verify Aadhaar identity using offline XML zip file.
      * Upgrades verification level from 'phone' to 'aadhaar'.
+     *
+     * Uses multipart/form-data with:
+     *  - file: password-protected zip from UIDAI
+     *  - share_code: 4-digit code used when downloading the XML
      */
-    verifyAadhaar(data: VerifyAadhaarRequest): Promise<{ message: string }> {
-      return client.post<{ message: string }>(AUTH.VERIFY_AADHAAR, data);
+    async verifyAadhaar(
+      file: File | Blob,
+      shareCode: string,
+      token: string,
+    ): Promise<VerifyAadhaarResponse> {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('share_code', shareCode);
+
+      const response = await fetch(AUTH.VERIFY_AADHAAR, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error?.error?.message || 'Aadhaar verification failed');
+      }
+
+      return response.json();
     },
   };
 }

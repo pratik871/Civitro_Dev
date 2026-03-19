@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/civitro/pkg/logger"
 	"github.com/civitro/services/reputation/internal/model"
 	"github.com/civitro/services/reputation/internal/repository"
@@ -134,5 +136,5 @@ func (s *ReputationService) ProcessEvent(ctx context.Context, userID, eventType 
 }
 
 func generateID() string {
-	return time.Now().UTC().Format("20060102150405.000000")
+	return uuid.New().String()
 }

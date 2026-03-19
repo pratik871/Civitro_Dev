@@ -7,6 +7,9 @@ import "common/common.proto";
 service RegistryService {
   rpc GetRepresentative(civitro.common.IDRequest) returns (RepresentativeResponse);
   rpc GetByBoundary(civitro.common.IDRequest) returns (RepresentativeList);
+  rpc GetByDesignation(DesignationRequest) returns (RepresentativeList);
+  rpc GetByOfficialType(OfficialTypeRequest) returns (RepresentativeList);
+  rpc CreateRepresentative(CreateRepresentativeRequest) returns (RepresentativeResponse);
 }
 
 message RepresentativeResponse {
@@ -20,8 +23,39 @@ message RepresentativeResponse {
   double response_rate = 8;
   string photo_url = 9;
   bool verified = 10;
+  string official_type = 11;
+  string designation = 12;
+  string state_designation = 13;
+  string term_start = 14;
+  string term_end = 15;
+  string election_cycle_id = 16;
 }
 
 message RepresentativeList {
   repeated RepresentativeResponse representatives = 1;
+}
+
+message DesignationRequest {
+  string designation = 1;
+  string boundary_id = 2;
+}
+
+message OfficialTypeRequest {
+  string official_type = 1;
+  string boundary_id = 2;
+}
+
+message CreateRepresentativeRequest {
+  string name = 1;
+  string party = 2;
+  string position = 3;
+  string level = 4;
+  string boundary_id = 5;
+  string photo_url = 6;
+  string official_type = 7;
+  string designation = 8;
+  string state_designation = 9;
+  string term_start = 10;
+  string term_end = 11;
+  string election_cycle_id = 12;
 }
