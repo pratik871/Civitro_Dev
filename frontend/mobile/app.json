@@ -40,13 +40,7 @@
       "expo-asset",
       "expo-font",
       "expo-location",
-      "expo-image-picker",
-      [
-        "react-native-maps",
-        {
-          "googleMapsApiKey": ""
-        }
-      ]
+      "expo-image-picker"
     ],
     "extra": {
       "eas": {
