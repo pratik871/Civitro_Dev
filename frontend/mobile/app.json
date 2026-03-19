@@ -2,7 +2,7 @@
   "expo": {
     "name": "Civitro",
     "slug": "civitro",
-    "owner": "pratik814",
+    "owner": "pratikbloom",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "civitro",
@@ -24,7 +24,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A365D"
       },
-      "softwareKeyboardLayoutMode": "adjustResize"
+      "softwareKeyboardLayoutMode": "adjustResize",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "ios": {
       "bundleIdentifier": "in.civitro.app",
@@ -44,7 +49,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "47a6ba02-8631-4519-a5d4-7c28326779e7"
+        "projectId": "6af66eba-ce0c-4b8f-ad6c-0ead2a2c5be2"
       }
     }
   }

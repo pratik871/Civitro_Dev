@@ -6,7 +6,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { ReportIssueScreen } from '../screens/report/ReportIssueScreen';
 import { LeadersScreen } from '../screens/leaders/LeadersScreen';
-import { MapScreen } from '../screens/map/MapScreen';
+// Placeholder MapScreen — react-native-maps crashes production builds
+// TODO: fix react-native-maps integration, then re-enable
+const MapScreenPlaceholder: React.FC = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
+    <Text style={{ fontSize: 48, marginBottom: 12 }}>{'\u{1F5FA}'}</Text>
+    <Text style={{ fontSize: 18, fontWeight: '600', color: '#1A365D' }}>Map View</Text>
+    <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>Coming soon</Text>
+  </View>
+);
 import { TrendingScreen } from '../screens/trending/TrendingScreen';
 import type { MainTabParamList } from './types';
 import { colors } from '../theme/colors';
@@ -86,7 +94,7 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Map"
-        component={MapScreen}
+        component={MapScreenPlaceholder}
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon icon={'\u{1F4CD}'} label={t('tabs.map')} focused={focused} />
