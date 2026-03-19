@@ -34,7 +34,7 @@ Root (r-9g9m) — Bloom AI (371580379428)
 | Field | Value |
 |-------|-------|
 | Instance ID | i-0abdc39a620517888 |
-| Type | t3.medium (2 vCPU, 4GB RAM) |
+| Type | t3.xlarge (4 vCPU, 16GB RAM) — upgraded from t3.medium |
 | AMI | Ubuntu 22.04 LTS (ami-07216ac99dc46a187) |
 | Disk | 50 GB gp3 (encrypted) |
 | Elastic IP | 13.200.159.10 |
@@ -114,12 +114,12 @@ ssh -i ~/.ssh/civitro-dev ubuntu@13.200.159.10
 
 | Service | Monthly |
 |---------|---------|
-| EC2 t3.medium | ~$30 |
+| EC2 t3.xlarge | ~$120 |
 | EBS 50GB gp3 | ~$4 |
 | Elastic IP | ~$4 |
 | S3 (media) | ~$1 |
 | Route 53 | ~$0.50 |
-| **Total** | **~$40/mo** |
+| **Total** | **~$130/mo** |
 
 ## Upgrade Path
 

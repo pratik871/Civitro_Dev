@@ -502,3 +502,101 @@ Removed ALL hardcoded/mock data from the entire mobile frontend and wired to rea
 - **Production deployment:** api.civitro.in not yet set up
 
 ---
+
+## Session 8 — 2026-03-18/19/20
+**Goal:** Indian governance chain, AWS deployment, boundary data, location-based ward assignment
+
+### Indian Governance Chain (Migration 000005)
+- Manager shared India's dual-track governance structure (73rd/74th Amendment)
+- Expanded boundaries from 6 levels to 14 across 4 tracks:
+  - Administrative: nation, state, division, district
+  - Electoral: parliamentary, assembly
+  - Urban (74th): municipal_corporation, municipal_council, nagar_panchayat, urban_ward
+  - Rural (73rd): zilla_parishad, block_panchayat, gram_panchayat, rural_ward
+- New columns: `track`, `urban_rural`, `state_local_name` on boundaries
+- Representatives: added `official_type` (elected/appointed/nominated), `designation`, `state_designation`, `term_start`, `term_end`, `election_cycle_id`
+- New tables: `election_cycles`, `seat_reservations`, `governance_nomenclature`, `designation_catalog`
+- Seeded nomenclature for 8 states (MH, UP, KA, TN, KL, WB, RJ, GJ)
+- Seeded 24 canonical designations (MP, MLA, Sarpanch, Mayor, District Collector, etc.)
+- Updated geospatial + registry Go services, proto files
+
+### AWS Infrastructure
+- **Account:** Civitro-Dev (431056843628) under Products OU
+- **EC2:** t3.xlarge (4 vCPU, 16GB RAM) in ap-south-1 (Mumbai)
+  - Started as t3.medium, upgraded after OOM during Docker builds
+- **Elastic IP:** 13.200.159.10
+- **Domain:** civitro.com (owned, GoDaddy → Route 53 nameservers)
+- **DNS:** civitro.com + api.civitro.com + www.civitro.com → EC2
+- **SSL:** Let's Encrypt (certbot), auto-renewal cron
+- **S3:** civitro-dev-media bucket (encrypted, public access blocked)
+- **Security Group:** HTTP/HTTPS/8080 open, SSH locked to owner IP
+- **IAM:** civitro-dev-ec2 role with S3 access
+- **23 Docker containers** running (14 Go services + 9 infra)
+
+### AWS Decision Process
+- Brainstormed AWS services mapping (local → cloud)
+- For 1000 testers: single EC2 + Docker Compose (~$120/mo) vs full managed stack (~$850/mo)
+- Decision: start lean, upgrade as users grow
+- Upgrade path: EC2 → ECS Fargate → Aurora → full managed
+- Created Terraform files (infra/terraform/) + deploy scripts
+- GitHub Actions CD pipeline (.github/workflows/deploy.yml)
+
+### Location-Based Ward Assignment (Migration 000006)
+- Added `location`, `primary_boundary_id`, `location_updated_at` to users table
+- New endpoint: `PUT /api/v1/auth/location` — takes lat/lng, calls geospatial to resolve, stores on user
+- `GET /auth/me` now returns boundary_id, boundary_name, lat, lng
+- Mobile: after OTP verify, auto-requests GPS permission and sends location (fire-and-forget)
+- Flow: Register → OTP → GPS → resolve boundaries → store ward → HomeScreen
+
+### Boundary Data Loading
+- Created `scripts/load-boundaries.py` — downloads public GeoJSON and loads into PostGIS
+- Loaded 630 boundaries: 1 nation (India) + 35 states + 594 districts
+- Geo resolve tested: Mumbai → India/Maharashtra/Greater Bombay, Delhi → India/Delhi/Delhi, etc.
+- Parliamentary constituencies URL was 404 (datameet repo changed) — to be fixed
+
+### Other Changes
+- **.gitignore fixed:** .next/, .expo/, android/, terraform state excluded
+- **Removed .next/ from git tracking** (~200 build artifacts deleted)
+- **config/production.yaml** created (safe to commit — only ${VAR} refs)
+- **Seed data:** 3 polls, 3 voices, 3 reps, 12 promises loaded on AWS
+- **EAS builds:** iOS + Android submitted with crash fixes (newArchEnabled: false, added expo-location/image-picker plugins)
+- **GitHub:** pushed to pratik871/Civitro_Dev
+
+### Files Created
+- `infra/migrations/000005_governance_chain.up.sql` / `.down.sql`
+- `infra/migrations/000006_user_location.up.sql` / `.down.sql`
+- `infra/migrations/seed_test_data.sql`
+- `infra/terraform/main.tf`, `variables.tf`, `outputs.tf`, `terraform.tfvars.example`
+- `infra/terraform/scripts/setup-server.sh`
+- `config/production.yaml`
+- `docs/aws-infrastructure.md`
+- `scripts/load-boundaries.py`
+- `.github/workflows/deploy.yml`
+
+### Key Files Modified
+- `backend/services/geospatial/` — all 4 files (model, repo, service, handler) — dual-track governance
+- `backend/services/registry/` — all 4 files — official_type, designation, create endpoint
+- `backend/services/identity/` — all 4 files — location endpoint, profile with boundary
+- `proto/geospatial/geospatial.proto` — governance chain messages
+- `proto/registry/registry.proto` — designation, official type
+- `frontend/mobile/src/lib/api.ts` — production URL https://api.civitro.com
+- `frontend/mobile/src/hooks/useAuth.ts` — auto GPS after login
+- `frontend/mobile/app.json` — newArchEnabled false, plugins added
+- `.gitignore` — .next/, .expo/, android/, terraform
+
+### Current Status
+- **API live:** https://api.civitro.com — all 23 containers healthy
+- **Auth working:** register + OTP (111111) + JWT + auto GPS location
+- **Geo resolve working:** any GPS point in India → nation/state/district
+- **630 boundaries loaded** — full India coverage at state + district level
+- **EAS builds queued** — iOS + Android with crash fixes
+
+### Next Steps
+- Load parliamentary constituency boundaries (find working data source)
+- Ward-level boundaries (harder — no single public dataset)
+- TestFlight submit (after EAS build succeeds)
+- GitHub Actions secrets for auto-deploy
+- Real SMS provider (MSG91/Twilio)
+- Real app icon + splash screen
+
+---
