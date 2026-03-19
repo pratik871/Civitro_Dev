@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "scheme": "civitro",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "platforms": [
       "ios",
       "android"
@@ -38,7 +38,15 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      "expo-location",
+      "expo-image-picker",
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": ""
+        }
+      ]
     ],
     "extra": {
       "eas": {
