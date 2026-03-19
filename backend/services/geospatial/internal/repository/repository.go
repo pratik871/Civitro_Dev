@@ -57,7 +57,7 @@ END`
 func (r *PostgresRepository) FindBoundariesContaining(ctx context.Context, lat, lng float64) ([]model.Boundary, error) {
 	query := `
 		SELECT id, name, level, COALESCE(track, ''), COALESCE(urban_rural, ''),
-		       COALESCE(parent_id::text, ''), population, area_sqkm,
+		       COALESCE(parent_id::text, ''), COALESCE(population, 0), COALESCE(area_sqkm, 0),
 		       COALESCE(code, ''), COALESCE(state_local_name, '')
 		FROM boundaries
 		WHERE ST_Contains(polygon, ST_SetSRID(ST_MakePoint($1, $2), 4326))
@@ -113,7 +113,7 @@ func (r *PostgresRepository) GetBoundaryByID(ctx context.Context, id string) (*m
 func (r *PostgresRepository) GetChildBoundaries(ctx context.Context, parentID string) ([]model.Boundary, error) {
 	query := `
 		SELECT id, name, level, COALESCE(track, ''), COALESCE(urban_rural, ''),
-		       COALESCE(parent_id::text, ''), population, area_sqkm,
+		       COALESCE(parent_id::text, ''), COALESCE(population, 0), COALESCE(area_sqkm, 0),
 		       COALESCE(code, ''), COALESCE(state_local_name, '')
 		FROM boundaries WHERE parent_id = $1
 		ORDER BY name
@@ -145,7 +145,7 @@ func (r *PostgresRepository) GetChildBoundaries(ctx context.Context, parentID st
 func (r *PostgresRepository) GetBoundariesByTrack(ctx context.Context, parentID string, track model.BoundaryTrack) ([]model.Boundary, error) {
 	query := `
 		SELECT id, name, level, COALESCE(track, ''), COALESCE(urban_rural, ''),
-		       COALESCE(parent_id::text, ''), population, area_sqkm,
+		       COALESCE(parent_id::text, ''), COALESCE(population, 0), COALESCE(area_sqkm, 0),
 		       COALESCE(code, ''), COALESCE(state_local_name, '')
 		FROM boundaries WHERE parent_id = $1 AND track = $2
 		ORDER BY ` + levelSortSQL
