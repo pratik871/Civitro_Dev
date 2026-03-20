@@ -600,3 +600,69 @@ Removed ALL hardcoded/mock data from the entire mobile frontend and wired to rea
 - Real app icon + splash screen
 
 ---
+
+## Session 9 — 2026-03-20
+**Goal:** Wire MVP end-to-end, dockerize Python AI, deploy to AWS
+
+### Migration 000007 — Missing Tables
+- Created `issue_upvotes`, `issue_comments`, `issue_comment_likes` tables
+- Expanded `issues.category` CHECK from 12 → 22 categories to match Go model
+- Down migration included with constraint rollback
+
+### Issues ↔ Ledger ↔ Notifications ↔ Classification Wiring
+- **CreateIssue** now auto: classifies via AI, creates ledger entry, sends notification
+- **UpdateStatus** now auto: appends ledger entry, notifies reporter
+- Added `POST /notifications/send` internal endpoint (no JWT)
+- Moved `POST /ledger/entry` to public group for inter-service calls
+- Classification fails gracefully when AI service isn't running
+
+### Bug Fixes Found During Testing
+- Ledger `generateID()` returned timestamps, DB expects UUID — fixed to crypto/rand UUID v4
+- Notifications `generateID()` same issue — fixed
+- Ledger `timestamp` column → actual DB column is `created_at` — fixed all queries
+- Ledger `changed_by_user_id` empty string → NULL for UUID column — fixed
+- Ledger `CreateEntryRequest.ChangedByUserID` had `binding:"required"` — removed for system entries
+
+### Python AI Dockerization
+- All 7 services added to docker-compose.yml (classification, sentiment, translation always-on; promises, chi, datamine, advertising wave2)
+- Nginx routes updated: `host.docker.internal` → container names
+- Python healthchecks use `urllib.request` (no curl in slim images)
+- CI/CD: added translation to matrix, fixed build contexts for Go + Python
+
+### Boundary Data
+- Fixed parliamentary constituency URL: `india_pc_2019_simplified.geojson` (primary) with full GeoJSON fallback
+- Added assembly constituency loader (`load_assembly()`) for ~4000 Vidhan Sabha seats
+
+### AWS Deployment
+- Updated EC2 security group SSH rule via AWS CLI (cross-account role assumption)
+- Cloned repo on EC2 at `~/civitro`
+- Ran migration 000007 on AWS PostgreSQL
+- Rebuilt + restarted issues, ledger, notifications, nginx gateway
+- **Full e2e verified on api.civitro.com**: issue → ledger ✅ → notification ✅ → upvote ✅ → comment ✅
+
+### Files Created
+- `infra/migrations/000007_issue_comments_upvotes.up.sql` / `.down.sql`
+
+### Files Modified (16)
+- `backend/services/issues/internal/service/service.go` — classify, ledger, notification wiring
+- `backend/services/issues/internal/repository/repository.go` — UpdateClassification method
+- `backend/services/ledger/` — UUID fix, column fix, NULL handling, auth bypass (4 files)
+- `backend/services/notifications/` — UUID fix, send endpoint, auth bypass (4 files)
+- `infra/docker-compose.yml` — 7 Python services added
+- `infra/nginx/nginx.conf` — container name routing
+- `scripts/load-boundaries.py` — PC URL fix, assembly loader
+- `.github/workflows/docker.yml` — translation + build context fix
+
+### Current Status
+- **Local:** 10 containers healthy, all MVP services tested
+- **AWS:** 24+ containers, api.civitro.com fully operational
+- **Git:** pushed to pratik871/Civitro_Dev, commit 14b61ce
+- **EC2 repo:** cloned at ~/civitro for future deployments
+
+### Next Steps
+- Mobile app (React Native) — needs Mac for iOS builds
+- Load parliamentary boundaries (run load-boundaries.py on AWS)
+- GitHub Actions secrets (EC2_HOST + EC2_SSH_KEY) for auto-deploy
+- Build + test Python AI containers on AWS
+
+---

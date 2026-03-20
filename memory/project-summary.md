@@ -157,25 +157,45 @@ All civitro Docker services use 1xxxx host ports to avoid conflicts with local P
 - MinIO: **19000/19001**, Ollama: 11434, Jaeger: 16686/**14317**/**14318**
 - OpenSearch Dashboards: **15601**, Redpanda Console: **18888**
 
-## Current Status (Updated 2026-03-20)
+## Current Status (Updated 2026-03-20, Session 9)
 - **AWS DEPLOYED** — Civitro-Dev account (431056843628), EC2 t3.xlarge in ap-south-1 (Mumbai)
-- **LIVE API:** https://api.civitro.com — 23 Docker containers, all healthy
+- **LIVE API:** https://api.civitro.com — 24+ Docker containers, all healthy
 - **SSL:** Let's Encrypt (auto-renewal), https://civitro.com + api.civitro.com
 - **Domain:** civitro.com (GoDaddy → Route 53), DNS propagated
 - **Backend:** All 14 Go services running on AWS (5 MVP + 9 wave2)
+- **Python AI:** 7 Dockerfiles ready, docker-compose definitions added (not yet built on AWS)
 - **Infrastructure:** Postgres, Redis, Redpanda, MongoDB, MinIO, OpenSearch, TimescaleDB, Jaeger
-- **Database:** 6 migrations applied, 630 boundary polygons loaded (India + 35 states + 594 districts)
+- **Database:** 7 migrations applied (000001-000007), 630 boundary polygons loaded
+- **MVP End-to-End WORKING:** Issue → auto Ledger entry → auto Notification → Upvote → Comment
+- **Inter-service wiring:** Issues calls Ledger + Notifications + Classification (async, fire-and-forget)
 - **Governance Chain:** Dual-track model (73rd/74th Amendment), 14 boundary levels, 4 tracks
 - **Geo Resolve:** POST /geo/resolve returns India→State→District for any GPS point in India
 - **Location Flow:** After login, app auto-requests GPS → resolves ward → stores on user profile
-- **Frontend Mobile:** React Native, 18+ screens, API pointing to https://api.civitro.com
+- **Frontend Mobile:** React Native 0.76, 18+ screens, API pointing to https://api.civitro.com
 - **Frontend Web:** Next.js 14, 24 pages, builds successfully
 - **Auth:** Phone + OTP (111111 dev) → JWT → auto GPS location
 - **Polls/Voices/Comments/RBAC/Civic Score:** All working on AWS
 - **Seeded Data:** 3 polls, 3 voices, 3 reps, 12 promises, 630 boundaries
 - **EAS Builds:** iOS + Android queued (newArch disabled, plugins fixed)
-- **GitHub:** pratik871/Civitro_Dev, auto-deploy via GitHub Actions (needs secrets)
-- **.gitignore:** .next/, .expo/, android/, terraform state excluded
-- **SSH:** Locked to owner IP, key at ~/.ssh/civitro-dev
+- **GitHub:** pratik871/Civitro_Dev, deploy.yml ready (needs EC2_HOST + EC2_SSH_KEY secrets)
+- **EC2 Repo:** Cloned at ~/civitro for future deployments (git pull + rebuild)
+- **SSH:** Locked to owner IP (auto-updated via AWS CLI), key at ~/.ssh/civitro-dev
 - **Cost:** ~$120/mo (t3.xlarge)
-- **Next:** Parliamentary constituency data, ward-level boundaries, TestFlight submit, real SMS provider
+
+## What's Working (Verified on api.civitro.com 2026-03-20)
+- Register → OTP → JWT ✅
+- Create issue (22 categories) → auto ledger entry → auto notification ✅
+- Upvote (toggle) ✅, Comments (threaded) ✅
+- Ledger timeline (immutable, append-only) ✅
+- Notifications (cursor pagination, mark read, prefs) ✅
+- Classification call (graceful fallback when AI service not running) ✅
+- Voices feed, Polls (vote/retract), Geo resolve, Location flow ✅
+
+## Next Steps (Session 10+)
+- **Mobile app testing on Mac** — React Native, connect to api.civitro.com
+- **Build Python AI containers on AWS** — classification + sentiment (MVP)
+- **Load parliamentary boundaries** — run load-boundaries.py on AWS
+- **GitHub Actions secrets** — EC2_HOST + EC2_SSH_KEY for auto-deploy
+- **TestFlight submit** — needs Mac + App Store Connect
+- **Real SMS provider** — replace fixed OTP with MSG91/Twilio
+- **Ward-level boundaries** — long-term, no single public dataset
