@@ -4,6 +4,9 @@ const fs = require('fs');
 
 const config = getDefaultConfig(__dirname);
 
+// Disable watchman — use polling instead (watchman has socket issues on this Mac)
+config.resolver.useWatchman = false;
+
 config.transformer.getTransformOptions = async () => ({
   transform: {
     experimentalImportSupport: false,

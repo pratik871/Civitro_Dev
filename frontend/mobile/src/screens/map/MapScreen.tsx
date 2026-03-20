@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
-import MapView, { Marker, Callout, Region } from 'react-native-maps';
+import ClusteredMapView from 'react-native-map-clustering';
+import { Marker, Circle, Region } from 'react-native-maps';
+import type MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -39,6 +40,13 @@ const PIN_COLORS: Record<string, string> = {
   low: '#059669',
 };
 
+const SEVERITY_WEIGHT: Record<string, number> = {
+  critical: 1.0,
+  high: 0.8,
+  medium: 0.5,
+  low: 0.3,
+};
+
 // Default to Mumbai center
 const DEFAULT_REGION: Region = {
   latitude: 19.076,
@@ -47,6 +55,8 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 0.05,
 };
 
+type ViewMode = 'clusters' | 'heatmap';
+
 export const MapScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
@@ -54,8 +64,39 @@ export const MapScreen: React.FC = () => {
   const { data: issues, isLoading } = useIssues();
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [locationReady, setLocationReady] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('clusters');
 
   const issuesList = issues ?? [];
+
+  // Filter issues with valid coordinates
+  const validIssues = useMemo(
+    () => issuesList.filter(i => i.latitude !== 0 && i.longitude !== 0),
+    [issuesList],
+  );
+
+  // Heatmap: group nearby issues into density cells
+  const heatCells = useMemo(() => {
+    if (validIssues.length === 0) return [];
+    const cellSize = 0.005; // ~500m grid cells
+    const grid: Record<string, { lat: number; lng: number; count: number; maxSeverity: number }> = {};
+    validIssues.forEach(issue => {
+      const key = `${Math.round(issue.latitude / cellSize)}_${Math.round(issue.longitude / cellSize)}`;
+      if (!grid[key]) {
+        grid[key] = {
+          lat: Math.round(issue.latitude / cellSize) * cellSize,
+          lng: Math.round(issue.longitude / cellSize) * cellSize,
+          count: 0,
+          maxSeverity: 0,
+        };
+      }
+      grid[key].count += 1;
+      grid[key].maxSeverity = Math.max(
+        grid[key].maxSeverity,
+        SEVERITY_WEIGHT[issue.priority] ?? 0.5,
+      );
+    });
+    return Object.values(grid);
+  }, [validIssues]);
 
   // Get user location to center map
   useEffect(() => {
@@ -82,21 +123,20 @@ export const MapScreen: React.FC = () => {
 
   // Fit map to all issue markers
   useEffect(() => {
-    if (locationReady && issuesList.length > 0 && mapRef.current) {
-      const coords = issuesList
-        .filter(i => i.latitude !== 0 && i.longitude !== 0)
-        .map(i => ({ latitude: i.latitude, longitude: i.longitude }));
-      if (coords.length > 0) {
-        mapRef.current.fitToCoordinates(coords, {
-          edgePadding: { top: 60, right: 40, bottom: 200, left: 40 },
-          animated: true,
-        });
-      }
+    if (locationReady && validIssues.length > 0 && mapRef.current) {
+      const coords = validIssues.map(i => ({
+        latitude: i.latitude,
+        longitude: i.longitude,
+      }));
+      mapRef.current.fitToCoordinates(coords, {
+        edgePadding: { top: 60, right: 40, bottom: 200, left: 40 },
+        animated: true,
+      });
     }
-  }, [locationReady, issuesList]);
+  }, [locationReady, validIssues]);
 
   // Group issues by category for the zone list
-  const categoryGroups = (() => {
+  const categoryGroups = useMemo(() => {
     if (issuesList.length === 0) return [];
     const grouped: Record<string, Issue[]> = {};
     issuesList.forEach(issue => {
@@ -106,7 +146,12 @@ export const MapScreen: React.FC = () => {
     });
     return Object.entries(grouped)
       .map(([category, catIssues]) => {
-        const priorityOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+        const priorityOrder: Record<string, number> = {
+          critical: 4,
+          high: 3,
+          medium: 2,
+          low: 1,
+        };
         const maxPriority = catIssues.reduce(
           (max, issue) => Math.max(max, priorityOrder[issue.priority] || 0),
           0,
@@ -126,7 +171,7 @@ export const MapScreen: React.FC = () => {
         };
       })
       .sort((a, b) => b.issueCount - a.issueCount);
-  })();
+  }, [issuesList]);
 
   if (isLoading && !locationReady) {
     return (
@@ -149,9 +194,45 @@ export const MapScreen: React.FC = () => {
         </Text>
       </View>
 
+      {/* View mode toggle */}
+      <View style={styles.toggleRow}>
+        <TouchableOpacity
+          style={[
+            styles.toggleBtn,
+            viewMode === 'clusters' && styles.toggleBtnActive,
+          ]}
+          onPress={() => setViewMode('clusters')}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              viewMode === 'clusters' && styles.toggleTextActive,
+            ]}
+          >
+            {'\u{1F4CD}'} Clusters
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.toggleBtn,
+            viewMode === 'heatmap' && styles.toggleBtnActive,
+          ]}
+          onPress={() => setViewMode('heatmap')}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              viewMode === 'heatmap' && styles.toggleTextActive,
+            ]}
+          >
+            {'\u{1F525}'} Heatmap
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Map */}
       <View style={styles.mapContainer}>
-        <MapView
+        <ClusteredMapView
           ref={mapRef}
           style={styles.map}
           initialRegion={region}
@@ -159,10 +240,17 @@ export const MapScreen: React.FC = () => {
           showsMyLocationButton
           showsCompass
           mapType="standard"
+          clusterColor={colors.primary}
+          clusterTextColor={colors.white}
+          clusterFontFamily="System"
+          radius={50}
+          minZoomLevel={4}
+          maxZoom={16}
+          animationEnabled={false}
         >
-          {issuesList
-            .filter(i => i.latitude !== 0 && i.longitude !== 0)
-            .map(issue => (
+          {/* Cluster markers (shown in both modes for tap interaction) */}
+          {viewMode === 'clusters' &&
+            validIssues.map(issue => (
               <Marker
                 key={issue.id}
                 coordinate={{
@@ -174,15 +262,36 @@ export const MapScreen: React.FC = () => {
                 description={
                   ISSUE_CATEGORY_LABELS[issue.category] +
                   ' \u2022 ' +
-                  issue.priority.charAt(0).toUpperCase() +
-                  issue.priority.slice(1)
+                  (issue.priority.charAt(0).toUpperCase() +
+                    issue.priority.slice(1))
                 }
                 onCalloutPress={() =>
                   navigation.navigate('IssueDetail', { issueId: issue.id })
                 }
               />
             ))}
-        </MapView>
+
+          {/* Heatmap overlay — density circles */}
+          {viewMode === 'heatmap' &&
+            heatCells.map((cell, idx) => {
+              const intensity = Math.min(cell.count / 5, 1); // normalize: 5+ issues = max
+              const r = Math.round(220 - intensity * 180);
+              const g = Math.round(100 + (1 - intensity) * 120);
+              const b = Math.round(40);
+              const fillColor = `rgba(${r}, ${g}, ${b}, ${0.25 + intensity * 0.35})`;
+              const strokeColor = `rgba(${r}, ${g}, ${b}, ${0.5 + intensity * 0.3})`;
+              return (
+                <Circle
+                  key={`heat-${idx}`}
+                  center={{ latitude: cell.lat, longitude: cell.lng }}
+                  radius={250 + cell.count * 80}
+                  fillColor={fillColor}
+                  strokeColor={strokeColor}
+                  strokeWidth={1}
+                />
+              );
+            })}
+        </ClusteredMapView>
 
         {/* Issue count badge overlay */}
         {issuesList.length > 0 && (
@@ -196,18 +305,52 @@ export const MapScreen: React.FC = () => {
 
       {/* Legend */}
       <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: PIN_COLORS.critical }]} />
-          <Text style={styles.legendText}>Critical/High</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: PIN_COLORS.medium }]} />
-          <Text style={styles.legendText}>Medium</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: PIN_COLORS.low }]} />
-          <Text style={styles.legendText}>Low</Text>
-        </View>
+        {viewMode === 'clusters' ? (
+          <>
+            <View style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: PIN_COLORS.critical },
+                ]}
+              />
+              <Text style={styles.legendText}>Critical/High</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: PIN_COLORS.medium },
+                ]}
+              />
+              <Text style={styles.legendText}>Medium</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: PIN_COLORS.low },
+                ]}
+              />
+              <Text style={styles.legendText}>Low</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendBar, { backgroundColor: '#059669' }]} />
+              <Text style={styles.legendText}>Low density</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendBar, { backgroundColor: '#D97706' }]} />
+              <Text style={styles.legendText}>Medium</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendBar, { backgroundColor: '#DC2626' }]} />
+              <Text style={styles.legendText}>High density</Text>
+            </View>
+          </>
+        )}
       </View>
 
       {/* Category breakdown list */}
@@ -224,7 +367,6 @@ export const MapScreen: React.FC = () => {
                 key={group.category}
                 activeOpacity={0.7}
                 onPress={() => {
-                  // Navigate to the first issue in this category
                   if (group.issues.length > 0) {
                     navigation.navigate('IssueDetail', {
                       issueId: group.issues[0].id,
@@ -297,8 +439,38 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 2,
   },
+  toggleRow: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.backgroundGray,
+    borderRadius: borderRadius.full,
+    padding: 3,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: borderRadius.full,
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  toggleTextActive: {
+    color: colors.textPrimary,
+  },
   mapContainer: {
-    height: 260,
+    height: 280,
     marginHorizontal: spacing.lg,
     marginVertical: spacing.sm,
     borderRadius: borderRadius.card,
@@ -338,6 +510,11 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  legendBar: {
+    width: 20,
+    height: 8,
+    borderRadius: 2,
   },
   legendText: {
     fontSize: 12,

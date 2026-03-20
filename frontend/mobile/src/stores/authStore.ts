@@ -23,13 +23,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
 
   initialize: async () => {
-    const user = await getUser();
-    const tokens = await getTokens();
-    set({
-      user,
-      isAuthenticated: !!user && !!tokens,
-      isInitialized: true,
-    });
+    try {
+      const user = await getUser();
+      const tokens = await getTokens();
+      set({
+        user,
+        isAuthenticated: !!user && !!tokens,
+        isInitialized: true,
+      });
+    } catch (e) {
+      console.warn('Auth init failed:', e);
+      set({ isInitialized: true });
+    }
   },
 
   login: async (user: User, tokens: AuthTokens) => {
