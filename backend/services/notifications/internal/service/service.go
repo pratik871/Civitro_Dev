@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"time"
 
@@ -138,7 +139,11 @@ func (s *Service) deliverPush(n *model.Notification) {
 		n.UserID, n.Type, n.Title, n.Body)
 }
 
-// generateID creates a simple unique ID. In production, use UUID.
+// generateID creates a UUID v4 for notification entries.
 func generateID() string {
-	return fmt.Sprintf("notif_%d", time.Now().UnixNano())
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant 10
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }

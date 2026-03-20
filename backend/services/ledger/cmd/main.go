@@ -69,10 +69,13 @@ func main() {
 	public.GET("/ledger/issue/:issue_id", h.GetTimeline)
 	public.GET("/ledger/entry/:id", h.GetEntry)
 
-	// Authenticated routes for writing.
+	// Authenticated routes for writing (external clients).
 	authed := router.Group("/api/v1")
 	authed.Use(middleware.JWTAuth())
-	authed.POST("/ledger/entry", h.AppendEntry)
+
+	// Ledger entry append — also available without auth for internal service-to-service calls.
+	// Internal services (issues, notifications) call this directly within the Docker network.
+	public.POST("/ledger/entry", h.AppendEntry)
 
 	// Start HTTP server.
 	srv := &http.Server{

@@ -12,7 +12,7 @@ type LedgerEntry struct {
 	ChangedByRole   string    `json:"changed_by_role" db:"changed_by_role"`
 	Detail          string    `json:"detail" db:"detail"`
 	EvidenceURLs    []string  `json:"evidence_urls" db:"evidence_urls"`
-	Timestamp       time.Time `json:"timestamp" db:"timestamp"`
+	Timestamp       time.Time `json:"timestamp" db:"created_at"`
 }
 
 // IssueTimeline is the full, ordered history of ledger entries for a single issue.
@@ -25,8 +25,8 @@ type IssueTimeline struct {
 type CreateEntryRequest struct {
 	IssueID         string   `json:"issue_id" binding:"required"`
 	Status          string   `json:"status" binding:"required"`
-	ChangedByUserID string   `json:"changed_by_user_id" binding:"required"`
-	ChangedByRole   string   `json:"changed_by_role" binding:"required"`
+	ChangedByUserID string   `json:"changed_by_user_id"`
+	ChangedByRole   string   `json:"changed_by_role"`
 	Detail          string   `json:"detail"`
 	EvidenceURLs    []string `json:"evidence_urls"`
 }

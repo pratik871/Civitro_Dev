@@ -710,3 +710,203 @@ services:
       start_period: 15s
     networks:
       - civitro-network
+
+  # ── Python AI Services ─────────────────────────────────────────
+
+  classification:
+    build:
+      context: ../ai
+      dockerfile: services/classification/Dockerfile
+    container_name: civitro-classification
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8008/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - civitro-network
+
+  sentiment:
+    build:
+      context: ../ai
+      dockerfile: services/sentiment/Dockerfile
+    container_name: civitro-sentiment
+    restart: unless-stopped
+    ports:
+      - "8009:8009"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8009/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - civitro-network
+
+  translation:
+    build:
+      context: ../ai
+      dockerfile: services/translation/Dockerfile
+    container_name: civitro-translation
+    restart: unless-stopped
+    ports:
+      - "8021:8021"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8021/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - civitro-network
+
+  promises:
+    build:
+      context: ../ai
+      dockerfile: services/promises/Dockerfile
+    container_name: civitro-promises
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8010:8010"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8010/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - civitro-network
+
+  chi:
+    build:
+      context: ../ai
+      dockerfile: services/chi/Dockerfile
+    container_name: civitro-chi
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8011:8011"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8011/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - civitro-network
+
+  datamine:
+    build:
+      context: ../ai
+      dockerfile: services/datamine/Dockerfile
+    container_name: civitro-datamine
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8016:8016"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8016/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - civitro-network
+
+  advertising:
+    build:
+      context: ../ai
+      dockerfile: services/advertising/Dockerfile
+    container_name: civitro-advertising
+    restart: unless-stopped
+    profiles: ["wave2"]
+    ports:
+      - "8020:8020"
+    environment:
+      - APP_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8020/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - civitro-network

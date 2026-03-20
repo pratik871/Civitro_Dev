@@ -48,7 +48,12 @@ SOURCES = {
 # India state GeoJSON — most reliable single-file source
 INDIA_STATES_URL = "https://raw.githubusercontent.com/geohacker/india/master/state/india_state.geojson"
 INDIA_DISTRICTS_URL = "https://raw.githubusercontent.com/geohacker/india/master/district/india_district.geojson"
-INDIA_PC_URL = "https://raw.githubusercontent.com/datameet/maps/master/parliamentary-constituencies/india_pc_2019.geojson"
+# Primary: simplified GeoJSON (< 2MB, works on raw GitHub)
+# Fallback: full GeoJSON (may be too large for raw GitHub)
+INDIA_PC_URLS = [
+    "https://raw.githubusercontent.com/datameet/maps/master/parliamentary-constituencies/india_pc_2019_simplified.geojson",
+    "https://raw.githubusercontent.com/datameet/maps/master/parliamentary-constituencies/india_pc_2019.geojson",
+]
 
 def fetch_geojson(url):
     """Download and parse a GeoJSON file."""
@@ -230,9 +235,13 @@ def load_parliamentary(cur):
         print(f"  {count} PCs already loaded, skipping.")
         return
 
-    data = fetch_geojson(INDIA_PC_URL)
+    data = None
+    for url in INDIA_PC_URLS:
+        data = fetch_geojson(url)
+        if data:
+            break
     if not data:
-        print("  Failed to download parliamentary constituencies.")
+        print("  Failed to download parliamentary constituencies from all sources.")
         return
 
     # Build state lookup
@@ -266,6 +275,63 @@ def load_parliamentary(cur):
     print(f"  Loaded {loaded} parliamentary constituencies")
 
 
+def load_assembly(cur):
+    """Load assembly (Vidhan Sabha) constituency boundaries."""
+    print("\n=== Loading Assembly Constituencies ===")
+
+    cur.execute("SELECT COUNT(*) FROM boundaries WHERE level = 'assembly'")
+    count = cur.fetchone()[0]
+    if count > 0:
+        print(f"  {count} assembly constituencies already loaded, skipping.")
+        return
+
+    # datameet has assembly data per state in shapefiles, but a combined simplified GeoJSON exists
+    assembly_urls = [
+        "https://raw.githubusercontent.com/datameet/maps/master/assembly-constituencies/india_ac_2019_simplified.geojson",
+        "https://raw.githubusercontent.com/datameet/maps/master/assembly-constituencies/india_ac_2019.geojson",
+    ]
+
+    data = None
+    for url in assembly_urls:
+        data = fetch_geojson(url)
+        if data:
+            break
+    if not data:
+        print("  No combined assembly constituency GeoJSON available yet.")
+        print("  Assembly data may need to be loaded per-state from shapefiles.")
+        return
+
+    # Build state lookup
+    cur.execute("SELECT id, name FROM boundaries WHERE level = 'state'")
+    state_map = {}
+    for row in cur.fetchall():
+        state_map[row[1].lower()] = row[0]
+
+    loaded = 0
+    for feature in data.get("features", []):
+        props = feature.get("properties", {})
+        geom = feature.get("geometry")
+        if not geom:
+            continue
+
+        name = props.get("AC_NAME") or props.get("ac_name") or props.get("NAME")
+        state_name = props.get("ST_NAME") or props.get("state") or props.get("STATE")
+        ac_no = props.get("AC_NO") or props.get("ac_no")
+        if not name:
+            continue
+
+        parent_id = state_map.get(state_name.lower()) if state_name else None
+        code = str(ac_no) if ac_no else None
+
+        bid = insert_boundary(cur, name, "assembly", "electoral", parent_id, geom, code=code)
+        if bid:
+            loaded += 1
+            if loaded % 100 == 0:
+                print(f"  [{loaded}] {name}, {state_name}")
+
+    print(f"  Loaded {loaded} assembly constituencies")
+
+
 def print_summary(cur):
     """Print boundary count summary."""
     print("\n=== Boundary Summary ===")
@@ -277,6 +343,7 @@ def print_summary(cur):
             CASE level
                 WHEN 'nation' THEN 1 WHEN 'state' THEN 2
                 WHEN 'district' THEN 3 WHEN 'parliamentary' THEN 4
+                WHEN 'assembly' THEN 5
             END
     """)
     for row in cur.fetchall():
@@ -312,6 +379,9 @@ def main():
         conn.commit()
 
         load_parliamentary(cur)
+        conn.commit()
+
+        load_assembly(cur)
         conn.commit()
 
         print_summary(cur)

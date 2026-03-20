@@ -25,9 +25,6 @@ func (r *Repository) GetByUserID(ctx context.Context, userID, cursor string, lim
 		limit = 20
 	}
 
-	var rows pgxpool.Pool
-	_ = rows // placeholder
-
 	query := `
 		SELECT id, user_id, type, title, body, data, read, created_at
 		FROM notifications

@@ -79,6 +79,17 @@ func (s *Service) CreateIssue(ctx context.Context, userID string, req *model.Cre
 	// Award civic score points for reporting an issue
 	awardPoints(userID, "report_filed", 10, "Reported issue: "+issue.ID)
 
+	// Auto-classify via AI (async — updates issue category/severity/confidence in background)
+	go s.classifyIssue(issue)
+
+	// Create initial ledger entry for issue creation
+	go appendLedger(issue.ID, string(model.StatusReported), userID, "citizen", "Issue reported by citizen")
+
+	// Send notification to user confirming issue was filed
+	go sendNotification(userID, "issue_update", "Issue Reported",
+		fmt.Sprintf("Your issue %s has been filed and is being reviewed", issue.ID),
+		map[string]interface{}{"issue_id": issue.ID})
+
 	return &model.IssueResponse{Issue: *issue}, nil
 }
 
@@ -150,6 +161,16 @@ func (s *Service) UpdateStatus(ctx context.Context, issueID string, req *model.U
 		"new_status": string(req.Status),
 	})
 	_ = s.producer.Publish(ctx, events.TopicIssueStatusUpdated, issueID, statusPayload)
+
+	// Append ledger entry for the status change
+	detail := fmt.Sprintf("Status changed from %s to %s", issue.Status, req.Status)
+	go appendLedger(issueID, string(req.Status), "", "system", detail)
+
+	// Notify the issue reporter about the status change
+	go sendNotification(issue.UserID, "issue_update",
+		"Issue Update: "+statusLabel(req.Status),
+		fmt.Sprintf("Your issue %s has been updated to: %s", issueID, statusLabel(req.Status)),
+		map[string]interface{}{"issue_id": issueID, "status": string(req.Status)})
 
 	return nil
 }
@@ -367,6 +388,146 @@ func isValidCategory(cat model.IssueCategory) bool {
 		model.CategoryEducation:    true,
 	}
 	return validCategories[cat]
+}
+
+// classifyIssue calls the AI classification service to auto-categorize an issue.
+// Updates the issue's category, severity, and AI confidence if the AI is more confident.
+func (s *Service) classifyIssue(issue *model.Issue) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	reqBody := map[string]interface{}{
+		"text":    issue.Text,
+		"gps_lat": issue.GPSLat,
+		"gps_lng": issue.GPSLng,
+	}
+	if len(issue.PhotoURLs) > 0 {
+		reqBody["image_url"] = issue.PhotoURLs[0]
+	}
+
+	payload, _ := json.Marshal(reqBody)
+
+	// Use text-only if no image, combined if image available
+	endpoint := "http://classification:8008/classify/text"
+	if len(issue.PhotoURLs) > 0 {
+		endpoint = "http://classification:8008/classify/combined"
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload))
+	if err != nil {
+		logger.Error().Err(err).Str("issue_id", issue.ID).Msg("failed to create classification request")
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Warn().Err(err).Str("issue_id", issue.ID).Msg("classification service unavailable, skipping auto-classify")
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Warn().Int("status", resp.StatusCode).Str("issue_id", issue.ID).Msg("classification service returned non-200")
+		return
+	}
+
+	var result struct {
+		Category   string  `json:"category"`
+		Confidence float64 `json:"confidence"`
+		Severity   string  `json:"severity"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		logger.Error().Err(err).Msg("failed to decode classification response")
+		return
+	}
+
+	logger.Info().
+		Str("issue_id", issue.ID).
+		Str("ai_category", result.Category).
+		Float64("confidence", result.Confidence).
+		Str("ai_severity", result.Severity).
+		Msg("issue auto-classified")
+
+	// Update the issue if AI confidence is high enough (>0.6)
+	if result.Confidence > 0.6 {
+		if err := s.repo.UpdateClassification(ctx, issue.ID, result.Category, result.Severity, result.Confidence); err != nil {
+			logger.Error().Err(err).Str("issue_id", issue.ID).Msg("failed to update issue with AI classification")
+		}
+	}
+}
+
+// appendLedger creates an immutable ledger entry for an issue status change (fire-and-forget).
+func appendLedger(issueID, status, userID, role, detail string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	payload, _ := json.Marshal(map[string]interface{}{
+		"issue_id":           issueID,
+		"status":             status,
+		"changed_by_user_id": userID,
+		"changed_by_role":    role,
+		"detail":             detail,
+	})
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "http://ledger:8006/api/v1/ledger/entry", bytes.NewReader(payload))
+	if err != nil {
+		logger.Error().Err(err).Str("issue_id", issueID).Msg("failed to create ledger request")
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Warn().Err(err).Str("issue_id", issueID).Msg("ledger service unavailable")
+		return
+	}
+	resp.Body.Close()
+}
+
+// sendNotification sends a notification to a user (fire-and-forget).
+func sendNotification(userID string, notifType, title, body string, data map[string]interface{}) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	payload, _ := json.Marshal(map[string]interface{}{
+		"user_id": userID,
+		"type":    notifType,
+		"title":   title,
+		"body":    body,
+		"data":    data,
+	})
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "http://notifications:8017/api/v1/notifications/send", bytes.NewReader(payload))
+	if err != nil {
+		logger.Error().Err(err).Str("user_id", userID).Msg("failed to create notification request")
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Warn().Err(err).Str("user_id", userID).Msg("notification service unavailable")
+		return
+	}
+	resp.Body.Close()
+}
+
+// statusLabel returns a human-readable label for an issue status.
+func statusLabel(status model.IssueStatus) string {
+	labels := map[model.IssueStatus]string{
+		model.StatusReported:        "Reported",
+		model.StatusAcknowledged:    "Acknowledged",
+		model.StatusAssigned:        "Assigned",
+		model.StatusWorkStarted:     "Work Started",
+		model.StatusCompleted:       "Completed",
+		model.StatusCitizenVerified: "Citizen Verified",
+		model.StatusResolved:        "Resolved",
+	}
+	if label, ok := labels[status]; ok {
+		return label
+	}
+	return string(status)
 }
 
 // isValidStatusTransition checks if a status transition is valid.

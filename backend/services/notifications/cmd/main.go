@@ -63,10 +63,14 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"service": "notifications", "status": "healthy"})
 	})
 
-	// Register routes.
+	// Register auth-protected routes.
 	api := router.Group("/api/v1")
 	api.Use(middleware.JWTAuth())
 	h.RegisterRoutes(api)
+
+	// Register internal service-to-service routes (no auth).
+	internal := router.Group("/api/v1")
+	h.RegisterInternalRoutes(internal)
 
 	// Start Kafka consumer for notification delivery.
 	go startNotificationConsumer(ctx, cfg, svc)

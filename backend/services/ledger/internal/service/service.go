@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/civitro/pkg/events"
@@ -97,7 +99,11 @@ func (s *LedgerService) GetEntry(ctx context.Context, id string) (*model.LedgerE
 	return entry, nil
 }
 
-// generateID produces a time-sortable unique identifier.
+// generateID produces a UUID v4 for ledger entries.
 func generateID() string {
-	return time.Now().UTC().Format("20060102150405.000000")
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant 10
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }

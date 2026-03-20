@@ -20,14 +20,14 @@ func NewLedgerRepository(db *pgxpool.Pool) *LedgerRepository {
 	return &LedgerRepository{db: db}
 }
 
-// GetByIssueID returns all ledger entries for a given issue, ordered by timestamp ascending.
+// GetByIssueID returns all ledger entries for a given issue, ordered by created_at ascending.
 func (r *LedgerRepository) GetByIssueID(ctx context.Context, issueID string) ([]model.LedgerEntry, error) {
 	query := `
 		SELECT id, issue_id, status, changed_by_user_id, changed_by_role,
-		       detail, evidence_urls, timestamp
+		       detail, evidence_urls, created_at
 		FROM ledger_entries
 		WHERE issue_id = $1
-		ORDER BY timestamp ASC`
+		ORDER BY created_at ASC`
 
 	rows, err := r.db.Query(ctx, query, issueID)
 	if err != nil {
@@ -53,11 +53,17 @@ func (r *LedgerRepository) GetByIssueID(ctx context.Context, issueID string) ([]
 func (r *LedgerRepository) Create(ctx context.Context, entry *model.LedgerEntry) error {
 	query := `
 		INSERT INTO ledger_entries (id, issue_id, status, changed_by_user_id, changed_by_role,
-		                            detail, evidence_urls, timestamp)
+		                            detail, evidence_urls, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
+	// Convert empty user ID to nil for the UUID column
+	var changedByUserID interface{}
+	if entry.ChangedByUserID != "" {
+		changedByUserID = entry.ChangedByUserID
+	}
+
 	_, err := r.db.Exec(ctx, query,
-		entry.ID, entry.IssueID, entry.Status, entry.ChangedByUserID, entry.ChangedByRole,
+		entry.ID, entry.IssueID, entry.Status, changedByUserID, entry.ChangedByRole,
 		entry.Detail, entry.EvidenceURLs, entry.Timestamp,
 	)
 	return err
@@ -67,7 +73,7 @@ func (r *LedgerRepository) Create(ctx context.Context, entry *model.LedgerEntry)
 func (r *LedgerRepository) GetByID(ctx context.Context, id string) (*model.LedgerEntry, error) {
 	query := `
 		SELECT id, issue_id, status, changed_by_user_id, changed_by_role,
-		       detail, evidence_urls, timestamp
+		       detail, evidence_urls, created_at
 		FROM ledger_entries
 		WHERE id = $1`
 

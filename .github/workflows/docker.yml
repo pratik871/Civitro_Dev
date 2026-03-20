@@ -15,14 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t civitro/${{ matrix.service }}:test backend/services/${{ matrix.service }}
+        run: docker build -t civitro/${{ matrix.service }}:test -f backend/services/${{ matrix.service }}/Dockerfile backend
 
   build-python:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [classification, sentiment, promises, chi, datamine, advertising]
+        service: [classification, sentiment, promises, chi, datamine, advertising, translation]
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t civitro/${{ matrix.service }}:test ai/services/${{ matrix.service }}
+        run: docker build -t civitro/${{ matrix.service }}:test -f ai/services/${{ matrix.service }}/Dockerfile ai

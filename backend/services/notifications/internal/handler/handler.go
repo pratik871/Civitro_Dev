@@ -21,7 +21,7 @@ func New(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// RegisterRoutes registers all notification HTTP routes.
+// RegisterRoutes registers all notification HTTP routes (auth-protected).
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	// User-scoped routes under /notifications/users/:user_id
 	users := r.Group("/notifications/users/:user_id")
@@ -33,6 +33,11 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	// Notification-scoped routes under /notifications/:id
 	r.PUT("/notifications/:id/read", h.MarkRead)
+}
+
+// RegisterInternalRoutes registers internal service-to-service endpoints (no auth).
+func (h *Handler) RegisterInternalRoutes(r *gin.RouterGroup) {
+	r.POST("/notifications/send", h.SendNotification)
 }
 
 // GetNotifications handles GET /notifications/:user_id
@@ -104,6 +109,22 @@ func (h *Handler) UpdatePrefs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// SendNotification handles POST /notifications/send (internal service-to-service).
+func (h *Handler) SendNotification(c *gin.Context) {
+	var req model.SendNotificationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("invalid request body: "+err.Error()))
+		return
+	}
+
+	if err := h.svc.SendNotification(c.Request.Context(), req); err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"status": "sent"})
 }
 
 // GetUnreadCount handles GET /notifications/:user_id/unread-count

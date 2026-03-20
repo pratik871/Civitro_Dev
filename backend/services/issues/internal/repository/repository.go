@@ -31,6 +31,7 @@ type Repository interface {
 	GetTrending(ctx context.Context) ([]model.TrendingTopic, error)
 	ListPromises(ctx context.Context) ([]model.PromiseResponse, error)
 	GetCHI(ctx context.Context) (*model.CHIResponse, error)
+	UpdateClassification(ctx context.Context, id string, category string, severity string, confidence float64) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -708,6 +709,16 @@ func (r *PostgresRepository) defaultCHI() *model.CHIResponse {
 		Trend:        model.CHITrend{Change: 0, Period: "vs last month"},
 		Categories:   categories,
 	}
+}
+
+// UpdateClassification updates the AI classification fields on an issue.
+func (r *PostgresRepository) UpdateClassification(ctx context.Context, id string, category string, severity string, confidence float64) error {
+	query := `
+		UPDATE issues SET category = $1, severity = $2, ai_classification_confidence = $3, updated_at = NOW()
+		WHERE id = $4
+	`
+	_, err := r.pool.Exec(ctx, query, category, severity, confidence, id)
+	return err
 }
 
 // GenerateIssueID creates a CIV-YYYY-XXXXX format ID.
