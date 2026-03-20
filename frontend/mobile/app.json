@@ -33,7 +33,7 @@
     },
     "ios": {
       "bundleIdentifier": "in.civitro.app",
-      "buildNumber": "13",
+      "buildNumber": "15",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Civitro needs camera access to capture issue photos",
