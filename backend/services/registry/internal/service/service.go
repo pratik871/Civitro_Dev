@@ -25,6 +25,15 @@ func New(repo repository.Repository, producer *events.Producer) *Service {
 	}
 }
 
+// ListAll retrieves all verified representatives.
+func (s *Service) ListAll(ctx context.Context) ([]model.Representative, error) {
+	reps, err := s.repo.ListAll(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list representatives: %w", err)
+	}
+	return reps, nil
+}
+
 // GetRepresentative retrieves a representative by ID.
 func (s *Service) GetRepresentative(ctx context.Context, id string) (*model.RepresentativeResponse, error) {
 	rep, err := s.repo.GetByID(ctx, id)

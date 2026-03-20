@@ -24,6 +24,7 @@ func New(svc *service.Service) *Handler {
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	reps := rg.Group("/representatives")
 	{
+		reps.GET("", h.ListAll)
 		reps.GET("/:id", h.GetRepresentative)
 		reps.GET("/boundary/:boundary_id", h.GetByBoundary)
 		reps.GET("/designation/:designation", h.GetByDesignation)
@@ -33,6 +34,16 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		reps.POST("/:id/staff", h.AddStaff)
 		reps.GET("/:id/staff", h.GetStaff)
 	}
+}
+
+// ListAll handles GET /representatives — returns all verified representatives.
+func (h *Handler) ListAll(c *gin.Context) {
+	reps, err := h.svc.ListAll(c.Request.Context())
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, reps)
 }
 
 // GetRepresentative handles GET /representatives/:id.

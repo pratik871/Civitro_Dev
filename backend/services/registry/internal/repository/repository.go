@@ -15,6 +15,7 @@ import (
 
 // Repository defines the data access interface for the registry service.
 type Repository interface {
+	ListAll(ctx context.Context) ([]model.Representative, error)
 	GetByID(ctx context.Context, id string) (*model.Representative, error)
 	GetByBoundaryID(ctx context.Context, boundaryID string) ([]model.Representative, error)
 	GetByDesignation(ctx context.Context, designation string, boundaryID string) ([]model.Representative, error)
@@ -88,6 +89,17 @@ func scanReps(rows pgx.Rows) ([]model.Representative, error) {
 		reps = append(reps, rep)
 	}
 	return reps, rows.Err()
+}
+
+// ListAll retrieves all verified representatives.
+func (r *PostgresRepository) ListAll(ctx context.Context) ([]model.Representative, error) {
+	query := `SELECT ` + repColumns + ` FROM representatives WHERE verified = true ORDER BY level, name LIMIT 100`
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanReps(rows)
 }
 
 // GetByID retrieves a representative by ID.
