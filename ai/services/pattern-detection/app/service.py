@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 
 from civitro_common.config import get_config
-from civitro_common.events import consume, emit, get_topic
+from civitro_common.events import consume, publish, get_topic
 from civitro_common.logger import get_logger
 
 from app.models import (
@@ -556,7 +556,7 @@ async def _emit_pattern_event(pattern: DetectedPattern) -> None:
     }
     event_type = event_map.get(pattern.confidence, "pattern.emerging")
     try:
-        await emit(
+        await publish(
             topic=get_topic("pattern"),
             key=pattern.ward_id,
             payload={
