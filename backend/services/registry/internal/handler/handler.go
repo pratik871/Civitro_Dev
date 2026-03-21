@@ -25,6 +25,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	reps := rg.Group("/representatives")
 	{
 		reps.GET("", h.ListAll)
+		reps.GET("/list", h.ListAll)
 		reps.GET("/:id", h.GetRepresentative)
 		reps.GET("/boundary/:boundary_id", h.GetByBoundary)
 		reps.GET("/designation/:designation", h.GetByDesignation)
