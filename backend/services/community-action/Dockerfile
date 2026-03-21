@@ -13,7 +13,7 @@ COPY services/community-action/ /app/services/community-action/
 
 WORKDIR /app/services/community-action
 
-RUN go mod download
+RUN go mod tidy && go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /community-action ./cmd/main.go
 
 # Stage 2: Run
