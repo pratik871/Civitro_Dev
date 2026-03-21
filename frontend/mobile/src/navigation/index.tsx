@@ -23,6 +23,10 @@ import { PrivacyScreen } from '../screens/settings/PrivacyScreen';
 import { HelpSupportScreen } from '../screens/settings/HelpSupportScreen';
 import { TermsScreen } from '../screens/settings/TermsScreen';
 import { AboutScreen } from '../screens/settings/AboutScreen';
+import { ActionsListScreen } from '../screens/actions/ActionsListScreen';
+import { ActionDetailScreen } from '../screens/actions/ActionDetailScreen';
+import { CreateActionScreen } from '../screens/actions/CreateActionScreen';
+import { ActionTimelineScreen } from '../screens/actions/ActionTimelineScreen';
 import { useAuthStore } from '../stores/authStore';
 import { colors } from '../theme/colors';
 import type { RootStackParamList } from './types';
@@ -183,6 +187,46 @@ export const RootNavigator: React.FC = () => {
               name="CreateVoice"
               component={CreateVoiceScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ActionsList"
+              component={ActionsListScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Community Actions',
+                headerTintColor: colors.textPrimary,
+                headerStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
+              name="ActionDetail"
+              component={ActionDetailScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Action Details',
+                headerTintColor: colors.textPrimary,
+                headerStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
+              name="CreateAction"
+              component={CreateActionScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'New Action',
+                headerTintColor: colors.textPrimary,
+                headerStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
+              name="ActionTimeline"
+              component={ActionTimelineScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Action Timeline',
+                headerTintColor: colors.textPrimary,
+                headerStyle: { backgroundColor: colors.background },
+              }}
             />
             <Stack.Screen
               name="Language"

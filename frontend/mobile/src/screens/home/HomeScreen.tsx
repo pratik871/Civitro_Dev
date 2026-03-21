@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,40 +9,107 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import Svg, {
+  Path,
+  Circle,
+  Defs,
+  LinearGradient,
+  Stop,
+} from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { IssueCard } from '../../components/issues/IssueCard';
-import { VoiceCard } from '../../components/voices/VoiceCard';
-import { StatsBar } from '../../components/ui/StatsCard';
-import { Avatar } from '../../components/ui/Avatar';
-import { Badge } from '../../components/ui/Badge';
-import { ScoreRing } from '../../components/ui/ScoreRing';
-import { FAB } from '../../components/ui/FAB';
+
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
 import { useIssues } from '../../hooks/useIssues';
-import { useVoices } from '../../hooks/useVoices';
+import { useWardMood } from '../../hooks/useWardMood';
+import { useLeaders } from '../../hooks/useLeaders';
 import { useUnreadCount } from '../../hooks/useNotifications';
+import { FAB } from '../../components/ui/FAB';
 import type { RootStackParamList } from '../../navigation/types';
 
+// Dashboard components
+import { CivicScoreRing } from '../../components/dashboard/CivicScoreRing';
+import { WardOfficerCard } from '../../components/dashboard/WardOfficerCard';
+import { WardDashboardChart } from '../../components/dashboard/WardDashboardChart';
+import { WardMood } from '../../components/dashboard/WardMood';
+import { CommunityPulse } from '../../components/dashboard/CommunityPulse';
+import { PatternBanner } from '../../components/dashboard/PatternBanner';
+import { QuickActions } from '../../components/dashboard/QuickActions';
+import { CommunityActionsSection, type CommunityAction } from '../../components/dashboard/CommunityActionCard';
+import { CelebrationBanner } from '../../components/dashboard/CelebrationBanner';
+import { IssueFeedCard } from '../../components/dashboard/IssueFeedCard';
+
+// ---------------------------------------------------------------------------
+// Design tokens from the HTML mockup
+// ---------------------------------------------------------------------------
+const SAFFRON = '#FF6B35';
+const SAFFRON_LIGHT = '#FFF3ED';
+const NAVY = '#0B1426';
+
+// ---------------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------------
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
 
+// ---------------------------------------------------------------------------
+// Mock data for sections without real APIs yet
+// ---------------------------------------------------------------------------
+const MOCK_COMMUNITY_ACTIONS: CommunityAction[] = [
+  {
+    id: '1',
+    title: "Fix Andheri East's chronic water supply failures",
+    badge: 'Trending',
+    badgeType: 'trending',
+    ward: 'Ward 45',
+    supporters: 312,
+    goalPercent: 78,
+    incidents: 47,
+    locations: 8,
+    impactLabel: '\u20B923L',
+    impactColor: '#0F766E',
+    creatorInitial: 'M',
+    creatorName: 'Meena R.',
+    createdAgo: '5 days ago',
+  },
+  {
+    id: '2',
+    title: 'Install proper streetlighting on SV Road stretch',
+    badge: 'Acknowledged',
+    badgeType: 'acknowledged',
+    ward: 'Ward 45',
+    supporters: 89,
+    goalPercent: 45,
+    incidents: 19,
+    locations: 5,
+    impactLabel: 'Responded',
+    impactColor: '#059669',
+    creatorInitial: 'R',
+    creatorName: 'Rajesh K.',
+    createdAgo: '12 days ago',
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavProp>();
   const { t } = useTranslation();
-  const user = useAuthStore(state => state.user);
+  const user = useAuthStore((state) => state.user);
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const { data: issues, isLoading, refetch } = useIssues();
-  const { data: voices } = useVoices();
   const { data: unreadData } = useUnreadCount();
+  const { data: leaders } = useLeaders();
+  const { data: wardMoodData } = useWardMood(user?.ward);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Refresh civic score whenever this screen comes into focus
+  // Refresh on focus
   useFocusEffect(useCallback(() => { refreshProfile(); }, [refreshProfile]));
 
   const onRefresh = useCallback(async () => {
@@ -51,57 +118,186 @@ export const HomeScreen: React.FC = () => {
     setRefreshing(false);
   }, [refetch, refreshProfile]);
 
+  // Derived data
   const issueList = issues ?? [];
-  const wardStats = [
-    { label: t('home.open'), value: issueList.filter(i => i.status === 'reported').length, color: colors.error },
-    { label: t('home.inProgress'), value: issueList.filter(i => ['assigned', 'work_started'].includes(i.status)).length, color: colors.warning },
-    { label: t('home.resolved'), value: issueList.filter(i => i.status === 'completed').length, color: colors.success },
-    { label: t('home.total'), value: issueList.length, color: colors.info },
-  ];
+  const openCount = issueList.filter((i) => i.status === 'reported').length;
+  const inProgressCount = issueList.filter((i) => ['assigned', 'work_started', 'acknowledged'].includes(i.status)).length;
+  const resolvedCount = issueList.filter((i) => i.status === 'completed').length;
+  const verifiedCount = issueList.filter((i) => i.status === 'citizen_verified').length;
+
+  // Ward officer (first leader, or mock)
+  const wardOfficer = useMemo(() => {
+    if (leaders && leaders.length > 0) {
+      const l = leaders[0];
+      return { name: l.name, designation: 'Ward Corporator', party: l.partyAbbr || l.party };
+    }
+    return { name: 'Priya Sharma', designation: 'Ward Corporator', party: 'BJP' };
+  }, [leaders]);
+
+  // Greeting
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }, []);
+
+  const firstName = user?.name?.split(' ')[0] || 'Citizen';
+
+  // Civic level mock
+  const civicLevel = useMemo(() => {
+    const score = user?.civicScore ?? 0;
+    if (score >= 75) return 'Star Citizen';
+    if (score >= 50) return 'Active Citizen';
+    if (score >= 25) return 'Reporter';
+    return 'New Citizen';
+  }, [user?.civicScore]);
+
+  const unreadCount = unreadData?.count ?? 0;
+
+  // Quick action handler
+  const handleQuickAction = useCallback(
+    (key: string) => {
+      switch (key) {
+        case 'report':
+          navigation.navigate('Main', { screen: 'Report' } as any);
+          break;
+        case 'polls':
+          navigation.navigate('Polls');
+          break;
+        case 'promises':
+          navigation.navigate('Promises');
+          break;
+        case 'chi':
+          navigation.navigate('CHI', {});
+          break;
+        case 'messages':
+          navigation.navigate('Messages');
+          break;
+        default:
+          break;
+      }
+    },
+    [navigation],
+  );
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      {/* Header */}
+      {/* ================================================================ */}
+      {/* 1. HEADER                                                        */}
+      {/* ================================================================ */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            <Avatar name={user?.name || 'User'} size={44} />
+          {/* Civic Shield Badge */}
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')} activeOpacity={0.7}>
+            <View style={styles.shieldWrap}>
+              <Svg viewBox="0 0 44 44" width={44} height={44} fill="none">
+                <Defs>
+                  <LinearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <Stop offset="0%" stopColor="#FF8F5E" />
+                    <Stop offset="100%" stopColor={SAFFRON} />
+                  </LinearGradient>
+                </Defs>
+                <Path
+                  d="M22 3L6 10v10c0 11 6.8 18.4 16 21 9.2-2.6 16-10 16-21V10L22 3z"
+                  fill="url(#shieldGrad)"
+                />
+                <Path
+                  d="M22 6L9 12v8c0 9.5 5.8 15.8 13 18 7.2-2.2 13-8.5 13-18v-8L22 6z"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth={0.5}
+                />
+              </Svg>
+              <Text style={styles.shieldLevel}>{Math.floor((user?.civicScore ?? 0) / 10) || 1}</Text>
+            </View>
           </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.greeting}>
-              {(() => {
-                const hour = new Date().getHours();
-                if (hour < 12) return t('home.greeting');
-                if (hour < 17) return t('home.greetingAfternoon');
-                return t('home.greetingEvening');
-              })()}, {user?.name?.split(' ')[0] || t('home.citizen')} {'\u{1F44B}'}
+
+          {/* Greeting */}
+          <View style={styles.greetingBlock}>
+            <Text style={styles.greetingText} numberOfLines={1}>
+              {greeting}, {firstName}
             </Text>
-            {user?.ward && <Text style={styles.wardText}>{user.ward}</Text>}
+            <Text style={styles.greetingSubText}>
+              {civicLevel} Level · {user?.ward || 'Ward 45'}
+            </Text>
           </View>
         </View>
+
         <View style={styles.headerRight}>
+          {/* Streak flame */}
+          <View style={styles.streakBadge}>
+            <Svg viewBox="0 0 16 16" width={14} height={14} fill="none">
+              <Path d="M8 1c0 3-3 4.5-3 7.5a3.5 3.5 0 007 0C12 5.5 8 4 8 1z" fill={SAFFRON} />
+              <Path d="M8 7c0 1.5-1.5 2.25-1.5 3.75a1.75 1.75 0 003.5 0C10 9.25 8 8.5 8 7z" fill="#FFD700" />
+            </Svg>
+            <Text style={styles.streakText}>7</Text>
+          </View>
+
+          {/* Language */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('Search')}
-            style={styles.iconButton}
+            style={styles.headerIcon}
+            onPress={() => navigation.navigate('Language')}
+            activeOpacity={0.7}
           >
-            <Text style={styles.iconText}>{'\u{1F50D}'}</Text>
+            <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
+              <Circle cx={12} cy={12} r={10} stroke={NAVY} strokeWidth={2} />
+              <Path
+                d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"
+                stroke={NAVY}
+                strokeWidth={2}
+              />
+            </Svg>
           </TouchableOpacity>
+
+          {/* Search */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('Notifications')}
-            style={styles.iconButton}
+            style={styles.headerIcon}
+            onPress={() => navigation.navigate('Search')}
+            activeOpacity={0.7}
           >
-            <Text style={styles.iconText}>{'\u{1F514}'}</Text>
-            {(unreadData?.count ?? 0) > 0 && (
+            <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
+              <Circle cx={10.5} cy={10.5} r={7} stroke={NAVY} strokeWidth={2} />
+              <Path d="M15.5 15.5L21 21" stroke={NAVY} strokeWidth={2} strokeLinecap="round" />
+            </Svg>
+          </TouchableOpacity>
+
+          {/* Notifications */}
+          <TouchableOpacity
+            style={styles.headerIcon}
+            onPress={() => navigation.navigate('Notifications')}
+            activeOpacity={0.7}
+          >
+            <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
+              <Path
+                d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"
+                stroke={NAVY}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <Path
+                d="M13.73 21a2 2 0 01-3.46 0"
+                stroke={NAVY}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+            {unreadCount > 0 && (
               <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>{unreadData?.count ?? 0}</Text>
+                <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* ================================================================ */}
+      {/* SCROLL CONTENT                                                   */}
+      {/* ================================================================ */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -115,108 +311,293 @@ export const HomeScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Civic Score */}
-        <View style={styles.scoreSection}>
-          <ScoreRing
-            score={user?.civicScore ?? 0}
-            size={64}
-            strokeWidth={5}
-            label="Civic"
-          />
-          <View style={styles.scoreInfo}>
-            <Text style={styles.scoreTitle}>{t('home.yourCivicScore')}</Text>
-            <Text style={styles.scoreDesc}>
-              {t('home.civicScoreHint')}
-            </Text>
-            {(user?.civicScore ?? 0) > 0 && (
-              <Badge
-                text={
-                  (user?.civicScore ?? 0) >= 75
-                    ? t('profile.starCitizen')
-                    : (user?.civicScore ?? 0) >= 50
-                    ? t('profile.activeCitizen')
-                    : t('profile.newCitizen')
-                }
-                backgroundColor={
-                  ((user?.civicScore ?? 0) >= 50 ? colors.success : colors.info) + '15'
-                }
-                color={(user?.civicScore ?? 0) >= 50 ? colors.success : colors.info}
-                size="sm"
-              />
-            )}
-          </View>
+        {/* ============================================================ */}
+        {/* 2. TAGLINE                                                    */}
+        {/* ============================================================ */}
+        <View style={styles.taglineWrap}>
+          <Text style={styles.taglineText}>
+            Democracy<Text style={styles.taglineDot}> {'\u2022'} </Text>You Shape
+            <Text style={styles.taglineTM}>.TM</Text>
+          </Text>
+          <View style={styles.taglineLine} />
         </View>
 
-        {/* Ward Stats */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.wardDashboard')}</Text>
-        </View>
-        <StatsBar stats={wardStats} style={styles.statsBar} />
-
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => navigation.navigate('Polls')}
-          >
-            <Text style={styles.quickActionIcon}>{'\u{1F5F3}'}</Text>
-            <Text style={styles.quickActionText}>{t('home.quickPolls')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => navigation.navigate('Promises')}
-          >
-            <Text style={styles.quickActionIcon}>{'\u{1F91D}'}</Text>
-            <Text style={styles.quickActionText}>{t('home.quickPromises')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => navigation.navigate('CHI', {})}
-          >
-            <Text style={styles.quickActionIcon}>{'\u{1F3E5}'}</Text>
-            <Text style={styles.quickActionText}>{t('home.quickCHI')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickAction}
-            onPress={() => navigation.navigate('Messages')}
-          >
-            <Text style={styles.quickActionIcon}>{'\u{1F4E9}'}</Text>
-            <Text style={styles.quickActionText}>{t('home.quickMessages')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Recent Issues */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.recentIssues')}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('IssuesList')}>
-            <Text style={styles.seeAll}>{t('common.seeAll')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
-        ) : (
-          issues?.slice(0, 3).map(issue => (
-            <IssueCard
-              key={issue.id}
-              issue={issue}
-              onPress={() => navigation.navigate('IssueDetail', { issueId: issue.id })}
+        {/* ============================================================ */}
+        {/* 3. WEATHER TIP                                                */}
+        {/* ============================================================ */}
+        <View style={styles.weatherTip}>
+          <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
+            <Path
+              d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"
+              stroke={SAFFRON}
+              strokeWidth={2}
+              strokeLinecap="round"
             />
-          ))
+            <Path d="M8 15v2M12 15v2M16 15v2" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" opacity={0.5} />
+          </Svg>
+          <Text style={styles.weatherText}>
+            Monsoon alert: Drainage issues likely -- report blockages early
+          </Text>
+        </View>
+
+        {/* ============================================================ */}
+        {/* 4. CIVIC SCORE RING                                           */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <CivicScoreRing
+            score={user?.civicScore ?? 15}
+            reported={user?.issuesReported ?? 3}
+            pollsVoted={user?.pollsVoted ?? 1}
+            validations={0}
+            actionsSupported={1}
+            actionsStarted={0}
+            milestoneProgress={0.6}
+            milestoneLabel="Report 2 more to reach Validator"
+            onBoostPress={() => navigation.navigate('Main', { screen: 'Report' } as any)}
+          />
+        </View>
+
+        {/* ============================================================ */}
+        {/* 5. WARD OFFICER CARD                                          */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <WardOfficerCard
+            name={wardOfficer.name}
+            designation={wardOfficer.designation}
+            party={wardOfficer.party}
+            onMessage={() => navigation.navigate('Messages')}
+            onRate={() => {
+              if (leaders && leaders.length > 0) {
+                navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
+              }
+            }}
+          />
+        </View>
+
+        {/* ============================================================ */}
+        {/* 6. WARD DASHBOARD                                             */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <WardDashboardChart
+            open={openCount || 3}
+            inProgress={inProgressCount || 2}
+            resolved={resolvedCount || 2}
+            verified={verifiedCount || 1}
+            wardName={user?.ward || 'Ward 45'}
+            wardArea="Andheri East"
+            rank={12}
+            totalWards={236}
+          />
+        </View>
+
+        {/* ============================================================ */}
+        {/* 7. WARD MOOD                                                  */}
+        {/* ============================================================ */}
+        {wardMoodData && (
+          <View style={styles.sectionSpacing}>
+            <WardMood data={wardMoodData} />
+          </View>
+        )}
+        {/* Fallback mock if API data not available */}
+        {!wardMoodData && (
+          <View style={styles.sectionSpacing}>
+            <WardMood
+              data={{
+                ward_id: user?.ward || 'ward-45',
+                mood: 'frustrated',
+                score: 0.35,
+                topics: [
+                  { name: 'Water supply', sentiment: -0.6, percentage: 43 },
+                  { name: 'Potholes', sentiment: -0.3, percentage: 22 },
+                  { name: 'Streetlights fixed', sentiment: 0.4, percentage: 18 },
+                  { name: 'New park', sentiment: 0.5, percentage: 17 },
+                ],
+                trend: {
+                  direction: 'declining',
+                  change_percent: 12,
+                  sparkline: [0.45, 0.42, 0.38, 0.35, 0.32, 0.36, 0.33],
+                },
+              }}
+            />
+          </View>
         )}
 
-        {/* Community Voices */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.communityVoices')}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('VoicesList')}>
-            <Text style={styles.seeAll}>{t('common.seeAll')}</Text>
-          </TouchableOpacity>
+        {/* ============================================================ */}
+        {/* 8. COMMUNITY PULSE                                            */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <CommunityPulse />
         </View>
 
-        {(voices ?? []).map(voice => (
-          <VoiceCard key={voice.id} voice={voice} />
-        ))}
+        {/* ============================================================ */}
+        {/* 9. PATTERN DETECTION BANNER                                   */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <PatternBanner
+            description="12 water leak reports in your ward this month -- 0 resolved"
+            onStartAction={() => {}}
+            onViewEvidence={() => navigation.navigate('IssuesList')}
+          />
+        </View>
 
+        {/* ============================================================ */}
+        {/* 10. WARD COMPARISON NUDGE                                     */}
+        {/* ============================================================ */}
+        <View style={styles.comparisonCard}>
+          <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
+            <Path d="M8 1v14M1 8h14" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" />
+            <Path d="M4 4l4 4-4 4" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" opacity={0.5} />
+          </Svg>
+          <Text style={styles.comparisonText}>
+            Ward 44 (Jogeshwari) resolved{' '}
+            <Text style={styles.comparisonBold}>31 issues</Text> this week vs your ward's 23. Close the gap!
+          </Text>
+        </View>
+
+        {/* ============================================================ */}
+        {/* 11. QUICK ACTIONS CAROUSEL                                    */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <QuickActions onPress={handleQuickAction} />
+        </View>
+
+        {/* ============================================================ */}
+        {/* 12. COMMUNITY ACTIONS SECTION                                 */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <CommunityActionsSection
+            actions={MOCK_COMMUNITY_ACTIONS}
+            onSeeAll={() => {}}
+          />
+        </View>
+
+        {/* ============================================================ */}
+        {/* 13. CELEBRATION BANNER                                        */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacing}>
+          <CelebrationBanner
+            issueTitle="Water leak on MG Road"
+            reportCount={12}
+            timeAgo="2h ago"
+            onPress={() => {}}
+          />
+        </View>
+
+        {/* ============================================================ */}
+        {/* 14. ISSUE FEED                                                */}
+        {/* ============================================================ */}
+        <View style={styles.sectionSpacingLarge}>
+          {/* Section header */}
+          <View style={styles.feedHeader}>
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.sectionTitle}>Live from Your Ward</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('IssuesList')}>
+              <Text style={styles.seeAll}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {isLoading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
+          ) : (
+            issueList.slice(0, 4).map((issue, index) => (
+              <IssueFeedCard
+                key={issue.id}
+                issue={issue}
+                isUrgent={index === 0 && issue.priority === 'critical'}
+                linkedAction={
+                  index === 0
+                    ? { title: 'Fix water supply failures', supporters: 312 }
+                    : undefined
+                }
+                onPress={() => navigation.navigate('IssueDetail', { issueId: issue.id })}
+              />
+            ))
+          )}
+
+          {/* If no issues loaded, show mock placeholder cards */}
+          {!isLoading && issueList.length === 0 && (
+            <>
+              <IssueFeedCard
+                issue={{
+                  id: 'mock-1',
+                  title: 'Broken water pipe flooding Nehru Street',
+                  description: '',
+                  category: 'water_supply',
+                  status: 'reported',
+                  priority: 'critical',
+                  latitude: 19.1136,
+                  longitude: 72.8697,
+                  address: 'Nehru Street, Andheri East',
+                  ward: 'Ward 45',
+                  constituency: '',
+                  department: '',
+                  reportedBy: '',
+                  reportedByName: '',
+                  upvotes: 24,
+                  commentCount: 3,
+                  hasUpvoted: false,
+                  ledger: [],
+                  createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+                  updatedAt: new Date().toISOString(),
+                }}
+                isUrgent
+                linkedAction={{ title: 'Fix water supply failures', supporters: 312 }}
+              />
+              <IssueFeedCard
+                issue={{
+                  id: 'mock-2',
+                  title: 'Large pothole near Infinity Mall junction',
+                  description: '',
+                  category: 'pothole',
+                  status: 'assigned',
+                  priority: 'high',
+                  latitude: 19.1369,
+                  longitude: 72.8271,
+                  address: 'Link Road, Andheri West',
+                  ward: 'Ward 45',
+                  constituency: '',
+                  department: '',
+                  reportedBy: '',
+                  reportedByName: '',
+                  upvotes: 15,
+                  commentCount: 7,
+                  hasUpvoted: false,
+                  ledger: [],
+                  createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                  updatedAt: new Date().toISOString(),
+                }}
+              />
+              <IssueFeedCard
+                issue={{
+                  id: 'mock-3',
+                  title: 'Streetlight outage on SV Road',
+                  description: '',
+                  category: 'streetlight',
+                  status: 'completed',
+                  priority: 'medium',
+                  latitude: 19.1286,
+                  longitude: 72.8350,
+                  address: 'SV Road, Andheri West',
+                  ward: 'Ward 45',
+                  constituency: '',
+                  department: '',
+                  reportedBy: '',
+                  reportedByName: '',
+                  upvotes: 5,
+                  commentCount: 2,
+                  hasUpvoted: false,
+                  ledger: [],
+                  createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                  updatedAt: new Date().toISOString(),
+                }}
+              />
+            </>
+          )}
+        </View>
+
+        {/* Bottom spacer for FAB clearance */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
@@ -230,17 +611,21 @@ export const HomeScreen: React.FC = () => {
   );
 };
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+
+  // ---- HEADER ----
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     backgroundColor: colors.background,
   },
@@ -249,42 +634,66 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  headerText: {
+  shieldWrap: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shieldLevel: {
+    position: 'absolute',
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    top: 14,
+  },
+  greetingBlock: {
     marginLeft: spacing.md,
     flex: 1,
   },
-  greeting: {
+  greetingText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.textPrimary,
   },
-  wardText: {
-    fontSize: 13,
+  greetingSubText: {
+    fontSize: 12,
     color: colors.textMuted,
     marginTop: 1,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 6,
   },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3ED',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 2,
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: SAFFRON,
+  },
+  headerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.backgroundGray,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
-  iconText: {
-    fontSize: 18,
-  },
   notifBadge: {
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: colors.error,
+    backgroundColor: '#EF4444',
     borderRadius: 9,
     minWidth: 18,
     height: 18,
@@ -297,50 +706,110 @@ const styles = StyleSheet.create({
   notifBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
+
+  // ---- SCROLL ----
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
   },
-  scoreSection: {
+
+  // ---- 2. TAGLINE ----
+  taglineWrap: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  taglineText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: NAVY,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+  },
+  taglineDot: {
+    color: SAFFRON,
+    fontSize: 16,
+  },
+  taglineTM: {
+    fontSize: 8,
+    color: colors.textMuted,
+    fontWeight: '400',
+  },
+  taglineLine: {
+    width: 40,
+    height: 2,
+    backgroundColor: SAFFRON,
+    borderRadius: 1,
+    marginTop: spacing.xs,
+  },
+
+  // ---- 3. WEATHER TIP ----
+  weatherTip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.card,
-    padding: spacing.lg,
+    backgroundColor: '#FFF3ED',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     marginBottom: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    gap: spacing.sm,
   },
-  scoreInfo: {
+  weatherText: {
+    fontSize: 12,
+    color: '#92400E',
     flex: 1,
-    marginLeft: spacing.lg,
+    lineHeight: 17,
   },
-  scoreTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginBottom: 2,
+
+  // ---- SECTION SPACING ----
+  sectionSpacing: {
+    marginBottom: spacing.lg,
   },
-  scoreDesc: {
+  sectionSpacingLarge: {
+    marginBottom: spacing.xl,
+  },
+
+  // ---- 10. WARD COMPARISON ----
+  comparisonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundGray,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  comparisonText: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: colors.textSecondary,
+    flex: 1,
     lineHeight: 18,
-    marginBottom: spacing.sm,
   },
-  sectionHeader: {
+  comparisonBold: {
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+
+  // ---- 14. ISSUE FEED HEADER ----
+  feedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.xl,
     marginBottom: spacing.md,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
   },
   sectionTitle: {
     fontSize: 18,
@@ -348,40 +817,12 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   seeAll: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+    color: SAFFRON,
   },
-  statsBar: {
-    marginBottom: spacing.sm,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  quickAction: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  quickActionIcon: {
-    fontSize: 22,
-    marginBottom: spacing.xs,
-  },
-  quickActionText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
+
+  // ---- BOTTOM SPACER ----
   bottomSpacer: {
     height: 100,
   },

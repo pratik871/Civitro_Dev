@@ -23,6 +23,10 @@ export type RootStackParamList = {
   HelpSupport: undefined;
   Terms: undefined;
   About: undefined;
+  ActionsList: undefined;
+  ActionDetail: { actionId: string };
+  CreateAction: { patternId?: string } | undefined;
+  ActionTimeline: { actionId: string };
 };
 
 export type AuthStackParamList = {
