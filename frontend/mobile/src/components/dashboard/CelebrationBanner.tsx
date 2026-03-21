@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -17,6 +18,7 @@ export const CelebrationBanner: React.FC<CelebrationBannerProps> = ({
   timeAgo = '2h ago',
   onPress,
 }) => {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       style={styles.card}
@@ -39,7 +41,7 @@ export const CelebrationBanner: React.FC<CelebrationBannerProps> = ({
       {/* Text */}
       <View style={styles.textWrap}>
         <Text style={styles.text}>
-          <Text style={styles.bold}>{issueTitle}</Text> resolved — thanks to {reportCount} citizen reports!
+          {t('home.celebrationResolved', { title: issueTitle, count: reportCount })}
         </Text>
       </View>
 

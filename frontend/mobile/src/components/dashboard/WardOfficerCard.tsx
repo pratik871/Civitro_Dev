@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -19,10 +20,12 @@ export const WardOfficerCard: React.FC<WardOfficerCardProps> = ({
   name,
   designation,
   party,
-  responseRate = 'Responds in avg 2.3 days',
+  responseRate,
   onMessage,
   onRate,
 }) => {
+  const { t } = useTranslation();
+  const displayResponseRate = responseRate || t('home.respondsIn', { days: '2.3' });
   return (
     <View style={styles.card}>
       {/* Avatar */}
@@ -52,7 +55,7 @@ export const WardOfficerCard: React.FC<WardOfficerCardProps> = ({
         </Text>
         <View style={styles.responseRow}>
           <View style={styles.responseDot} />
-          <Text style={styles.responseText}>{responseRate}</Text>
+          <Text style={styles.responseText}>{displayResponseRate}</Text>
         </View>
       </View>
 

@@ -7,6 +7,7 @@ import Svg, {
   Stop,
   Path,
 } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -61,15 +62,16 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
   actionsStarted = 0,
   onBoostPress,
 }) => {
+  const { t } = useTranslation();
   const progress = Math.min(score / maxScore, 1);
   const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
 
   const chips: ScoreChip[] = [
-    { label: `${reported} Reported`, value: reported, color: SAFFRON, iconPath: 'M3 8h10M8 3l5 5-5 5' },
-    { label: `${pollsVoted} Poll Voted`, value: pollsVoted, color: STATUS_VERIFIED, iconPath: 'M2 8l4 4 8-8' },
-    { label: `${validations} Validations`, value: validations, color: colors.textMuted, iconPath: '' },
-    { label: `${actionsSupported} Action Supported`, value: actionsSupported, color: PURPLE, iconPath: 'M8 2v12M2 8h12' },
-    { label: `${actionsStarted} Actions Started`, value: actionsStarted, color: colors.textMuted, iconPath: '' },
+    { label: t('home.reported', { count: reported }), value: reported, color: SAFFRON, iconPath: 'M3 8h10M8 3l5 5-5 5' },
+    { label: t('home.pollsVoted', { count: pollsVoted }), value: pollsVoted, color: STATUS_VERIFIED, iconPath: 'M2 8l4 4 8-8' },
+    { label: t('home.validations', { count: validations }), value: validations, color: colors.textMuted, iconPath: '' },
+    { label: t('home.actionsSupported', { count: actionsSupported }), value: actionsSupported, color: PURPLE, iconPath: 'M8 2v12M2 8h12' },
+    { label: t('home.actionsStarted', { count: actionsStarted }), value: actionsStarted, color: colors.textMuted, iconPath: '' },
   ];
 
   return (
@@ -111,15 +113,15 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
           {/* Center text */}
           <View style={styles.ringCenter}>
             <Text style={styles.scoreNumber}>{score}</Text>
-            <Text style={styles.scoreLabel}>Civic</Text>
+            <Text style={styles.scoreLabel}>{t('home.civic')}</Text>
           </View>
         </View>
 
         {/* Details */}
         <View style={styles.scoreDetails}>
-          <Text style={styles.journeyTitle}>Your Civic Journey</Text>
+          <Text style={styles.journeyTitle}>{t('home.yourCivicJourney')}</Text>
           <Text style={styles.journeySubtitle}>
-            Report issues and participate to level up your civic reputation
+            {t('home.civicJourneyDesc')}
           </Text>
 
           {/* Milestone bar */}
@@ -132,7 +134,7 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
               {milestoneLabel}
             </Text>
             <TouchableOpacity style={styles.boostCta} onPress={onBoostPress} activeOpacity={0.7}>
-              <Text style={styles.boostCtaText}>Boost</Text>
+              <Text style={styles.boostCtaText}>{t('home.boost')}</Text>
               <Svg width={12} height={12} viewBox="0 0 12 12" fill="none">
                 <Path d="M2 6h8M7 3l3 3-3 3" stroke="white" strokeWidth={2} strokeLinecap="round" />
               </Svg>

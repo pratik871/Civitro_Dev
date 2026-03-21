@@ -9,6 +9,7 @@ import { PollsScreen } from '../screens/polls/PollsScreen';
 import { PollDetailScreen } from '../screens/polls/PollDetailScreen';
 import { PromisesScreen } from '../screens/promises/PromisesScreen';
 import { MessagesScreen } from '../screens/messages/MessagesScreen';
+import { ChatScreen } from '../screens/messages/ChatScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { SearchScreen } from '../screens/search/SearchScreen';
 import { CHIScreen } from '../screens/chi/CHIScreen';
@@ -117,6 +118,11 @@ export const RootNavigator: React.FC = () => {
                 headerTintColor: colors.textPrimary,
                 headerStyle: { backgroundColor: colors.background },
               }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Notifications"

@@ -109,18 +109,18 @@ export const HomeScreen: React.FC = () => {
   const wardOfficer = useMemo(() => {
     if (leaders && leaders.length > 0) {
       const l = leaders[0];
-      return { name: l.name, designation: 'Ward Corporator', party: l.partyAbbr || l.party };
+      return { id: l.id, name: l.name, designation: 'Ward Corporator', party: l.partyAbbr || l.party };
     }
-    return { name: 'Priya Sharma', designation: 'Ward Corporator', party: 'BJP' };
+    return { id: '', name: 'Priya Sharma', designation: 'Ward Corporator', party: 'BJP' };
   }, [leaders]);
 
   // Greeting
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  }, []);
+    if (hour < 12) return t('home.goodMorning');
+    if (hour < 17) return t('home.goodAfternoon');
+    return t('home.goodEvening');
+  }, [t]);
 
   const firstName = user?.name?.split(' ')[0] || 'Citizen';
 
@@ -330,7 +330,7 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         <View style={styles.taglineWrap}>
           <Text style={styles.taglineText}>
-            Democracy<Text style={styles.taglineDot}> {'\u2022'} </Text>You Shape
+            {t('home.democracyTagline')}<Text style={styles.taglineDot}> {'\u2022'} </Text>{t('home.youShape')}
             <Text style={styles.taglineTM}>.TM</Text>
           </Text>
           <View style={styles.taglineLine} />
@@ -350,7 +350,7 @@ export const HomeScreen: React.FC = () => {
             <Path d="M8 15v2M12 15v2M16 15v2" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" opacity={0.5} />
           </Svg>
           <Text style={styles.weatherText}>
-            Monsoon alert: Drainage issues likely -- report blockages early
+            {t('home.weatherMonsoon')}
           </Text>
         </View>
 
@@ -366,7 +366,7 @@ export const HomeScreen: React.FC = () => {
             actionsSupported={dashboardStats?.actions_supported ?? 0}
             actionsStarted={dashboardStats?.actions_started ?? 0}
             milestoneProgress={0.6}
-            milestoneLabel="Report 2 more to reach Validator"
+            milestoneLabel={t('home.reportMore', { count: 2, level: 'Validator' })}
             onBoostPress={() => navigation.navigate('Main', { screen: 'Report' } as any)}
           />
         </View>
@@ -379,7 +379,10 @@ export const HomeScreen: React.FC = () => {
             name={wardOfficer.name}
             designation={wardOfficer.designation}
             party={wardOfficer.party}
-            onMessage={() => navigation.navigate('Messages')}
+            onMessage={() => navigation.navigate('Chat', {
+              recipientId: wardOfficer.id,
+              recipientName: wardOfficer.name,
+            })}
             onRate={() => {
               if (leaders && leaders.length > 0) {
                 navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
@@ -454,9 +457,9 @@ export const HomeScreen: React.FC = () => {
             <PatternBanner
               description={firstPattern.description}
               stats={[
-                { icon: 'location', value: String(firstPattern.locations ?? 0), label: 'locations' },
-                { icon: 'calendar', value: String(firstPattern.days_unresolved ?? 0), label: 'days unresolved' },
-                { icon: 'damage', value: firstPattern.estimated_damage ?? '', label: 'est. damage', valueColor: '#0F766E' },
+                { icon: 'location', value: String(firstPattern.locations ?? 0), label: t('home.locations') },
+                { icon: 'calendar', value: String(firstPattern.days_unresolved ?? 0), label: t('home.daysUnresolved') },
+                { icon: 'damage', value: firstPattern.estimated_damage ?? '', label: t('home.estDamage'), valueColor: '#0F766E' },
               ]}
               onStartAction={() => {}}
               onViewEvidence={() => navigation.navigate('IssuesList')}
@@ -473,8 +476,7 @@ export const HomeScreen: React.FC = () => {
             <Path d="M4 4l4 4-4 4" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" opacity={0.5} />
           </Svg>
           <Text style={styles.comparisonText}>
-            Ward 44 (Jogeshwari) resolved{' '}
-            <Text style={styles.comparisonBold}>31 issues</Text> this week vs your ward's 23. Close the gap!
+            {t('home.wardComparison', { ward: 'Ward 44 (Jogeshwari)', count: 31, yourCount: 23 })}
           </Text>
         </View>
 
@@ -523,10 +525,10 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.feedHeader}>
             <View style={styles.liveIndicator}>
               <View style={styles.liveDot} />
-              <Text style={styles.sectionTitle}>Live from Your Ward</Text>
+              <Text style={styles.sectionTitle}>{t('home.liveFromYourWard')}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('IssuesList')}>
-              <Text style={styles.seeAll}>See All</Text>
+              <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
             </TouchableOpacity>
           </View>
 

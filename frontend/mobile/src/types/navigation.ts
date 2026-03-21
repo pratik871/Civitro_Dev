@@ -9,6 +9,7 @@ export type RootStackParamList = {
   Polls: undefined;
   Promises: undefined;
   Messages: undefined;
+  Chat: { conversationId?: string; recipientId?: string; recipientName?: string };
   Notifications: undefined;
   Search: undefined;
   CHI: { constituencyId?: string };

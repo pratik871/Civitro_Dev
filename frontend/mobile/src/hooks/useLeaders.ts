@@ -87,7 +87,9 @@ export function useLeader(leaderId: string) {
   return useQuery({
     queryKey: ['leaders', leaderId],
     queryFn: async () => {
-      const raw = await api.get<RawRepresentative>(`/api/v1/representatives/${leaderId}`);
+      const resp = await api.get<{ representative: RawRepresentative }>(`/api/v1/representatives/${leaderId}`);
+      const raw = resp.representative || (resp as unknown as RawRepresentative);
+      if (!raw || !raw.name) throw new Error('Leader not found');
       return mapLeader(raw);
     },
     staleTime: 60_000,

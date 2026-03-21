@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -18,6 +19,7 @@ export const CommunityPulse: React.FC<CommunityPulseProps> = ({
   weeklyTrendPercent = 18,
   initials = ['A', 'R', 'P', 'S', '+'],
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.card}>
       <View style={styles.left}>
@@ -40,7 +42,7 @@ export const CommunityPulse: React.FC<CommunityPulseProps> = ({
           ))}
         </View>
         <Text style={styles.communityText}>
-          <Text style={styles.communityBold}>{activeCitizens}</Text> active citizens in your ward
+          {t('home.activeCitizens', { count: activeCitizens })}
         </Text>
       </View>
 

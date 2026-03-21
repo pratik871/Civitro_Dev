@@ -78,7 +78,8 @@ export function formatNumber(num: number): string {
 /**
  * Generate initials from a name
  */
-export function getInitials(name: string): string {
+export function getInitials(name: string | undefined | null): string {
+  if (!name) return '?';
   return name
     .split(' ')
     .map(part => part[0])

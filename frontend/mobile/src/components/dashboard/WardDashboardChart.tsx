@@ -8,6 +8,7 @@ import Svg, {
   Path,
   Circle as SvgCircle,
 } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -55,14 +56,15 @@ export const WardDashboardChart: React.FC<WardDashboardChartProps> = ({
   sparklineData = [22, 18, 20, 14, 16, 8, 4],
   sparklineTrend = '+34%',
 }) => {
+  const { t } = useTranslation();
   const total = open + inProgress + resolved + verified || 1;
 
   // Calculate donut segments (stroke-dasharray based)
   const segments = [
-    { count: open, color: STATUS_OPEN, label: 'Open' },
-    { count: inProgress, color: STATUS_PROGRESS, label: 'In Progress' },
-    { count: resolved, color: STATUS_RESOLVED, label: 'Resolved' },
-    { count: verified, color: STATUS_VERIFIED, label: 'Verified' },
+    { count: open, color: STATUS_OPEN, label: t('home.openIssues') },
+    { count: inProgress, color: STATUS_PROGRESS, label: t('home.inProgressIssues') },
+    { count: resolved, color: STATUS_RESOLVED, label: t('home.resolvedIssues') },
+    { count: verified, color: STATUS_VERIFIED, label: t('home.verifiedIssues') },
   ];
 
   let accumulatedOffset = 0;
@@ -98,7 +100,7 @@ export const WardDashboardChart: React.FC<WardDashboardChartProps> = ({
   return (
     <View style={styles.section}>
       <View style={styles.titleRow}>
-        <Text style={styles.sectionTitle}>Ward Dashboard</Text>
+        <Text style={styles.sectionTitle}>{t('home.wardDashboard')}</Text>
         <Text style={styles.wardLabel}>
           {wardName} · {wardArea}
         </Text>
@@ -139,7 +141,7 @@ export const WardDashboardChart: React.FC<WardDashboardChartProps> = ({
             {/* Center text */}
             <View style={styles.donutCenter}>
               <Text style={styles.totalNumber}>{open + inProgress + resolved + verified}</Text>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{t('home.total')}</Text>
             </View>
           </View>
 
@@ -160,17 +162,17 @@ export const WardDashboardChart: React.FC<WardDashboardChartProps> = ({
           <View style={styles.pulseRow}>
             <View style={styles.pulseDot} />
             <Text style={styles.pulseText}>
-              Resolution rate <Text style={styles.pulseBold}>{resolutionTrend}</Text> this week
+              {t('home.resolutionRate')} <Text style={styles.pulseBold}>{resolutionTrend}</Text>
             </Text>
           </View>
           <Text style={styles.wardRank}>
-            Rank <Text style={styles.pulseBold}>#{rank}</Text> / {totalWards}
+            {t('home.rank')} <Text style={styles.pulseBold}>#{rank}</Text> / {totalWards}
           </Text>
         </View>
 
         {/* Sparkline */}
         <View style={styles.sparkRow}>
-          <Text style={styles.sparkLabel}>7-day resolution</Text>
+          <Text style={styles.sparkLabel}>{t('home.dayResolution')}</Text>
           <Svg width={SPARK_W} height={SPARK_H} viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}>
             <Defs>
               <LinearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">

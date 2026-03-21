@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -31,6 +32,7 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
   onStartAction,
   onViewEvidence,
 }) => {
+  const { t } = useTranslation();
   const renderStatIcon = (icon: string) => {
     switch (icon) {
       case 'location':
@@ -74,7 +76,7 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
             <Circle cx={8} cy={8} r={3} stroke={SAFFRON} strokeWidth={2} />
           </Svg>
         </View>
-        <Text style={styles.label}>Pattern Detected</Text>
+        <Text style={styles.label}>{t('home.patternDetected')}</Text>
       </View>
 
       {/* Body */}
@@ -96,10 +98,10 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
       {/* Buttons */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.primaryBtn} onPress={onStartAction} activeOpacity={0.7}>
-          <Text style={styles.primaryBtnText}>Start Community Action</Text>
+          <Text style={styles.primaryBtnText}>{t('home.startCommunityAction')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryBtn} onPress={onViewEvidence} activeOpacity={0.7}>
-          <Text style={styles.secondaryBtnText}>View Evidence</Text>
+          <Text style={styles.secondaryBtnText}>{t('home.viewEvidence')}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -8,51 +8,84 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { Avatar } from '../../components/ui/Avatar';
-import { useMessages } from '../../hooks/useMessages';
+import {
+  useConversations,
+  type ConversationPreview,
+} from '../../hooks/useMessages';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime } from '../../lib/utils';
+import type { RootStackParamList } from '../../navigation/types';
 
-interface Message {
-  id: string;
-  sender_name: string;
-  sender_role: string;
-  preview: string;
-  created_at: string;
-  unread: boolean;
-}
+type MessagesNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const MessagesScreen: React.FC = () => {
-  const { data: messages, isLoading } = useMessages();
+  const navigation = useNavigation<MessagesNavProp>();
+  const { data: conversations, isLoading } = useConversations();
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <TouchableOpacity style={styles.messageRow} activeOpacity={0.7}>
-      <Avatar
-        name={item.sender_name}
-        size={48}
-        backgroundColor={item.unread ? colors.primary : colors.navyLight}
-      />
-      <View style={styles.messageContent}>
-        <View style={styles.messageHeader}>
-          <Text style={[styles.senderName, item.unread && styles.unreadText]}>
-            {item.sender_name}
-          </Text>
-          <Text style={styles.timestamp}>
-            {formatRelativeTime(item.created_at)}
+  const handleConversationPress = (conversation: ConversationPreview) => {
+    navigation.navigate('Chat', {
+      conversationId: conversation.conversation_id,
+      recipientId: conversation.other_user_id,
+      recipientName: conversation.other_user_name,
+    });
+  };
+
+  const renderConversation = ({ item }: { item: ConversationPreview }) => {
+    const hasUnread = item.unread_count > 0;
+
+    return (
+      <TouchableOpacity
+        style={styles.messageRow}
+        activeOpacity={0.7}
+        onPress={() => handleConversationPress(item)}
+      >
+        <View style={styles.avatarContainer}>
+          <Avatar
+            name={item.other_user_name}
+            size={48}
+            backgroundColor={hasUnread ? colors.primary : colors.navyLight}
+          />
+          {item.online && <View style={styles.onlineDot} />}
+        </View>
+
+        <View style={styles.messageContent}>
+          <View style={styles.messageHeader}>
+            <Text
+              style={[styles.senderName, hasUnread && styles.unreadText]}
+              numberOfLines={1}
+            >
+              {item.other_user_name}
+            </Text>
+            {item.last_message_at ? (
+              <Text style={styles.timestamp}>
+                {formatRelativeTime(item.last_message_at)}
+              </Text>
+            ) : null}
+          </View>
+          <Text style={styles.senderRole}>{item.other_user_role}</Text>
+          <Text
+            style={[styles.preview, hasUnread && styles.unreadText]}
+            numberOfLines={2}
+          >
+            {item.last_message || 'No messages yet'}
           </Text>
         </View>
-        <Text style={styles.senderRole}>{item.sender_role}</Text>
-        <Text
-          style={[styles.preview, item.unread && styles.unreadText]}
-          numberOfLines={2}
-        >
-          {item.preview}
-        </Text>
-      </View>
-      {item.unread && <View style={styles.unreadDot} />}
-    </TouchableOpacity>
-  );
+
+        {hasUnread && (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadBadgeText}>
+              {item.unread_count > 9 ? '9+' : item.unread_count}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -66,16 +99,19 @@ export const MessagesScreen: React.FC = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <FlatList
-        data={messages ?? []}
-        renderItem={renderMessage}
-        keyExtractor={item => item.id}
+        data={conversations ?? []}
+        renderItem={renderConversation}
+        keyExtractor={(item) => item.conversation_id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F4EC}'}</Text>
-            <Text style={styles.emptyText}>No messages yet</Text>
+            <Text style={styles.emptyTitle}>No conversations yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Message your ward representative from the dashboard to get started
+            </Text>
           </View>
         }
       />
@@ -96,12 +132,27 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: spacing.md,
+    flexGrow: 1,
   },
   messageRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     alignItems: 'flex-start',
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  onlineDot: {
+    position: 'absolute',
+    bottom: 1,
+    right: 1,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   messageContent: {
     flex: 1,
@@ -138,13 +189,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textPrimary,
   },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  unreadBadge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
     marginTop: spacing.sm,
     marginLeft: spacing.sm,
+  },
+  unreadBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.white,
   },
   separator: {
     height: 1,
@@ -155,14 +214,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingHorizontal: spacing['3xl'],
   },
   emptyIcon: {
     fontSize: 48,
     marginBottom: spacing.md,
   },
-  emptyText: {
-    fontSize: 16,
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    fontSize: 14,
     color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

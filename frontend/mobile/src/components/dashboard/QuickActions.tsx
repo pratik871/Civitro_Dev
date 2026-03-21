@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -35,11 +36,12 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   actionCount = 2,
   onPress,
 }) => {
+  const { t } = useTranslation();
   const actions: ActionItem[] = [
     {
       key: 'report',
-      label: 'Report Issue',
-      badge: 'Quick Report',
+      label: t('home.reportIssue'),
+      badge: t('home.quickReport'),
       iconColor: '#FFFFFF',
       isHero: true,
       renderIcon: () => (
@@ -61,8 +63,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     },
     {
       key: 'polls',
-      label: 'Polls',
-      badge: `${pollCount} Active`,
+      label: t('home.quickPolls'),
+      badge: `${pollCount} ${t('home.active')}`,
       iconColor: '#3B82F6',
       renderIcon: () => (
         <Svg viewBox="0 0 24 24" width={24} height={24} fill="none">
@@ -76,8 +78,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     },
     {
       key: 'promises',
-      label: 'Promises',
-      badge: `${promiseCount} Tracked`,
+      label: t('home.quickPromises'),
+      badge: `${promiseCount} ${t('home.tracked')}`,
       iconColor: '#D97706',
       renderIcon: () => (
         <Svg viewBox="0 0 24 24" width={24} height={24} fill="none">
@@ -94,7 +96,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     },
     {
       key: 'chi',
-      label: 'CHI',
+      label: t('home.quickCHI'),
       badge: `${chiScore}/100`,
       iconColor: '#059669',
       renderIcon: () => (
@@ -109,8 +111,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     },
     {
       key: 'messages',
-      label: 'Messages',
-      badge: `${messageCount} New`,
+      label: t('home.quickMessages'),
+      badge: `${messageCount} ${t('home.new')}`,
       iconColor: '#7C3AED',
       renderIcon: () => (
         <Svg viewBox="0 0 24 24" width={24} height={24} fill="none">
@@ -126,8 +128,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     },
     {
       key: 'actions',
-      label: 'Actions',
-      badge: `${actionCount} Active`,
+      label: t('home.actions'),
+      badge: `${actionCount} ${t('home.active')}`,
       iconColor: '#C2410C',
       renderIcon: () => (
         <Svg viewBox="0 0 24 24" width={24} height={24} fill="none">
@@ -141,7 +143,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Take Action</Text>
+      <Text style={styles.sectionTitle}>{t('home.takeAction')}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

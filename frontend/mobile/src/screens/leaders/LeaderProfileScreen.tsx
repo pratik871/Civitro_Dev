@@ -39,7 +39,7 @@ export const LeaderProfileScreen: React.FC = () => {
 
   const rateMutation = useMutation({
     mutationFn: (rating: Record<string, unknown>) =>
-      api.post(`/api/v1/rating/representatives/${leaderId}`, rating),
+      api.post(`/api/v1/ratings/survey`, { ...rating, representative_id: leaderId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
       Alert.alert('Thank You', 'Your rating has been submitted.');
