@@ -954,6 +954,7 @@ services:
       - "8023:8023"
     environment:
       - APP_ENV=docker
+      - CIVITRO_ENV=docker
     volumes:
       - ../config:/app/config:ro
     extra_hosts:
