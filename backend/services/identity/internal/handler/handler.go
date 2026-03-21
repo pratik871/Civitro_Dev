@@ -41,6 +41,7 @@ func (h *Handler) RegisterProtectedRoutes(rg *gin.RouterGroup) {
 	auth.Use(middleware.JWTAuth())
 	{
 		auth.GET("/me", h.GetProfile)
+		auth.GET("/dashboard-stats", h.GetDashboardStats)
 		auth.PUT("/language", h.UpdateLanguage)
 		auth.PUT("/location", h.UpdateLocation)
 		auth.POST("/verify-aadhaar", h.VerifyAadhaar)
@@ -113,6 +114,23 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// GetDashboardStats handles GET /auth/dashboard-stats.
+func (h *Handler) GetDashboardStats(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	stats, err := h.svc.GetDashboardStats(c.Request.Context(), userID)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
 }
 
 // UpdateLanguage handles PUT /auth/language.

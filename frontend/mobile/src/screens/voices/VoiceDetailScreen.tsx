@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { colors } from '../../theme/colors';
@@ -24,6 +25,7 @@ type DetailRouteProp = RouteProp<RootStackParamList, 'VoiceDetail'>;
 
 export const VoiceDetailScreen: React.FC = () => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const route = useRoute<DetailRouteProp>();
   const navigation = useNavigation();
   const { voiceId } = route.params;
@@ -82,7 +84,7 @@ export const VoiceDetailScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}

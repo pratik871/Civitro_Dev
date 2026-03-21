@@ -35,6 +35,9 @@ type Repository interface {
 
 	// Civic score
 	GetCivicScore(ctx context.Context, userID string) (int, string)
+
+	// Dashboard
+	GetDashboardStats(ctx context.Context, userID string) (*model.DashboardStats, error)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -307,4 +310,163 @@ func (r *PostgresRepository) GetAadhaarVerificationByUIDHash(ctx context.Context
 		return nil, err
 	}
 	return v, nil
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard Stats
+// ---------------------------------------------------------------------------
+
+// GetDashboardStats aggregates dashboard statistics for the given user.
+func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID string) (*model.DashboardStats, error) {
+	stats := &model.DashboardStats{}
+
+	// 1. Civic score + tier
+	var score int
+	var tier string
+	err := r.pool.QueryRow(ctx,
+		`SELECT COALESCE(credibility_score, 0), COALESCE(tier, 'new_citizen') FROM civic_scores WHERE user_id = $1`,
+		userID,
+	).Scan(&score, &tier)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+	stats.CivicScore = score
+	stats.CivicLevel = tier
+
+	// 2. User's ward info
+	var wardID, wardName string
+	err = r.pool.QueryRow(ctx, `
+		SELECT COALESCE(u.primary_boundary_id::text, ''), COALESCE(b.name, '')
+		FROM users u
+		LEFT JOIN boundaries b ON b.id = u.primary_boundary_id
+		WHERE u.id = $1
+	`, userID).Scan(&wardID, &wardName)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+	stats.WardID = wardID
+	stats.WardName = wardName
+
+	// 3. Issues reported by this user
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM issues WHERE reporter_id = $1`, userID,
+	).Scan(&stats.IssuesReported)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 4. Polls voted
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM poll_votes WHERE user_id = $1`, userID,
+	).Scan(&stats.PollsVoted)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 5. Validations (issue verifications by this user)
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM issue_validations WHERE user_id = $1`, userID,
+	).Scan(&stats.Validations)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 6. Actions supported
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM action_supporters WHERE user_id = $1`, userID,
+	).Scan(&stats.ActionsSupported)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 7. Actions started (created)
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM community_actions WHERE creator_id = $1`, userID,
+	).Scan(&stats.ActionsStarted)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 8. Streak days
+	err = r.pool.QueryRow(ctx,
+		`SELECT COALESCE(streak_days, 0) FROM civic_scores WHERE user_id = $1`, userID,
+	).Scan(&stats.StreakDays)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 9. Active citizens in user's ward (active in last 30 days)
+	if wardID != "" {
+		err = r.pool.QueryRow(ctx,
+			`SELECT COUNT(*) FROM users WHERE primary_boundary_id = $1::uuid AND last_active > NOW() - INTERVAL '30 days'`,
+			wardID,
+		).Scan(&stats.ActiveCitizensInWard)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+
+		// Trend: compare last 30 days vs previous 30 days
+		var previousCount int
+		err = r.pool.QueryRow(ctx, `
+			SELECT COUNT(*) FROM users
+			WHERE primary_boundary_id = $1::uuid
+			  AND last_active > NOW() - INTERVAL '60 days'
+			  AND last_active <= NOW() - INTERVAL '30 days'
+		`, wardID).Scan(&previousCount)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		if previousCount > 0 {
+			stats.ActiveCitizensTrend = ((stats.ActiveCitizensInWard - previousCount) * 100) / previousCount
+		}
+	}
+
+	// 10. Active polls count
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM polls WHERE is_active = true AND expires_at > NOW()`,
+	).Scan(&stats.ActivePollsCount)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 11. Unread messages
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read_at IS NULL`, userID,
+	).Scan(&stats.UnreadMessages)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 12. Recently resolved issues in user's ward (last 7 days)
+	stats.RecentlyResolved = []model.RecentlyResolved{}
+	if wardID != "" {
+		rows, err := r.pool.Query(ctx, `
+			SELECT i.id, i.title, i.resolved_at,
+			       (SELECT COUNT(*) FROM issues sub WHERE sub.title = i.title AND sub.ward_id = i.ward_id) as citizen_reports
+			FROM issues i
+			WHERE i.ward_id = $1::uuid
+			  AND i.status = 'completed'
+			  AND i.resolved_at > NOW() - INTERVAL '7 days'
+			ORDER BY i.resolved_at DESC
+			LIMIT 5
+		`, wardID)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var r model.RecentlyResolved
+			var resolvedAt interface{}
+			if err := rows.Scan(&r.ID, &r.Title, &resolvedAt, &r.CitizenReports); err != nil {
+				return nil, err
+			}
+			if t, ok := resolvedAt.(interface{ Format(string) string }); ok {
+				r.ResolvedAt = t.Format("2006-01-02T15:04:05Z")
+			}
+			stats.RecentlyResolved = append(stats.RecentlyResolved, r)
+		}
+	}
+
+	return stats, nil
 }

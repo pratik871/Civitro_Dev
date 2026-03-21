@@ -453,6 +453,25 @@ func (s *Service) VerifyAadhaar(ctx context.Context, userID string, zipData []by
 	}, nil
 }
 
+// GetDashboardStats returns aggregated dashboard stats for the authenticated user.
+func (s *Service) GetDashboardStats(ctx context.Context, userID string) (*model.DashboardStats, error) {
+	// Verify user exists.
+	_, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	stats, err := s.repo.GetDashboardStats(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dashboard stats: %w", err)
+	}
+
+	return stats, nil
+}
+
 // generateRefreshToken returns (raw hex string, SHA256 hash of raw, error).
 func generateRefreshToken() (string, string, error) {
 	b := make([]byte, 64)

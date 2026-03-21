@@ -113,6 +113,33 @@ type Boundary struct {
 	Track string `json:"track,omitempty"`
 }
 
+// RecentlyResolved represents an issue recently resolved in the user's ward.
+type RecentlyResolved struct {
+	ID             string `json:"id"`
+	Title          string `json:"title"`
+	ResolvedAt     string `json:"resolved_at"`
+	CitizenReports int    `json:"citizen_reports"`
+}
+
+// DashboardStats holds aggregated stats for the authenticated user's dashboard.
+type DashboardStats struct {
+	CivicScore          int                `json:"civic_score"`
+	CivicLevel          string             `json:"civic_level"`
+	IssuesReported      int                `json:"issues_reported"`
+	PollsVoted          int                `json:"polls_voted"`
+	Validations         int                `json:"validations"`
+	ActionsSupported    int                `json:"actions_supported"`
+	ActionsStarted      int                `json:"actions_started"`
+	StreakDays          int                `json:"streak_days"`
+	WardID              string             `json:"ward_id"`
+	WardName            string             `json:"ward_name"`
+	ActiveCitizensInWard int               `json:"active_citizens_in_ward"`
+	ActiveCitizensTrend  int               `json:"active_citizens_trend"`
+	ActivePollsCount    int                `json:"active_polls_count"`
+	UnreadMessages      int                `json:"unread_messages"`
+	RecentlyResolved    []RecentlyResolved `json:"recently_resolved"`
+}
+
 // ProfileResponse is the response for user profile retrieval.
 type ProfileResponse struct {
 	ID                string            `json:"id"`

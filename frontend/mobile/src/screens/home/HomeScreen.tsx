@@ -29,6 +29,9 @@ import { useIssues } from '../../hooks/useIssues';
 import { useWardMood } from '../../hooks/useWardMood';
 import { useLeaders } from '../../hooks/useLeaders';
 import { useUnreadCount } from '../../hooks/useNotifications';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
+import { usePatterns } from '../../hooks/usePatterns';
+import { useActions } from '../../hooks/useCommunityActions';
 import { FAB } from '../../components/ui/FAB';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -57,42 +60,15 @@ const NAVY = '#0B1426';
 type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 // ---------------------------------------------------------------------------
-// Mock data for sections without real APIs yet
+// Helpers
 // ---------------------------------------------------------------------------
-const MOCK_COMMUNITY_ACTIONS: CommunityAction[] = [
-  {
-    id: '1',
-    title: "Fix Andheri East's chronic water supply failures",
-    badge: 'Trending',
-    badgeType: 'trending',
-    ward: 'Ward 45',
-    supporters: 312,
-    goalPercent: 78,
-    incidents: 47,
-    locations: 8,
-    impactLabel: '\u20B923L',
-    impactColor: '#0F766E',
-    creatorInitial: 'M',
-    creatorName: 'Meena R.',
-    createdAgo: '5 days ago',
-  },
-  {
-    id: '2',
-    title: 'Install proper streetlighting on SV Road stretch',
-    badge: 'Acknowledged',
-    badgeType: 'acknowledged',
-    ward: 'Ward 45',
-    supporters: 89,
-    goalPercent: 45,
-    incidents: 19,
-    locations: 5,
-    impactLabel: 'Responded',
-    impactColor: '#059669',
-    creatorInitial: 'R',
-    creatorName: 'Rajesh K.',
-    createdAgo: '12 days ago',
-  },
-];
+function formatTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days === 0) return 'today';
+  if (days === 1) return '1 day ago';
+  return `${days} days ago`;
+}
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -106,7 +82,11 @@ export const HomeScreen: React.FC = () => {
   const { data: issues, isLoading, refetch } = useIssues();
   const { data: unreadData } = useUnreadCount();
   const { data: leaders } = useLeaders();
-  const { data: wardMoodData } = useWardMood(user?.ward);
+  const { data: dashboardStats, refetch: refetchStats } = useDashboardStats();
+  const wardId = dashboardStats?.ward_id || user?.ward;
+  const { data: wardMoodData } = useWardMood(wardId);
+  const { data: patternsData } = usePatterns(wardId);
+  const { data: actionsData } = useActions(wardId);
   const [refreshing, setRefreshing] = useState(false);
 
   // Refresh on focus
@@ -114,9 +94,9 @@ export const HomeScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetch(), refreshProfile()]);
+    await Promise.all([refetch(), refreshProfile(), refetchStats()]);
     setRefreshing(false);
-  }, [refetch, refreshProfile]);
+  }, [refetch, refreshProfile, refetchStats]);
 
   // Derived data
   const issueList = issues ?? [];
@@ -144,16 +124,50 @@ export const HomeScreen: React.FC = () => {
 
   const firstName = user?.name?.split(' ')[0] || 'Citizen';
 
-  // Civic level mock
+  // Civic level from dashboard stats (fall back to computed from profile)
   const civicLevel = useMemo(() => {
+    if (dashboardStats?.civic_level) {
+      // Capitalize the tier name for display
+      return dashboardStats.civic_level
+        .split('_')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
     const score = user?.civicScore ?? 0;
     if (score >= 75) return 'Star Citizen';
     if (score >= 50) return 'Active Citizen';
     if (score >= 25) return 'Reporter';
     return 'New Citizen';
-  }, [user?.civicScore]);
+  }, [dashboardStats?.civic_level, user?.civicScore]);
 
-  const unreadCount = unreadData?.count ?? 0;
+  const unreadCount = dashboardStats?.unread_messages ?? unreadData?.count ?? 0;
+
+  // Map community actions from API to the card component shape
+  const communityActions: CommunityAction[] = useMemo(() => {
+    if (!actionsData || actionsData.length === 0) return [];
+    return actionsData.slice(0, 4).map((a) => ({
+      id: a.id,
+      title: a.title,
+      badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
+      badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
+      ward: a.wardName,
+      supporters: a.supportCount,
+      goalPercent: a.supportGoal > 0 ? Math.round((a.supportCount / a.supportGoal) * 100) : 0,
+      incidents: a.evidenceCount,
+      locations: 0,
+      impactLabel: a.economicImpact ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
+      impactColor: '#0F766E',
+      creatorInitial: a.creatorName.charAt(0),
+      creatorName: a.creatorName,
+      createdAgo: formatTimeAgo(a.createdAt),
+    }));
+  }, [actionsData]);
+
+  // First pattern for the banner
+  const firstPattern = patternsData?.patterns?.[0];
+
+  // Recently resolved for celebration banner
+  const recentResolution = dashboardStats?.recently_resolved?.[0];
 
   // Quick action handler
   const handleQuickAction = useCallback(
@@ -211,7 +225,7 @@ export const HomeScreen: React.FC = () => {
                   strokeWidth={0.5}
                 />
               </Svg>
-              <Text style={styles.shieldLevel}>{Math.floor((user?.civicScore ?? 0) / 10) || 1}</Text>
+              <Text style={styles.shieldLevel}>{Math.floor((dashboardStats?.civic_score ?? user?.civicScore ?? 0) / 10) || 1}</Text>
             </View>
           </TouchableOpacity>
 
@@ -221,7 +235,7 @@ export const HomeScreen: React.FC = () => {
               {greeting}, {firstName}
             </Text>
             <Text style={styles.greetingSubText}>
-              {civicLevel} Level · {user?.ward || 'Ward 45'}
+              {civicLevel} Level · {dashboardStats?.ward_name || user?.ward || 'Ward 45'}
             </Text>
           </View>
         </View>
@@ -233,7 +247,7 @@ export const HomeScreen: React.FC = () => {
               <Path d="M8 1c0 3-3 4.5-3 7.5a3.5 3.5 0 007 0C12 5.5 8 4 8 1z" fill={SAFFRON} />
               <Path d="M8 7c0 1.5-1.5 2.25-1.5 3.75a1.75 1.75 0 003.5 0C10 9.25 8 8.5 8 7z" fill="#FFD700" />
             </Svg>
-            <Text style={styles.streakText}>7</Text>
+            <Text style={styles.streakText}>{dashboardStats?.streak_days ?? 0}</Text>
           </View>
 
           {/* Language */}
@@ -345,12 +359,12 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
           <CivicScoreRing
-            score={user?.civicScore ?? 15}
-            reported={user?.issuesReported ?? 3}
-            pollsVoted={user?.pollsVoted ?? 1}
-            validations={0}
-            actionsSupported={1}
-            actionsStarted={0}
+            score={dashboardStats?.civic_score ?? user?.civicScore ?? 0}
+            reported={dashboardStats?.issues_reported ?? user?.issuesReported ?? 0}
+            pollsVoted={dashboardStats?.polls_voted ?? user?.pollsVoted ?? 0}
+            validations={dashboardStats?.validations ?? 0}
+            actionsSupported={dashboardStats?.actions_supported ?? 0}
+            actionsStarted={dashboardStats?.actions_started ?? 0}
             milestoneProgress={0.6}
             milestoneLabel="Report 2 more to reach Validator"
             onBoostPress={() => navigation.navigate('Main', { screen: 'Report' } as any)}
@@ -383,7 +397,7 @@ export const HomeScreen: React.FC = () => {
             inProgress={inProgressCount || 2}
             resolved={resolvedCount || 2}
             verified={verifiedCount || 1}
-            wardName={user?.ward || 'Ward 45'}
+            wardName={dashboardStats?.ward_name || user?.ward || 'Ward 45'}
             wardArea="Andheri East"
             rank={12}
             totalWards={236}
@@ -426,19 +440,29 @@ export const HomeScreen: React.FC = () => {
         {/* 8. COMMUNITY PULSE                                            */}
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
-          <CommunityPulse />
+          <CommunityPulse
+            activeCitizens={dashboardStats?.active_citizens_in_ward}
+            weeklyTrendPercent={dashboardStats?.active_citizens_trend}
+          />
         </View>
 
         {/* ============================================================ */}
         {/* 9. PATTERN DETECTION BANNER                                   */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
-          <PatternBanner
-            description="12 water leak reports in your ward this month -- 0 resolved"
-            onStartAction={() => {}}
-            onViewEvidence={() => navigation.navigate('IssuesList')}
-          />
-        </View>
+        {firstPattern && (
+          <View style={styles.sectionSpacing}>
+            <PatternBanner
+              description={firstPattern.description}
+              stats={[
+                { icon: 'location', value: String(firstPattern.locations ?? 0), label: 'locations' },
+                { icon: 'calendar', value: String(firstPattern.days_unresolved ?? 0), label: 'days unresolved' },
+                { icon: 'damage', value: firstPattern.estimated_damage ?? '', label: 'est. damage', valueColor: '#0F766E' },
+              ]}
+              onStartAction={() => {}}
+              onViewEvidence={() => navigation.navigate('IssuesList')}
+            />
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 10. WARD COMPARISON NUDGE                                     */}
@@ -458,30 +482,38 @@ export const HomeScreen: React.FC = () => {
         {/* 11. QUICK ACTIONS CAROUSEL                                    */}
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
-          <QuickActions onPress={handleQuickAction} />
+          <QuickActions
+            pollCount={dashboardStats?.active_polls_count}
+            messageCount={dashboardStats?.unread_messages}
+            onPress={handleQuickAction}
+          />
         </View>
 
         {/* ============================================================ */}
         {/* 12. COMMUNITY ACTIONS SECTION                                 */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
-          <CommunityActionsSection
-            actions={MOCK_COMMUNITY_ACTIONS}
-            onSeeAll={() => {}}
-          />
-        </View>
+        {communityActions.length > 0 && (
+          <View style={styles.sectionSpacing}>
+            <CommunityActionsSection
+              actions={communityActions}
+              onSeeAll={() => {}}
+            />
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 13. CELEBRATION BANNER                                        */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
-          <CelebrationBanner
-            issueTitle="Water leak on MG Road"
-            reportCount={12}
-            timeAgo="2h ago"
-            onPress={() => {}}
-          />
-        </View>
+        {recentResolution && (
+          <View style={styles.sectionSpacing}>
+            <CelebrationBanner
+              issueTitle={recentResolution.title}
+              reportCount={recentResolution.citizen_reports}
+              timeAgo={formatTimeAgo(recentResolution.resolved_at)}
+              onPress={() => {}}
+            />
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 14. ISSUE FEED                                                */}
