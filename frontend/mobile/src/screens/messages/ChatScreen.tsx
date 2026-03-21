@@ -176,11 +176,16 @@ export const ChatScreen: React.FC = () => {
           { recipientId },
           {
             onSuccess: (data) => {
-              setConversationId(data.id);
+              const convId = data.id || (data as any).conversation_id;
+              setConversationId(convId);
               sendMessageMutation.mutate({
-                conversationId: data.id,
+                conversationId: convId,
                 text,
               });
+              setInputText('');
+            },
+            onError: (err: any) => {
+              console.error('Create conversation failed:', err?.message || err);
             },
           },
         );
@@ -188,7 +193,15 @@ export const ChatScreen: React.FC = () => {
       return;
     }
 
-    sendMessageMutation.mutate({ conversationId, text });
+    sendMessageMutation.mutate(
+      { conversationId, text },
+      {
+        onSuccess: () => setInputText(''),
+        onError: (err: any) => {
+          console.error('Send message failed:', err?.message || err);
+        },
+      },
+    );
     setInputText('');
   }, [
     inputText,

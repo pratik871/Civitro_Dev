@@ -109,9 +109,9 @@ export const HomeScreen: React.FC = () => {
   const wardOfficer = useMemo(() => {
     if (leaders && leaders.length > 0) {
       const l = leaders[0];
-      return { id: l.id, name: l.name, designation: 'Ward Corporator', party: l.partyAbbr || l.party };
+      return { id: l.id, userId: l.userId || l.id, name: l.name, designation: 'Ward Corporator', party: l.partyAbbr || l.party };
     }
-    return { id: '', name: 'Priya Sharma', designation: 'Ward Corporator', party: 'BJP' };
+    return { id: '', userId: '', name: 'Priya Sharma', designation: 'Ward Corporator', party: 'BJP' };
   }, [leaders]);
 
   // Greeting
@@ -380,7 +380,7 @@ export const HomeScreen: React.FC = () => {
             designation={wardOfficer.designation}
             party={wardOfficer.party}
             onMessage={() => navigation.navigate('Chat', {
-              recipientId: wardOfficer.id,
+              recipientId: wardOfficer.userId || wardOfficer.id,
               recipientName: wardOfficer.name,
             })}
             onRate={() => {

@@ -33,6 +33,7 @@ interface RawRepresentative {
   boundary_id: string;
   photo_url: string;
   claimed: boolean;
+  claimed_by_user_id: string;
   verified: boolean;
   rating: number;
   contact_info: string;
@@ -46,6 +47,7 @@ interface RawRepresentative {
 function mapLeader(raw: RawRepresentative): Leader {
   return {
     id: raw.id,
+    userId: raw.claimed_by_user_id || raw.id,
     name: raw.name,
     party: raw.party || '',
     partyAbbr: raw.party || '',

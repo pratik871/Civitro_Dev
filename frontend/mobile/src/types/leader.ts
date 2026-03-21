@@ -37,6 +37,7 @@ export interface Promise {
 
 export interface Leader {
   id: string;
+  userId?: string;
   name: string;
   party: string;
   partyAbbr: string;
