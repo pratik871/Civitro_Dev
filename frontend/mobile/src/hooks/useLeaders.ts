@@ -76,7 +76,7 @@ export function useLeaders() {
   return useQuery({
     queryKey: ['leaders'],
     queryFn: async () => {
-      const raw = await api.get<RawRepresentative[]>('/api/v1/registry/representatives/list');
+      const raw = await api.get<RawRepresentative[]>('/api/v1/representatives/list');
       return raw.map(mapLeader);
     },
     staleTime: 60_000,
@@ -87,7 +87,7 @@ export function useLeader(leaderId: string) {
   return useQuery({
     queryKey: ['leaders', leaderId],
     queryFn: async () => {
-      const raw = await api.get<RawRepresentative>(`/api/v1/registry/representatives/${leaderId}`);
+      const raw = await api.get<RawRepresentative>(`/api/v1/representatives/${leaderId}`);
       return mapLeader(raw);
     },
     staleTime: 60_000,
