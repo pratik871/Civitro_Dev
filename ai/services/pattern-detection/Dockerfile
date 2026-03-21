@@ -3,8 +3,8 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /build
 
-COPY shared/python /build/shared/python
-RUN pip install --no-cache-dir /build/shared/python
+COPY shared /build/shared
+RUN pip install --no-cache-dir /build/shared
 
 COPY services/pattern-detection/pyproject.toml /build/service/pyproject.toml
 RUN pip install --no-cache-dir /build/service
