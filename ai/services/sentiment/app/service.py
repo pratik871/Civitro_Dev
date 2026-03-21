@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
@@ -23,6 +24,9 @@ from app.models import (
     SentimentResult,
     TrendAnalysis,
     TrendResponse,
+    WardMoodResponse,
+    WardMoodTopic,
+    WardMoodTrend,
 )
 from app.repository import (
     get_active_alerts,
@@ -223,6 +227,109 @@ async def detect_alerts() -> list[SentimentAlert]:
         )
         for r in rows
     ]
+
+
+# ---------------------------------------------------------------------------
+# Ward Mood (citizen-facing sentiment dashboard)
+# ---------------------------------------------------------------------------
+
+# Base topic pool used to generate deterministic mock data per ward.
+_WARD_MOOD_TOPICS: list[tuple[str, float]] = [
+    ("Water Supply", -0.6),
+    ("Roads", -0.3),
+    ("Sanitation", 0.1),
+    ("Safety", 0.4),
+    ("Electricity", -0.45),
+    ("Public Transport", -0.2),
+    ("Healthcare", 0.05),
+    ("Education", 0.3),
+    ("Drainage", -0.5),
+    ("Garbage Collection", -0.35),
+]
+
+_MOOD_LABELS: list[tuple[float, str]] = [
+    (0.2, "angry"),
+    (0.35, "frustrated"),
+    (0.5, "concerned"),
+    (0.65, "hopeful"),
+    (1.01, "happy"),
+]
+
+
+def _ward_seed(ward_id: str) -> int:
+    """Derive a deterministic integer seed from a ward_id string."""
+    return int(hashlib.sha256(ward_id.encode()).hexdigest()[:8], 16)
+
+
+async def get_ward_mood(ward_id: str) -> WardMoodResponse:
+    """Return ward mood data.
+
+    For now this generates deterministic mock data seeded by *ward_id* so that
+    each ward returns consistent but slightly different results.  In production
+    this will aggregate real sentiment scores from the repository layer.
+    """
+    seed = _ward_seed(ward_id)
+    rng = __import__("random").Random(seed)
+
+    # Overall mood score in [0.15, 0.85]
+    score = round(rng.uniform(0.15, 0.85), 2)
+
+    # Pick mood label from score
+    mood = "concerned"
+    for threshold, label in _MOOD_LABELS:
+        if score < threshold:
+            mood = label
+            break
+
+    # Select 4 topics deterministically
+    topic_indices = rng.sample(range(len(_WARD_MOOD_TOPICS)), 4)
+    raw_pcts = [rng.randint(10, 40) for _ in range(4)]
+    total_pct = sum(raw_pcts)
+    norm_pcts = [round(p / total_pct * 100) for p in raw_pcts]
+    # Correct rounding drift on the largest slice
+    norm_pcts[0] += 100 - sum(norm_pcts)
+
+    topics: list[WardMoodTopic] = []
+    for idx, ti in enumerate(topic_indices):
+        name, base_sent = _WARD_MOOD_TOPICS[ti]
+        # Jitter sentiment slightly per ward
+        jitter = rng.uniform(-0.15, 0.15)
+        topics.append(
+            WardMoodTopic(
+                name=name,
+                sentiment=round(max(-1.0, min(1.0, base_sent + jitter)), 2),
+                percentage=norm_pcts[idx],
+            )
+        )
+
+    # 7-day sparkline: random walk anchored to the current score
+    sparkline: list[float] = []
+    val = score + rng.uniform(-0.1, 0.1)
+    for _ in range(7):
+        val = max(0.05, min(0.95, val + rng.uniform(-0.04, 0.04)))
+        sparkline.append(round(val, 2))
+    # Ensure the last point equals the current score
+    sparkline[-1] = score
+
+    change_pct = round((sparkline[-1] - sparkline[0]) / max(sparkline[0], 0.01) * 100)
+    if change_pct > 0:
+        direction = "improving"
+    elif change_pct < 0:
+        direction = "declining"
+    else:
+        direction = "stable"
+
+    return WardMoodResponse(
+        ward_id=ward_id,
+        mood=mood,
+        score=score,
+        topics=topics,
+        trend=WardMoodTrend(
+            direction=direction,
+            change_percent=change_pct,
+            sparkline=sparkline,
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------

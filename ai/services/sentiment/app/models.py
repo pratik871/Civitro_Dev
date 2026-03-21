@@ -77,3 +77,28 @@ class SentimentAlert(BaseModel):
 
 class AlertsResponse(BaseModel):
     alerts: list[SentimentAlert]
+
+
+# ---------------------------------------------------------------------------
+# Ward Mood models
+# ---------------------------------------------------------------------------
+
+
+class WardMoodTopic(BaseModel):
+    name: str
+    sentiment: float = Field(ge=-1.0, le=1.0)
+    percentage: int = Field(ge=0, le=100)
+
+
+class WardMoodTrend(BaseModel):
+    direction: str  # "improving", "declining", "stable"
+    change_percent: float
+    sparkline: list[float]
+
+
+class WardMoodResponse(BaseModel):
+    ward_id: str
+    mood: str  # "angry", "frustrated", "concerned", "hopeful", "happy"
+    score: float = Field(ge=0.0, le=1.0)
+    topics: list[WardMoodTopic]
+    trend: WardMoodTrend

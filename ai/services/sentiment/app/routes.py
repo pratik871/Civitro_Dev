@@ -11,6 +11,7 @@ from app.models import (
     SentimentRequest,
     SentimentResult,
     TrendResponse,
+    WardMoodResponse,
 )
 from app import service
 
@@ -34,6 +35,12 @@ async def batch(req: BatchSentimentRequest) -> BatchSentimentResult:
 async def trends(boundary_id: str) -> TrendResponse:
     """Get sentiment trends for a boundary."""
     return await service.get_trends(boundary_id)
+
+
+@router.get("/sentiment/ward-mood/{ward_id}", response_model=WardMoodResponse)
+async def ward_mood(ward_id: str) -> WardMoodResponse:
+    """Get the citizen-facing Ward Mood gauge data for a ward."""
+    return await service.get_ward_mood(ward_id)
 
 
 @router.get("/sentiment/alerts", response_model=AlertsResponse)

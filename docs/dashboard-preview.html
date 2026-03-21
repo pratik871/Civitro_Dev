@@ -1,0 +1,3555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Civitro Dashboard — Redesign Preview</title>
+<style>
+/* ============================================
+   CIVITRO DASHBOARD REDESIGN — INTERACTIVE PREVIEW
+   "Democracy You Shape.™"
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap');
+
+/* [#12] System font fallback when offline */
+@font-face { font-family: 'Inter'; src: local('Inter'), local('SF Pro Text'), local('Segoe UI'); }
+
+/* === CSS VARIABLES === */
+:root {
+  --saffron: #FF6B35;
+  --saffron-light: #FFF3ED;
+  --saffron-glow: rgba(255, 107, 53, 0.25);
+  --saffron-deep: #E85D2A;
+  --navy: #0B1426;
+  --navy-soft: #1E3A5F;
+  --cream: #FFFCF8;
+  --card-white: #FFFFFF;
+  --status-open: #EF4444;
+  --status-progress: #F59E0B;
+  --status-resolved: #10B981;
+  --status-verified: #3B82F6;
+  --civic-bronze: #CD7F32;
+  --civic-silver: #C0C0C0;
+  --civic-gold: #FFD700;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --polls-bg: #EFF6FF;
+  --promises-bg: #FFFBEB;
+  --chi-bg: #ECFDF5;
+  --messages-bg: #F5F3FF;
+  --report-bg: #FFF3ED;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-fab: 0 6px 20px rgba(255, 107, 53, 0.35);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 50%;
+}
+
+/* === RESET & BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F0F0F0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* === PHONE FRAME === */
+.phone-frame {
+  width: 375px;
+  min-height: 812px;
+  background: var(--cream);
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  position: relative;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 34px;
+  background: #000;
+  border-radius: 0 0 20px 20px;
+  z-index: 100;
+}
+
+.phone-notch::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 6px;
+  background: #1a1a1a;
+  border-radius: 3px;
+}
+
+/* === STATUS BAR === */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px 0;
+  height: 50px;
+  position: relative;
+  z-index: 50;
+}
+
+.status-bar .time {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--navy);
+}
+
+.status-bar .indicators {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-bar .indicators svg {
+  height: 12px;
+}
+
+/* === SCROLLABLE CONTENT === */
+.scroll-content {
+  height: 762px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 80px;
+}
+
+.scroll-content::-webkit-scrollbar { display: none; }
+
+/* === HEADER === */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px 16px;
+  animation: fadeSlideDown 0.4s ease-out;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.civic-shield {
+  width: 44px;
+  height: 44px;
+  position: relative;
+}
+
+.civic-shield svg {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.2));
+}
+
+.civic-shield .level-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 16px;
+  color: white;
+}
+
+.shield-glow {
+  animation: shieldPulse 3s ease-in-out infinite;
+}
+
+.greeting-block h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.greeting-block p {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--card-white);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.header-icon:active {
+  transform: scale(0.93);
+  background: var(--border-light);
+}
+
+.header-icon svg {
+  width: 20px;
+  height: 20px;
+  color: var(--navy-soft);
+}
+
+.notif-dot {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  background: var(--saffron);
+  border-radius: 50%;
+  border: 2px solid var(--card-white);
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Streak badge */
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: linear-gradient(135deg, #FFF3ED, #FFEDD5);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--saffron);
+}
+
+.streak-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* === CONNECTIVITY BANNER === */
+.connectivity-banner {
+  display: none; /* hidden when online */
+  margin: 0 20px 8px;
+  padding: 8px 14px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: #92400E;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connectivity-banner.hidden { display: none; }
+.connectivity-banner svg { width: 16px; height: 16px; color: #D97706; flex-shrink: 0; }
+
+/* === CIVIC SCORE RING === */
+.civic-score-section {
+  margin: 4px 20px 20px;
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+  animation: fadeSlideUp 0.6s ease-out 0.1s both;
+}
+
+.civic-score-section::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, var(--saffron-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.score-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.score-ring-container {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+}
+
+.score-ring-container svg {
+  width: 76px;
+  height: 76px;
+  transform: rotate(-90deg);
+}
+
+.score-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 6;
+}
+
+.score-ring-fill {
+  fill: none;
+  stroke: url(#saffronGradient);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 226;
+  stroke-dashoffset: 226;
+  animation: ringFill 1.2s ease-out 0.5s forwards;
+  filter: drop-shadow(0 0 6px var(--saffron-glow));
+}
+
+.score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.score-value .number {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--saffron);
+  line-height: 1;
+  display: block;
+}
+
+.score-value .label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.score-details {
+  flex: 1;
+}
+
+.score-details h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+
+.score-details .subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.milestone-bar {
+  background: var(--border-light);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.milestone-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--saffron), #FF8F5E);
+  border-radius: 4px;
+  width: 0%;
+  animation: milestoneGrow 1s ease-out 1s forwards;
+}
+
+.milestone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.milestone-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.milestone-text strong {
+  color: var(--saffron);
+  font-weight: 700;
+}
+
+.score-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.score-chips::-webkit-scrollbar { display: none; }
+
+.score-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: var(--border-light);
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.score-chip:active {
+  background: var(--saffron-light);
+  color: var(--saffron);
+}
+
+.score-chip svg {
+  width: 12px;
+  height: 12px;
+}
+
+.boost-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-deep));
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 3px 8px var(--saffron-glow);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.boost-cta:active {
+  transform: scale(0.96);
+}
+
+.boost-cta svg {
+  width: 16px;
+  height: 16px;
+  animation: arrowBounce 2s ease-in-out infinite;
+}
+
+/* === WARD OFFICER CARD === */
+.ward-officer-section {
+  margin: 0 20px 20px;
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: fadeSlideUp 0.6s ease-out 0.2s both;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ward-officer-section:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+.officer-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--saffron-light), #FFE0CC);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid var(--saffron);
+}
+
+.officer-avatar svg {
+  width: 28px;
+  height: 28px;
+  color: var(--saffron);
+}
+
+.officer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.officer-info .name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.officer-info .designation {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.officer-info .response-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--status-resolved);
+  background: #ECFDF5;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.officer-info .response-rate svg {
+  width: 10px;
+  height: 10px;
+}
+
+.officer-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.officer-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--card-white);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.officer-btn:active {
+  background: var(--saffron-light);
+  border-color: var(--saffron);
+}
+
+.officer-btn svg {
+  width: 16px;
+  height: 16px;
+  color: var(--navy-soft);
+}
+
+/* === WARD DASHBOARD === */
+.ward-dashboard-section {
+  margin: 0 20px 16px;
+  animation: fadeSlideUp 0.6s ease-out 0.3s both;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-title h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.section-title .ward-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--border-light);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.ward-dashboard-card {
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.donut-and-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.donut-container {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+}
+
+.donut-container svg {
+  width: 110px;
+  height: 110px;
+  transform: rotate(-90deg);
+}
+
+.donut-bg {
+  fill: none;
+  stroke: var(--border-light);
+  stroke-width: 10;
+}
+
+.donut-segment {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.donut-center .total-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--navy);
+  line-height: 1;
+  display: block;
+}
+
+.donut-center .total-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+
+.stat-item:active {
+  background: var(--border-light);
+}
+
+.stat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-dot.open { background: var(--status-open); }
+.stat-dot.progress { background: var(--status-progress); }
+.stat-dot.resolved { background: var(--status-resolved); }
+.stat-dot.verified { background: var(--status-verified); }
+
+.stat-item .stat-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--navy);
+  width: 30px;
+}
+
+.stat-item .stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.ward-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+}
+
+.ward-pulse {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ward-pulse .pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-resolved);
+  animation: sonarPulse 3s ease-out infinite;
+  position: relative;
+}
+
+.ward-pulse .pulse-text {
+  color: var(--text-secondary);
+}
+
+.ward-pulse .pulse-text strong {
+  color: var(--status-resolved);
+}
+
+.ward-rank {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.ward-rank strong {
+  color: var(--navy);
+}
+
+/* === COMMUNITY PULSE === */
+.community-pulse {
+  margin: 0 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  animation: fadeSlideUp 0.6s ease-out 0.35s both;
+}
+
+.community-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-stack {
+  display: flex;
+  margin-right: 4px;
+}
+
+.avatar-stack .mini-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--card-white);
+  margin-left: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+}
+
+.avatar-stack .mini-avatar:first-child { margin-left: 0; }
+.avatar-stack .mini-avatar:nth-child(1) { background: var(--saffron); z-index: 5; }
+.avatar-stack .mini-avatar:nth-child(2) { background: #6366F1; z-index: 4; }
+.avatar-stack .mini-avatar:nth-child(3) { background: var(--status-resolved); z-index: 3; }
+.avatar-stack .mini-avatar:nth-child(4) { background: var(--status-progress); z-index: 2; }
+.avatar-stack .mini-avatar:nth-child(5) { background: var(--text-muted); z-index: 1; font-size: 7px; }
+
+.community-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.community-text strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.community-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--status-resolved);
+  background: #ECFDF5;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.community-trend svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* === QUICK ACTIONS CAROUSEL === */
+.quick-actions-section {
+  margin: 0 0 20px;
+  animation: fadeSlideUp 0.6s ease-out 0.4s both;
+}
+
+.quick-actions-section .section-title {
+  padding: 0 20px;
+}
+
+.quick-actions-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 20px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quick-actions-scroll::-webkit-scrollbar { display: none; }
+
+.action-card {
+  flex-shrink: 0;
+  width: 120px;
+  padding: 18px 14px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  scroll-snap-align: start;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card:active {
+  transform: scale(0.95);
+}
+
+.action-card.report-hero {
+  width: 140px;
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-deep));
+  border: none;
+  box-shadow: 0 4px 16px var(--saffron-glow);
+}
+
+.action-card.report-hero .action-label { color: white; }
+.action-card.report-hero .action-badge { background: rgba(255,255,255,0.25); color: white; }
+
+.action-card.polls { background: var(--polls-bg); }
+.action-card.promises { background: var(--promises-bg); }
+.action-card.chi { background: var(--chi-bg); }
+.action-card.messages { background: var(--messages-bg); }
+
+.action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.7);
+}
+
+.report-hero .action-icon {
+  background: rgba(255,255,255,0.2);
+}
+
+.action-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.action-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  text-align: center;
+}
+
+.action-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.06);
+  color: var(--text-secondary);
+}
+
+/* === CELEBRATION BANNER === */
+.celebration-banner {
+  margin: 0 20px 16px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  border: 1px solid #A7F3D0;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: fadeSlideUp 0.6s ease-out 0.45s both;
+}
+
+.celebration-banner:active {
+  transform: scale(0.98);
+}
+
+.celebration-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--status-resolved);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: celebrationPop 0.6s ease-out 1.5s both;
+}
+
+.celebration-icon svg {
+  width: 18px;
+  height: 18px;
+  color: white;
+}
+
+.celebration-text {
+  flex: 1;
+  font-size: 12px;
+  color: #065F46;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.celebration-text strong {
+  font-weight: 700;
+  color: #047857;
+}
+
+.celebration-time {
+  font-size: 10px;
+  color: #6EE7B7;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* === ISSUE FEED === */
+.issue-feed-section {
+  margin: 0 20px 20px;
+  animation: fadeSlideUp 0.6s ease-out 0.5s both;
+}
+
+.issue-feed-section .section-title .see-all {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--saffron);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s;
+}
+
+.issue-feed-section .section-title .see-all:active {
+  opacity: 0.6;
+}
+
+.issue-feed-section .section-title .see-all svg {
+  width: 14px;
+  height: 14px;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-indicator .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--saffron);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+.issue-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.issue-card {
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.issue-card:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+.issue-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 0 2px 2px 0;
+}
+
+.issue-card.status-open::before { background: var(--status-open); }
+.issue-card.status-progress::before { background: var(--status-progress); }
+.issue-card.status-resolved::before { background: var(--status-resolved); }
+
+.issue-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  margin-left: 8px;
+}
+
+.issue-category-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.issue-category-icon.water { background: #EFF6FF; }
+.issue-category-icon.pothole { background: #FEF3C7; }
+.issue-category-icon.streetlight { background: #FFFBEB; }
+.issue-category-icon.garbage { background: #FEE2E2; }
+
+.issue-category-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.issue-time {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.issue-time.urgent {
+  color: var(--status-open);
+  font-weight: 600;
+}
+
+.issue-card-body {
+  margin-left: 8px;
+}
+
+.issue-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.35;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.issue-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.issue-location svg {
+  width: 12px;
+  height: 12px;
+  color: var(--saffron);
+  flex-shrink: 0;
+}
+
+.issue-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.issue-engagement {
+  display: flex;
+  gap: 12px;
+}
+
+.engagement-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.engagement-item svg {
+  width: 12px;
+  height: 12px;
+}
+
+.issue-progress {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress-step {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.progress-step.active { background: var(--status-open); }
+.progress-step.completed { background: var(--status-resolved); }
+
+.issue-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.issue-status-badge.reported {
+  background: #FEF2F2;
+  color: var(--status-open);
+}
+
+.issue-status-badge.in-progress {
+  background: #FFFBEB;
+  color: #B45309;
+}
+
+.issue-status-badge.resolved {
+  background: #ECFDF5;
+  color: #047857;
+}
+
+/* Peek card */
+.issue-card.peek {
+  opacity: 0.5;
+  transform: scale(0.97);
+  margin-top: -6px;
+}
+
+/* === FAB === */
+.fab {
+  position: absolute;
+  bottom: 84px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-fab);
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: fabEntry 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.8s both;
+}
+
+.fab:hover {
+  transform: scale(1.05);
+}
+
+.fab:active {
+  transform: scale(0.92);
+}
+
+.fab svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.fab-breathing {
+  animation: fabBreathe 4s ease-in-out infinite;
+}
+
+/* FAB Radial Menu */
+.fab-menu {
+  position: absolute;
+  bottom: 84px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  z-index: 49;
+  pointer-events: none;
+}
+
+.fab-menu-item {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--card-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  bottom: 6px;
+  right: 6px;
+}
+
+.fab-menu-item svg {
+  width: 18px;
+  height: 18px;
+  color: var(--navy-soft);
+}
+
+.fab-menu.active .fab-menu-item {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.fab-menu.active .fab-menu-item:nth-child(1) { transform: translate(-72px, 5px); transition-delay: 0.05s; }
+.fab-menu.active .fab-menu-item:nth-child(2) { transform: translate(-68px, -38px); transition-delay: 0.1s; }
+.fab-menu.active .fab-menu-item:nth-child(3) { transform: translate(-45px, -68px); transition-delay: 0.15s; }
+.fab-menu.active .fab-menu-item:nth-child(4) { transform: translate(-10px, -82px); transition-delay: 0.2s; }
+.fab-menu.active .fab-menu-item:nth-child(5) { transform: translate(25px, -78px); transition-delay: 0.25s; }
+
+.fab-menu-item .tooltip {
+  position: absolute;
+  right: 50px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--card-white);
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.fab-menu.active .fab-menu-item .tooltip {
+  opacity: 1;
+}
+
+/* === BOTTOM NAVIGATION === */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card-white);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0 24px;
+  z-index: 60;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 4px 12px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.nav-item:active {
+  transform: scale(0.9);
+}
+
+.nav-item .nav-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.nav-item .nav-icon svg {
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.nav-item.active .nav-icon svg {
+  color: var(--saffron);
+}
+
+.nav-item .nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.nav-item.active .nav-label {
+  color: var(--saffron);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--saffron);
+  border-radius: 0 0 2px 2px;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ringFill {
+  to { stroke-dashoffset: 192; /* 15% fill for score of 15 */ }
+}
+
+@keyframes milestoneGrow {
+  to { width: 30%; }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes shieldPulse {
+  0%, 100% { filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.2)); }
+  50% { filter: drop-shadow(0 2px 12px rgba(255, 107, 53, 0.45)); }
+}
+
+@keyframes sonarPulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes fabEntry {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fabBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+@keyframes celebrationPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* In-progress shimmer on status ribbon */
+.issue-card.status-progress::before {
+  background: linear-gradient(180deg, var(--status-progress) 0%, #FBBF24 50%, var(--status-progress) 100%);
+  background-size: 100% 200%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* === TOGGLE CONTROLS === */
+.preview-controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.control-btn {
+  padding: 8px 16px;
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.control-btn:hover { background: var(--navy-soft); }
+.control-btn.active { background: var(--saffron); }
+
+/* === RESPONSIVE === */
+@media (max-width: 420px) {
+  body { padding: 0; }
+  .phone-frame { border-radius: 0; width: 100%; min-height: 100vh; }
+  .phone-notch { display: none; }
+  .preview-controls { top: auto; bottom: 10px; right: 10px; flex-direction: row; }
+}
+
+/* === [#5] REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === [#1] TAGLINE === */
+.tagline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px 12px;
+  animation: taglineReveal 1s ease-out 0.6s both;
+}
+
+.tagline-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  position: relative;
+}
+
+.tagline-dot {
+  display: inline-block;
+  margin: 0 6px;
+  font-size: 16px;
+  line-height: 1;
+  vertical-align: middle;
+  color: var(--saffron);
+}
+
+.tagline-text .tm {
+  font-size: 8px;
+  vertical-align: super;
+  color: var(--saffron);
+}
+
+.tagline-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+@keyframes taglineReveal {
+  from { opacity: 0; transform: translateY(-6px); letter-spacing: 4px; }
+  to { opacity: 1; transform: translateY(0); letter-spacing: 1.5px; }
+}
+
+/* === [#3] SPARKLINE === */
+.sparkline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.sparkline-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sparkline-svg {
+  flex: 1;
+  height: 30px;
+}
+
+/* === [#4] NOTIFICATION COUNT BADGE === */
+.notif-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  background: var(--saffron);
+  border-radius: 8px;
+  border: 2px solid var(--card-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  padding: 0 3px;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* === [#7] DARK MODE === */
+.phone-frame.dark {
+  --cream: #0F1419;
+  --card-white: #1A2332;
+  --navy: #F1F5F9;
+  --navy-soft: #CBD5E1;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --border: #2D3B4E;
+  --border-light: #1E2D3D;
+  --saffron-light: #2A1A10;
+  --polls-bg: #0F1A2E;
+  --promises-bg: #1A1505;
+  --chi-bg: #0A1A14;
+  --messages-bg: #150F25;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  background: var(--cream);
+}
+
+.phone-frame.dark .status-bar .time,
+.phone-frame.dark .status-bar .indicators span { color: var(--navy); }
+.phone-frame.dark .status-bar .indicators svg rect { fill: var(--navy); }
+.phone-frame.dark .status-bar .indicators svg rect:last-child { fill: var(--text-muted); }
+
+/* === [#8] EMPTY STATE === */
+.empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 30px;
+  animation: fadeSlideUp 0.8s ease-out;
+}
+
+.empty-state.visible { display: flex; }
+.populated-content.hidden { display: none; }
+
+.empty-state-illustration {
+  width: 160px;
+  height: 160px;
+  margin-bottom: 24px;
+}
+
+.empty-state h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.empty-state-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.empty-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--border-light);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.empty-step .step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--saffron);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-cta {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-deep));
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px var(--saffron-glow);
+  transition: all 0.2s;
+}
+
+.empty-state-cta:active { transform: scale(0.96); }
+
+/* === [#9] CONFETTI === */
+.confetti-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  animation: confettiFall 2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes confettiFall {
+  0% { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(60px) rotate(720deg); }
+}
+
+/* === [#10] WARD COMPARISON === */
+.ward-comparison {
+  margin: -12px 20px 20px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  color: #92400E;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ward-comparison svg { width: 14px; height: 14px; flex-shrink: 0; color: #D97706; }
+
+/* === [#11] WEATHER TIP === */
+.weather-tip {
+  margin: 0 20px 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1E40AF;
+  animation: fadeSlideUp 0.6s ease-out 0.15s both;
+}
+
+.weather-tip svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* === [#14] LAST SYNCED === */
+.last-synced {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* === [#15] PROGRESS LABELS === */
+.issue-progress {
+  position: relative;
+}
+
+.progress-labels {
+  display: none;
+  position: absolute;
+  bottom: 10px;
+  right: 0;
+  background: var(--navy);
+  color: white;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.issue-progress:hover .progress-labels,
+.issue-progress:active .progress-labels {
+  display: block;
+}
+
+/* === [#16] TOUCH RIPPLE === */
+.ripple-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,107,53,0.12) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.ripple-wrap:active::after {
+  opacity: 1;
+}
+
+/* === [#17] RICHER ACTION CARD GRADIENTS === */
+.action-card.polls { background: linear-gradient(145deg, #EFF6FF 0%, #DBEAFE 100%); }
+.action-card.promises { background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%); }
+.action-card.chi { background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%); }
+.action-card.messages { background: linear-gradient(145deg, #F5F3FF 0%, #EDE9FE 100%); }
+
+/* === [#18] TOPOGRAPHIC WATERMARK === */
+.header {
+  position: relative;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30 50 50 T100 50 T150 50 T200 50' fill='none' stroke='%23FF6B35' stroke-width='0.3' opacity='0.06'/%3E%3Cpath d='M0 60 Q25 40 50 60 T100 60 T150 60 T200 60' fill='none' stroke='%23FF6B35' stroke-width='0.3' opacity='0.04'/%3E%3Cpath d='M0 40 Q25 20 50 40 T100 40 T150 40 T200 40' fill='none' stroke='%23FF6B35' stroke-width='0.3' opacity='0.04'/%3E%3C/svg%3E") repeat;
+  pointer-events: none;
+  opacity: 0.8;
+  z-index: 0;
+}
+
+.header > * { position: relative; z-index: 1; }
+
+/* === WARD MOOD (SENTIMENT ANALYSIS) === */
+.ward-mood-section {
+  margin: 0 20px 16px;
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.ward-mood-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ward-mood-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ward-mood-header h3 svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mood-live-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+  background: var(--status-verified);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.mood-arc-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.mood-arc {
+  width: 72px;
+  height: 40px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.mood-arc svg {
+  width: 72px;
+  height: 40px;
+}
+
+.mood-arc-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.mood-arc-fill {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.mood-needle {
+  transform-origin: 36px 36px;
+  transition: transform 1s ease-out;
+}
+
+.mood-label-primary {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.mood-label-detail {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.mood-topics {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mood-topic {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--border-light);
+  border-radius: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mood-topic:active {
+  background: var(--saffron-light);
+  color: var(--saffron);
+}
+
+.mood-topic .topic-bar {
+  width: 3px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.mood-trend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.mood-trend-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.mood-sparkline {
+  flex: 1;
+  height: 20px;
+  margin: 0 10px;
+}
+
+.mood-trend-change {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.mood-trend-change.negative {
+  color: #B91C1C;
+  background: #FEF2F2;
+}
+
+.mood-trend-change.positive {
+  color: #047857;
+  background: #ECFDF5;
+}
+
+/* === PATTERN DETECTION BANNER === */
+.pattern-banner {
+  margin: 0 20px 16px;
+  padding: 16px;
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--saffron);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: fadeSlideUp 0.6s ease-out 0.32s both;
+}
+
+.pattern-banner::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--saffron), #FF8F5E, var(--saffron));
+  background-size: 200% 100%;
+  animation: shimmerBorder 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes shimmerBorder {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.pattern-banner:active { transform: scale(0.98); }
+
+.pattern-banner-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pattern-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--saffron-light), #FFE0CC);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pattern-icon svg { width: 16px; height: 16px; }
+
+.pattern-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: white;
+  background: var(--saffron);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.pattern-banner-body {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.pattern-banner-body strong {
+  color: var(--status-open);
+}
+
+.pattern-banner-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.pattern-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.pattern-stat svg { width: 12px; height: 12px; }
+
+.pattern-stat .stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.pattern-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.pattern-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pattern-btn:active { transform: scale(0.95); }
+
+.pattern-btn.primary {
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-deep));
+  color: white;
+  box-shadow: 0 3px 10px var(--saffron-glow);
+}
+
+.pattern-btn.secondary {
+  background: var(--border-light);
+  color: var(--text-secondary);
+}
+
+/* === COMMUNITY ACTION CARDS === */
+.community-actions-section {
+  margin: 0 0 20px;
+}
+
+.community-actions-section .section-title {
+  padding: 0 20px;
+  margin-bottom: 12px;
+}
+
+.community-actions-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 20px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.community-actions-scroll::-webkit-scrollbar { display: none; }
+
+.ca-card {
+  flex-shrink: 0;
+  width: 280px;
+  padding: 18px;
+  background: var(--card-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.ca-card:active { transform: scale(0.97); }
+
+.ca-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ca-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.ca-badge.trending {
+  background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+  color: #C2410C;
+}
+
+.ca-badge.new {
+  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  color: var(--status-verified);
+}
+
+.ca-badge.acknowledged {
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  color: #047857;
+}
+
+.ca-ward-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.ca-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.35;
+  margin-bottom: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ca-progress-bar {
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.ca-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--saffron), #FF8F5E);
+  transition: width 1s ease-out;
+}
+
+.ca-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 14px;
+}
+
+.ca-progress-text .supporters {
+  font-weight: 700;
+  color: var(--navy);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ca-progress-text .goal {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.ca-evidence {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  background: var(--border-light);
+  border-radius: 8px;
+}
+
+.ca-evidence-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.ca-evidence-item svg { width: 12px; height: 12px; }
+
+.ca-evidence-item .ev-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.ca-ctas {
+  display: flex;
+  gap: 8px;
+}
+
+.ca-cta {
+  flex: 1;
+  padding: 9px 0;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.ca-cta:active { transform: scale(0.95); }
+
+.ca-cta.support {
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-deep));
+  color: white;
+  box-shadow: 0 3px 10px var(--saffron-glow);
+}
+
+.ca-cta.share {
+  background: var(--border-light);
+  color: var(--text-secondary);
+}
+
+.ca-cta svg { width: 14px; height: 14px; }
+
+.ca-creator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.ca-creator-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--saffron-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--saffron);
+}
+
+/* === ISSUE CARD — LINKED ACTION === */
+.issue-linked-action {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 0 8px;
+  padding: 6px 10px;
+  background: var(--saffron-light);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--saffron-deep);
+  cursor: pointer;
+}
+
+.issue-linked-action svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* === ACTION QUICK-ACTION CARD === */
+.action-card.actions { background: linear-gradient(145deg, #FFF7ED 0%, #FFEDD5 100%); }
+
+/* === [#13] SCROLL-TRIGGERED ANIMATION === */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- Preview Controls -->
+<div class="preview-controls">
+  <button class="control-btn" onclick="toggleFabMenu()">FAB Menu</button>
+  <button class="control-btn" onclick="toggleOffline()">Offline</button>
+  <button class="control-btn" onclick="toggleDarkMode()">Dark Mode</button>
+  <button class="control-btn" onclick="toggleEmptyState()">Empty State</button>
+</div>
+
+<!-- Phone Frame -->
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">10:16</span>
+    <div class="indicators">
+      <!-- Signal -->
+      <svg viewBox="0 0 20 12" fill="none">
+        <rect x="0" y="8" width="3" height="4" rx="0.5" fill="#0B1426"/>
+        <rect x="4.5" y="5" width="3" height="7" rx="0.5" fill="#0B1426"/>
+        <rect x="9" y="2" width="3" height="10" rx="0.5" fill="#0B1426"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="#D1D5DB"/>
+      </svg>
+      <span style="font-size:11px;font-weight:600;color:var(--navy)">5G</span>
+      <!-- Battery -->
+      <svg viewBox="0 0 28 14" fill="none">
+        <rect x="0.5" y="0.5" width="23" height="13" rx="2.5" stroke="#0B1426" stroke-width="1"/>
+        <rect x="25" y="4" width="2" height="6" rx="1" fill="#0B1426"/>
+        <rect x="2" y="2" width="7" height="9" rx="1" fill="#FF6B35"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="scroll-content">
+
+    <!-- === HEADER === -->
+    <div class="header">
+      <div class="header-left">
+        <!-- Civic Shield Badge -->
+        <div class="civic-shield shield-glow">
+          <svg viewBox="0 0 44 44" fill="none">
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FF8F5E"/>
+                <stop offset="100%" style="stop-color:#FF6B35"/>
+              </linearGradient>
+            </defs>
+            <path d="M22 3L6 10v10c0 11 6.8 18.4 16 21 9.2-2.6 16-10 16-21V10L22 3z" fill="url(#shieldGrad)"/>
+            <path d="M22 6L9 12v8c0 9.5 5.8 15.8 13 18 7.2-2.2 13-8.5 13-18v-8L22 6z" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+          </svg>
+          <span class="level-text">9</span>
+        </div>
+        <div class="greeting-block">
+          <h1 id="greetingText">Good Morning, Arjun</h1>
+          <p>Reporter Level · Ward 45</p>
+          <span class="last-synced" id="lastSynced">Last synced: just now</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="streak-badge">
+          <!-- Flame icon -->
+          <svg viewBox="0 0 16 16" fill="none">
+            <path d="M8 1c0 3-3 4.5-3 7.5a3.5 3.5 0 007 0C12 5.5 8 4 8 1z" fill="#FF6B35"/>
+            <path d="M8 7c0 1.5-1.5 2.25-1.5 3.75a1.75 1.75 0 003.5 0C10 9.25 8 8.5 8 7z" fill="#FFD700"/>
+          </svg>
+          7
+        </div>
+        <!-- [#6] Language — aria-label -->
+        <div class="header-icon" title="Language" role="button" aria-label="Switch language">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/>
+          </svg>
+        </div>
+        <!-- [#6] Search — aria-label -->
+        <div class="header-icon" title="Search" role="button" aria-label="Search issues and wards">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="7"/>
+            <path d="M15.5 15.5L21 21"/>
+            <circle cx="13" cy="8" r="1" fill="currentColor" stroke="none" opacity="0.4"/>
+          </svg>
+        </div>
+        <!-- [#4] Notification Bell — count badge instead of dot -->
+        <div class="header-icon" title="Notifications" role="button" aria-label="3 unread notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+          <div class="notif-count">3</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="populated-content" id="populatedContent">
+    <!-- === [#1] TAGLINE === -->
+    <div class="tagline">
+      <span class="tagline-text">Democracy<span class="tagline-dot">&#x2022;</span>You Shape<span class="tm">.TM</span></span>
+      <div class="tagline-line"></div>
+    </div>
+
+    <!-- === [#11] WEATHER-AWARE TIP === -->
+    <div class="weather-tip" id="weatherTip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/>
+        <path d="M8 15v2M12 15v2M16 15v2" opacity="0.5"/>
+      </svg>
+      <span>Monsoon alert: Drainage issues likely — report blockages early</span>
+    </div>
+
+    <!-- === CONNECTIVITY BANNER (hidden by default) === -->
+    <div class="connectivity-banner hidden" id="connectivityBanner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/>
+      </svg>
+      <span>Offline — 3 reports queued for sync</span>
+    </div>
+
+    <!-- === CIVIC SCORE RING === -->
+    <div class="civic-score-section">
+      <div class="score-header">
+        <div class="score-ring-container">
+          <svg viewBox="0 0 90 90">
+            <defs>
+              <linearGradient id="saffronGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#FF8F5E"/>
+                <stop offset="100%" style="stop-color:#FF6B35"/>
+              </linearGradient>
+            </defs>
+            <circle class="score-ring-bg" cx="45" cy="45" r="36"/>
+            <circle class="score-ring-fill" cx="45" cy="45" r="36"/>
+          </svg>
+          <div class="score-value">
+            <span class="number">15</span>
+            <span class="label">Civic</span>
+          </div>
+        </div>
+        <div class="score-details">
+          <h2>Your Civic Journey</h2>
+          <p class="subtitle">Report issues and participate to level up your civic reputation</p>
+          <div class="milestone-bar"><div class="milestone-bar-fill"></div></div>
+          <div class="milestone-row">
+            <p class="milestone-text">Report <strong>2 more</strong> to reach Validator</p>
+            <button class="boost-cta">
+              Boost
+              <svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="score-chips">
+        <div class="score-chip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="var(--saffron)" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+          3 Reported
+        </div>
+        <div class="score-chip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="var(--status-verified)" stroke-width="1.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
+          1 Poll Voted
+        </div>
+        <div class="score-chip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="5"/><path d="M8 5v3h3"/></svg>
+          0 Validations
+        </div>
+        <div class="score-chip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
+          1 Action Supported
+        </div>
+        <div class="score-chip">
+          <svg viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><path d="M4 12l4-8 4 8M6 8h4"/></svg>
+          0 Actions Started
+        </div>
+      </div>
+    </div>
+
+    <!-- === WARD OFFICER CARD === -->
+    <div class="ward-officer-section">
+      <div class="officer-avatar">
+        <!-- Person with star SVG -->
+        <svg viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="9" r="5" stroke="currentColor" stroke-width="2"/>
+          <path d="M4 25c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M20 5l1 2.5H24l-2 1.8.7 2.7L20 10.5 17.3 12l.7-2.7-2-1.8h3L20 5z" fill="#FFD700" stroke="#FFD700" stroke-width="0.5"/>
+        </svg>
+      </div>
+      <div class="officer-info">
+        <div class="name">Priya Sharma</div>
+        <div class="designation">Ward Corporator · BJP</div>
+        <div class="response-rate">
+          <svg viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
+          Responds in avg 2.3 days
+        </div>
+      </div>
+      <div class="officer-actions">
+        <div class="officer-btn" title="Message">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+        </div>
+        <div class="officer-btn" title="Rate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- === WARD DASHBOARD === -->
+    <div class="ward-dashboard-section">
+      <div class="section-title">
+        <h2>Ward Dashboard</h2>
+        <span class="ward-label">Ward 45 · Andheri East</span>
+      </div>
+      <div class="ward-dashboard-card">
+        <div class="donut-and-stats">
+          <div class="donut-container">
+            <svg viewBox="0 0 110 110">
+              <circle class="donut-bg" cx="55" cy="55" r="42"/>
+              <!-- Open: 3 issues (red) - 3/8 = 37.5% of circumference -->
+              <circle class="donut-segment" cx="55" cy="55" r="42"
+                stroke="var(--status-open)" stroke-dasharray="99 165"
+                stroke-dashoffset="0" style="animation: fadeSlideUp 0.8s ease-out 0.6s both"/>
+              <!-- In Progress: 2 issues (amber) - 2/8 = 25% -->
+              <circle class="donut-segment" cx="55" cy="55" r="42"
+                stroke="var(--status-progress)" stroke-dasharray="66 198"
+                stroke-dashoffset="-99" style="animation: fadeSlideUp 0.8s ease-out 0.7s both"/>
+              <!-- Resolved: 2 issues (green) - 2/8 = 25% -->
+              <circle class="donut-segment" cx="55" cy="55" r="42"
+                stroke="var(--status-resolved)" stroke-dasharray="66 198"
+                stroke-dashoffset="-165" style="animation: fadeSlideUp 0.8s ease-out 0.8s both"/>
+              <!-- Verified: 1 issue (blue) - 1/8 = 12.5% -->
+              <circle class="donut-segment" cx="55" cy="55" r="42"
+                stroke="var(--status-verified)" stroke-dasharray="33 231"
+                stroke-dashoffset="-231" style="animation: fadeSlideUp 0.8s ease-out 0.9s both"/>
+            </svg>
+            <div class="donut-center">
+              <span class="total-number">8</span>
+              <span class="total-label">Total</span>
+            </div>
+          </div>
+          <div class="stat-list">
+            <div class="stat-item">
+              <div class="stat-dot open"></div>
+              <span class="stat-count">3</span>
+              <span class="stat-label">Open</span>
+            </div>
+            <div class="stat-item">
+              <div class="stat-dot progress"></div>
+              <span class="stat-count">2</span>
+              <span class="stat-label">In Progress</span>
+            </div>
+            <div class="stat-item">
+              <div class="stat-dot resolved"></div>
+              <span class="stat-count">2</span>
+              <span class="stat-label">Resolved</span>
+            </div>
+            <div class="stat-item">
+              <div class="stat-dot verified"></div>
+              <span class="stat-count">1</span>
+              <span class="stat-label">Verified</span>
+            </div>
+          </div>
+        </div>
+        <div class="ward-meta">
+          <div class="ward-pulse">
+            <div class="pulse-dot"></div>
+            <span class="pulse-text">Resolution rate <strong>up 12%</strong> this week</span>
+          </div>
+          <div class="ward-rank">Rank <strong>#12</strong> / 236</div>
+        </div>
+        <!-- [#3] 7-DAY SPARKLINE -->
+        <div class="sparkline-row">
+          <span class="sparkline-label">7-day resolution</span>
+          <svg class="sparkline-svg" viewBox="0 0 140 30" preserveAspectRatio="none">
+            <!-- Gradient fill under line -->
+            <defs>
+              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--status-resolved)" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="var(--status-resolved)" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 22 L20 18 L40 20 L60 14 L80 16 L100 8 L120 10 L140 4" fill="none" stroke="var(--status-resolved)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M0 22 L20 18 L40 20 L60 14 L80 16 L100 8 L120 10 L140 4 V30 H0 Z" fill="url(#sparkGrad)"/>
+            <!-- Data dots -->
+            <circle cx="0" cy="22" r="2" fill="var(--status-resolved)" opacity="0.4"/>
+            <circle cx="60" cy="14" r="2" fill="var(--status-resolved)" opacity="0.4"/>
+            <circle cx="140" cy="4" r="2.5" fill="var(--status-resolved)"/>
+          </svg>
+          <span class="sparkline-label" style="color:var(--status-resolved);font-weight:700">+34%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- === WARD MOOD (SENTIMENT ANALYSIS) === -->
+    <div class="ward-mood-section" role="region" aria-label="Ward sentiment analysis">
+      <div class="ward-mood-header">
+        <h3>
+          <!-- Pulse/mood icon -->
+          <svg viewBox="0 0 16 16" fill="none" stroke="var(--navy-soft)" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="8" cy="8" r="6"/>
+            <path d="M5 9.5 Q6.5 7 8 9.5 Q9.5 12 11 9.5" fill="none"/>
+            <circle cx="6" cy="6.5" r="0.8" fill="var(--navy-soft)" stroke="none"/>
+            <circle cx="10" cy="6.5" r="0.8" fill="var(--navy-soft)" stroke="none"/>
+          </svg>
+          Ward Mood
+        </h3>
+        <span class="mood-live-tag">Live</span>
+      </div>
+
+      <div class="mood-arc-container">
+        <!-- Sentiment arc gauge -->
+        <div class="mood-arc">
+          <svg viewBox="0 0 72 40">
+            <defs>
+              <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#EF4444"/>
+                <stop offset="35%" stop-color="#F59E0B"/>
+                <stop offset="65%" stop-color="#84CC16"/>
+                <stop offset="100%" stop-color="#10B981"/>
+              </linearGradient>
+            </defs>
+            <!-- Background arc -->
+            <path class="mood-arc-bg" d="M8 36 A28 28 0 0 1 64 36"/>
+            <!-- Colored arc -->
+            <path class="mood-arc-fill" d="M8 36 A28 28 0 0 1 64 36" stroke="url(#moodGrad)" stroke-dasharray="88" stroke-dashoffset="0"/>
+            <!-- Needle pointing to ~35% (Frustrated zone) -->
+            <line class="mood-needle" x1="36" y1="36" x2="20" y2="14" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" style="transform:rotate(-15deg)"/>
+            <circle cx="36" cy="36" r="3" fill="var(--navy)"/>
+            <!-- Scale labels -->
+            <text x="4" y="40" font-size="5" fill="var(--text-muted)" font-family="Inter,sans-serif" font-weight="600">Angry</text>
+            <text x="52" y="40" font-size="5" fill="var(--text-muted)" font-family="Inter,sans-serif" font-weight="600">Happy</text>
+          </svg>
+        </div>
+
+        <div>
+          <div class="mood-label-primary">Frustrated</div>
+          <div class="mood-label-detail">Water supply issues dominating conversation this week</div>
+        </div>
+      </div>
+
+      <!-- Trending topics by sentiment volume -->
+      <div class="mood-topics">
+        <div class="mood-topic">
+          <span class="topic-bar" style="background:#EF4444"></span>
+          Water supply (43%)
+        </div>
+        <div class="mood-topic">
+          <span class="topic-bar" style="background:#F59E0B"></span>
+          Potholes (22%)
+        </div>
+        <div class="mood-topic">
+          <span class="topic-bar" style="background:#10B981"></span>
+          Streetlights fixed (18%)
+        </div>
+        <div class="mood-topic">
+          <span class="topic-bar" style="background:#3B82F6"></span>
+          New park (17%)
+        </div>
+      </div>
+
+      <!-- 7-day mood trend -->
+      <div class="mood-trend-row">
+        <span class="mood-trend-label">7-day trend</span>
+        <svg class="mood-sparkline" viewBox="0 0 100 20" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="moodSparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 8 L14 6 L28 10 L42 12 L56 14 L70 11 L85 13 L100 15" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M0 8 L14 6 L28 10 L42 12 L56 14 L70 11 L85 13 L100 15 V20 H0 Z" fill="url(#moodSparkGrad)"/>
+        </svg>
+        <span class="mood-trend-change negative">-12%</span>
+      </div>
+    </div>
+
+    <!-- === COMMUNITY PULSE === -->
+    <div class="community-pulse">
+      <div class="community-left">
+        <div class="avatar-stack">
+          <div class="mini-avatar">A</div>
+          <div class="mini-avatar">R</div>
+          <div class="mini-avatar">P</div>
+          <div class="mini-avatar">S</div>
+          <div class="mini-avatar">+</div>
+        </div>
+        <div class="community-text">
+          <strong>423</strong> active citizens in your ward
+        </div>
+      </div>
+      <div class="community-trend">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 9l3-3 2 2 5-5M8 3h3v3"/></svg>
+        +18%
+      </div>
+    </div>
+
+    <!-- === PATTERN DETECTION BANNER === -->
+    <div class="pattern-banner" role="region" aria-label="Pattern detected in your ward">
+      <div class="pattern-banner-header">
+        <div class="pattern-icon">
+          <svg viewBox="0 0 16 16" fill="none" stroke="var(--saffron)" stroke-width="2" stroke-linecap="round">
+            <path d="M8 1v4M8 11v4M1 8h4M11 8h4"/>
+            <circle cx="8" cy="8" r="3"/>
+          </svg>
+        </div>
+        <span class="pattern-label">Pattern Detected</span>
+      </div>
+      <div class="pattern-banner-body">
+        <strong style="color:var(--navy)">12 water leak reports</strong> in your ward this month — <strong style="color:var(--navy)">0 resolved</strong>
+      </div>
+      <div class="pattern-banner-stats">
+        <div class="pattern-stat">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1C3.24 1 1 3.24 1 6c0 3.31 5 5 5 5s5-1.69 5-5c0-2.76-2.24-5-5-5z"/><circle cx="6" cy="6" r="1.5"/></svg>
+          <span class="stat-value">8</span> locations
+        </div>
+        <div class="pattern-stat">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="1" width="10" height="10" rx="1"/><path d="M1 5h10"/><path d="M4 1v3M8 1v3"/></svg>
+          <span class="stat-value">23</span> days unresolved
+        </div>
+        <div class="pattern-stat">
+          <svg viewBox="0 0 12 12" fill="none" stroke="#0F766E" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v6l3 3"/></svg>
+          <span class="stat-value" style="color:#0F766E">₹18.2L</span> est. damage
+        </div>
+      </div>
+      <div class="pattern-actions">
+        <button class="pattern-btn primary">Start Community Action</button>
+        <button class="pattern-btn secondary">View Evidence</button>
+      </div>
+    </div>
+
+    <!-- === [#10] WARD COMPARISON NUDGE === -->
+    <div class="ward-comparison">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M8 1v14M1 8h14"/>
+        <path d="M4 4l4 4-4 4" opacity="0.5"/>
+      </svg>
+      <span>Ward 44 (Jogeshwari) resolved <strong>31 issues</strong> this week vs your ward's 23. Close the gap!</span>
+    </div>
+
+    <!-- === QUICK ACTIONS === -->
+    <div class="quick-actions-section">
+      <div class="section-title">
+        <h2>Take Action</h2>
+      </div>
+      <div class="quick-actions-scroll">
+        <!-- Report Hero Card -->
+        <div class="action-card report-hero">
+          <div class="action-icon">
+            <!-- Camera + Crosshair SVG -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+              <line x1="12" y1="9" x2="12" y2="9.5" stroke-width="1.5"/>
+              <line x1="12" y1="16.5" x2="12" y2="17" stroke-width="1.5"/>
+              <line x1="8" y1="13" x2="8.5" y2="13" stroke-width="1.5"/>
+              <line x1="15.5" y1="13" x2="16" y2="13" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <span class="action-label">Report Issue</span>
+          <span class="action-badge">Quick Report</span>
+        </div>
+
+        <!-- Polls -->
+        <div class="action-card polls">
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 3v18h14V3H5z"/>
+              <path d="M9 8h6M9 12h6M9 16h3"/>
+              <path d="M17 8l2 2-2 2" opacity="0.5"/>
+              <circle cx="7" cy="8" r="0.5" fill="#3B82F6"/>
+              <circle cx="7" cy="12" r="0.5" fill="#3B82F6"/>
+              <circle cx="7" cy="16" r="0.5" fill="#3B82F6"/>
+            </svg>
+          </div>
+          <span class="action-label">Polls</span>
+          <span class="action-badge">2 Active</span>
+        </div>
+
+        <!-- Promises -->
+        <div class="action-card promises">
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19V5a2 2 0 012-2h8a2 2 0 012 2v14l-6-3-6 3z"/>
+              <path d="M8 8h4M8 12h2"/>
+              <path d="M18 8l2 1-2 1" opacity="0.5"/>
+              <path d="M18 14l2 1-2 1" opacity="0.5"/>
+            </svg>
+          </div>
+          <span class="action-label">Promises</span>
+          <span class="action-badge">5 Tracked</span>
+        </div>
+
+        <!-- CHI -->
+        <div class="action-card chi">
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Heartbeat forming skyline -->
+              <path d="M2 16h3l2-4 3 8 3-12 2 8h2l1-2h4"/>
+              <!-- Mini buildings -->
+              <rect x="3" y="18" width="3" height="4" rx="0.5" opacity="0.3" fill="#059669"/>
+              <rect x="8" y="16" width="3" height="6" rx="0.5" opacity="0.3" fill="#059669"/>
+              <rect x="13" y="14" width="3" height="8" rx="0.5" opacity="0.3" fill="#059669"/>
+              <rect x="18" y="17" width="3" height="5" rx="0.5" opacity="0.3" fill="#059669"/>
+            </svg>
+          </div>
+          <span class="action-label">CHI</span>
+          <span class="action-badge">67/100</span>
+        </div>
+
+        <!-- Messages -->
+        <div class="action-card messages">
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+              <!-- Sunrise rays -->
+              <line x1="12" y1="8" x2="12" y2="6" stroke-width="1.5" opacity="0.4"/>
+              <line x1="15" y1="9" x2="16.5" y2="7.5" stroke-width="1.5" opacity="0.4"/>
+              <line x1="9" y1="9" x2="7.5" y2="7.5" stroke-width="1.5" opacity="0.4"/>
+            </svg>
+          </div>
+          <span class="action-label">Messages</span>
+          <span class="action-badge">1 New</span>
+        </div>
+
+        <!-- Community Actions -->
+        <div class="action-card actions">
+          <div class="action-icon">
+            <!-- Megaphone / collective voice SVG -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 2L11 13"/>
+              <path d="M22 2l-7 20-4-9-9-4z"/>
+              <circle cx="15" cy="9" r="1.5" fill="#C2410C" opacity="0.3"/>
+            </svg>
+          </div>
+          <span class="action-label">Actions</span>
+          <span class="action-badge">2 Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- === COMMUNITY ACTIONS SECTION === -->
+    <div class="community-actions-section">
+      <div class="section-title">
+        <h2>Community Actions</h2>
+        <div class="see-all" style="font-size:13px;font-weight:600;color:var(--saffron);cursor:pointer;display:flex;align-items:center;gap:4px">
+          See All
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><path d="M5 3l4 4-4 4"/></svg>
+        </div>
+      </div>
+      <div class="community-actions-scroll">
+
+        <!-- Action Card 1: Trending -->
+        <div class="ca-card ripple-wrap">
+          <div class="ca-card-header">
+            <span class="ca-badge trending">Trending</span>
+            <span class="ca-ward-tag">Ward 45</span>
+          </div>
+          <div class="ca-title">Fix Andheri East's chronic water supply failures</div>
+          <div class="ca-progress-bar">
+            <div class="ca-progress-fill" style="width:78%"></div>
+          </div>
+          <div class="ca-progress-text">
+            <span class="supporters">312 supporters</span>
+            <span class="goal">78% of goal</span>
+          </div>
+          <div class="ca-evidence">
+            <div class="ca-evidence-item">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8l2-3 2 2 3-4 2 3"/><rect x="1" y="1" width="10" height="10" rx="1"/></svg>
+              <span class="ev-count">47</span> incidents
+            </div>
+            <div class="ca-evidence-item">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1C3.24 1 1 3.24 1 6c0 3.31 5 5 5 5s5-1.69 5-5c0-2.76-2.24-5-5-5z"/><circle cx="6" cy="6" r="1.5"/></svg>
+              <span class="ev-count">8</span> locations
+            </div>
+            <div class="ca-evidence-item">
+              <svg viewBox="0 0 12 12" fill="none" stroke="#0F766E" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v6l3 3"/></svg>
+              <span class="ev-count" style="color:#0F766E">₹23L</span> impact
+            </div>
+          </div>
+          <div class="ca-ctas">
+            <button class="ca-cta support" aria-label="Support this community action">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
+              Support
+            </button>
+            <button class="ca-cta share" aria-label="Share this community action">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="4" cy="7" r="2"/><circle cx="11" cy="3" r="2"/><circle cx="11" cy="11" r="2"/><path d="M5.5 6l4-2M5.5 8l4 2"/></svg>
+              Share
+            </button>
+          </div>
+          <div class="ca-creator">
+            <div class="ca-creator-avatar">M</div>
+            Started by Meena R. · 5 days ago
+          </div>
+        </div>
+
+        <!-- Action Card 2: New + Acknowledged -->
+        <div class="ca-card ripple-wrap">
+          <div class="ca-card-header">
+            <span class="ca-badge acknowledged">Acknowledged</span>
+            <span class="ca-ward-tag">Ward 45</span>
+          </div>
+          <div class="ca-title">Install proper streetlighting on SV Road stretch</div>
+          <div class="ca-progress-bar">
+            <div class="ca-progress-fill" style="width:45%"></div>
+          </div>
+          <div class="ca-progress-text">
+            <span class="supporters">89 supporters</span>
+            <span class="goal">45% of goal</span>
+          </div>
+          <div class="ca-evidence">
+            <div class="ca-evidence-item">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8l2-3 2 2 3-4 2 3"/><rect x="1" y="1" width="10" height="10" rx="1"/></svg>
+              <span class="ev-count">19</span> incidents
+            </div>
+            <div class="ca-evidence-item">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1C3.24 1 1 3.24 1 6c0 3.31 5 5 5 5s5-1.69 5-5c0-2.76-2.24-5-5-5z"/><circle cx="6" cy="6" r="1.5"/></svg>
+              <span class="ev-count">5</span> locations
+            </div>
+            <div class="ca-evidence-item">
+              <svg viewBox="0 0 12 12" fill="none" stroke="#059669" stroke-width="1.5" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>
+              <span class="ev-count" style="color:#059669">Responded</span>
+            </div>
+          </div>
+          <div class="ca-ctas">
+            <button class="ca-cta support" aria-label="Support this community action">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
+              Support
+            </button>
+            <button class="ca-cta share" aria-label="Share this community action">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="4" cy="7" r="2"/><circle cx="11" cy="3" r="2"/><circle cx="11" cy="11" r="2"/><path d="M5.5 6l4-2M5.5 8l4 2"/></svg>
+              Share
+            </button>
+          </div>
+          <div class="ca-creator">
+            <div class="ca-creator-avatar">R</div>
+            Started by Rajesh K. · 12 days ago
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- === [#9] CELEBRATION BANNER WITH CONFETTI === -->
+    <div class="celebration-banner" role="button" aria-label="View resolved issue: Water leak on MG Road" style="position:relative">
+      <!-- Confetti particles -->
+      <div class="confetti-container" id="confettiBox">
+        <div class="confetti-piece" style="left:10%;background:#FF6B35;animation-delay:0.1s"></div>
+        <div class="confetti-piece" style="left:25%;background:#10B981;animation-delay:0.3s"></div>
+        <div class="confetti-piece" style="left:40%;background:#3B82F6;animation-delay:0.15s"></div>
+        <div class="confetti-piece" style="left:55%;background:#FFD700;animation-delay:0.4s"></div>
+        <div class="confetti-piece" style="left:70%;background:#7C3AED;animation-delay:0.2s"></div>
+        <div class="confetti-piece" style="left:85%;background:#F59E0B;animation-delay:0.35s"></div>
+        <div class="confetti-piece" style="left:15%;background:#EF4444;animation-delay:0.5s"></div>
+        <div class="confetti-piece" style="left:60%;background:#10B981;animation-delay:0.25s"></div>
+      </div>
+      <div class="celebration-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <div class="celebration-text">
+        <strong>Water leak on MG Road</strong> resolved — thanks to 12 citizen reports!
+      </div>
+      <div class="celebration-time">2h ago</div>
+    </div>
+
+    <!-- === ISSUE FEED === -->
+    <div class="issue-feed-section">
+      <div class="section-title">
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          <h2>Live from Your Ward</h2>
+        </div>
+        <div class="see-all" onclick="alert('Navigate to all issues')">
+          See All
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l4 4-4 4"/></svg>
+        </div>
+      </div>
+
+      <div class="issue-cards">
+        <!-- Issue 1: Water Pipe (Open) -->
+        <div class="issue-card status-open">
+          <div class="issue-card-header">
+            <div class="issue-category-icon water">
+              <!-- Water pipe SVG -->
+              <svg viewBox="0 0 20 20" fill="none">
+                <path d="M4 6h12v3c0 2-1 3-3 3H7c-2 0-3-1-3-3V6z" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M7 12v3M13 12v3" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="8" cy="16" r="1" fill="#3B82F6" opacity="0.5"/>
+                <circle cx="12" cy="17" r="0.7" fill="#3B82F6" opacity="0.3"/>
+                <circle cx="10" cy="16.5" r="0.5" fill="#3B82F6" opacity="0.4"/>
+                <path d="M3 6h14" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="issue-time urgent">URGENT · 5h ago</span>
+          </div>
+          <div class="issue-card-body">
+            <div class="issue-title">Broken water pipe flooding Nehru Street</div>
+            <div class="issue-location">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1C5.24 1 3 3.24 3 6c0 4.13 5 9 5 9s5-4.87 5-9c0-2.76-2.24-5-5-5zm0 7a2 2 0 110-4 2 2 0 010 4z" fill="#FF6B35"/></svg>
+              Nehru Street, Andheri East
+            </div>
+          </div>
+          <div class="issue-footer">
+            <div class="issue-engagement">
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><circle cx="7" cy="7" r="2"/></svg>
+                24
+              </span>
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 11V3M4 6l3-3 3 3"/></svg>
+                8
+              </span>
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 10l3 3 10-10"/><path d="M4 7h5" opacity="0.5"/></svg>
+                3
+              </span>
+            </div>
+            <div class="issue-progress" title="Reported → Assigned → Resolved">
+              <div class="progress-step active"></div>
+              <div class="progress-step"></div>
+              <div class="progress-step"></div>
+              <span class="progress-labels">Reported</span>
+            </div>
+          </div>
+          <!-- LINKED ACTION -->
+          <div class="issue-linked-action">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 7l2 2 4-4"/><circle cx="6" cy="6" r="5"/></svg>
+            Part of: Fix water supply failures (312 supporters)
+          </div>
+        </div>
+
+        <!-- Issue 2: Pothole (In Progress) -->
+        <div class="issue-card status-progress">
+          <div class="issue-card-header">
+            <div class="issue-category-icon pothole">
+              <!-- Pothole SVG -->
+              <svg viewBox="0 0 20 20" fill="none">
+                <path d="M2 14h16" stroke="#D97706" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M5 14c0-2 2-3 5-3s5 1 5 3" stroke="#D97706" stroke-width="1.5" fill="none"/>
+                <path d="M7 11c1-1 2.5-1.5 3-1.5" stroke="#D97706" stroke-width="1" stroke-dasharray="1 1"/>
+                <path d="M3 14l-1 2M17 14l1 2" stroke="#D97706" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+              </svg>
+            </div>
+            <span class="issue-time">2 days ago</span>
+          </div>
+          <div class="issue-card-body">
+            <div class="issue-title">Large pothole near Infinity Mall junction</div>
+            <div class="issue-location">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1C5.24 1 3 3.24 3 6c0 4.13 5 9 5 9s5-4.87 5-9c0-2.76-2.24-5-5-5zm0 7a2 2 0 110-4 2 2 0 010 4z" fill="#FF6B35"/></svg>
+              Link Road, Andheri West
+            </div>
+          </div>
+          <div class="issue-footer">
+            <div class="issue-engagement">
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><circle cx="7" cy="7" r="2"/></svg>
+                42
+              </span>
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 11V3M4 6l3-3 3 3"/></svg>
+                15
+              </span>
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 10l3 3 10-10"/><path d="M4 7h5" opacity="0.5"/></svg>
+                7
+              </span>
+            </div>
+            <div class="issue-progress" title="Reported → Assigned → Resolved">
+              <div class="progress-step completed"></div>
+              <div class="progress-step active" style="background:var(--status-progress)"></div>
+              <div class="progress-step"></div>
+              <span class="progress-labels">Assigned</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Issue 3: Streetlight (Resolved) -->
+        <div class="issue-card status-resolved">
+          <div class="issue-card-header">
+            <div class="issue-category-icon streetlight">
+              <!-- Streetlight SVG -->
+              <svg viewBox="0 0 20 20" fill="none">
+                <path d="M10 4v12" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M7 4h6l-1 3H8L7 4z" fill="#059669" opacity="0.3" stroke="#059669" stroke-width="1"/>
+                <path d="M8 16h4" stroke="#059669" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10" cy="3" r="1.5" fill="#FFD700" stroke="#059669" stroke-width="0.5"/>
+                <!-- Light rays -->
+                <path d="M6 3H5M15 3h-1M7 1l-.5-.5M13 1l.5-.5" stroke="#FFD700" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="issue-time" style="color:var(--status-resolved)">Resolved · 1d ago</span>
+          </div>
+          <div class="issue-card-body">
+            <div class="issue-title">Streetlight outage on SV Road</div>
+            <div class="issue-location">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1C5.24 1 3 3.24 3 6c0 4.13 5 9 5 9s5-4.87 5-9c0-2.76-2.24-5-5-5zm0 7a2 2 0 110-4 2 2 0 010 4z" fill="#FF6B35"/></svg>
+              SV Road, Andheri West
+            </div>
+          </div>
+          <div class="issue-footer">
+            <div class="issue-engagement">
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><circle cx="7" cy="7" r="2"/></svg>
+                18
+              </span>
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 11V3M4 6l3-3 3 3"/></svg>
+                5
+              </span>
+              <span class="engagement-item">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 10l3 3 10-10"/><path d="M4 7h5" opacity="0.5"/></svg>
+                2
+              </span>
+            </div>
+            <div class="issue-progress" title="Reported → Assigned → Resolved">
+              <div class="progress-step completed"></div>
+              <div class="progress-step completed"></div>
+              <div class="progress-step completed"></div>
+              <span class="progress-labels">Resolved</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peek card (partially visible) -->
+        <div class="issue-card status-open peek">
+          <div class="issue-card-header">
+            <div class="issue-category-icon garbage" style="background:#FEE2E2">
+              <svg viewBox="0 0 20 20" fill="none">
+                <path d="M6 5h8v10a2 2 0 01-2 2H8a2 2 0 01-2-2V5z" stroke="#EF4444" stroke-width="1.5"/>
+                <path d="M4 5h12" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M8 3h4" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M5 7l2-3M15 7l-2-3" stroke="#EF4444" stroke-width="0.8" opacity="0.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="issue-time">6h ago</span>
+          </div>
+          <div class="issue-card-body">
+            <div class="issue-title">Garbage overflow near DN Nagar metro...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- end .populated-content -->
+
+    <!-- === [#8] EMPTY STATE (hidden by default) === -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-illustration">
+        <svg viewBox="0 0 160 160" fill="none">
+          <!-- Ground -->
+          <ellipse cx="80" cy="140" rx="60" ry="8" fill="var(--border-light)"/>
+          <!-- Person -->
+          <circle cx="80" cy="55" r="14" fill="var(--saffron-light)" stroke="var(--saffron)" stroke-width="2"/>
+          <path d="M80 69 L80 105" stroke="var(--saffron)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M80 80 L65 95" stroke="var(--saffron)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M80 80 L95 72" stroke="var(--saffron)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M80 105 L68 135" stroke="var(--saffron)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M80 105 L92 135" stroke="var(--saffron)" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Flag -->
+          <line x1="95" y1="72" x2="95" y2="35" stroke="var(--navy-soft)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M95 35 L120 42 L95 50" fill="var(--saffron)" opacity="0.8"/>
+          <!-- Eyes and smile -->
+          <circle cx="75" cy="53" r="1.5" fill="var(--navy)"/>
+          <circle cx="85" cy="53" r="1.5" fill="var(--navy)"/>
+          <path d="M75 60 Q80 65 85 60" stroke="var(--navy)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Sparkles -->
+          <path d="M110 30 l2-6 2 6 6 2-6 2-2 6-2-6-6-2z" fill="var(--saffron)" opacity="0.4"/>
+          <path d="M40 45 l1.5-4 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5z" fill="var(--status-verified)" opacity="0.3"/>
+          <path d="M125 65 l1-3 1 3 3 1-3 1-1 3-1-3-3-1z" fill="var(--status-resolved)" opacity="0.3"/>
+        </svg>
+      </div>
+      <h2>Plant Your Flag</h2>
+      <p>Be the first to report an issue in your ward and start building your civic reputation.</p>
+      <div class="empty-state-steps">
+        <div class="empty-step"><span class="step-num">1</span> Spot an issue</div>
+        <div class="empty-step"><span class="step-num">2</span> Snap a photo</div>
+        <div class="empty-step"><span class="step-num">3</span> Watch it get fixed</div>
+      </div>
+      <button class="empty-state-cta">Report Your First Issue</button>
+    </div>
+
+    <!-- Bottom spacer for scroll -->
+    <div style="height: 60px;"></div>
+  </div>
+
+  <!-- === FAB === -->
+  <div class="fab fab-breathing" onclick="toggleFabMenu()" id="mainFab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  </div>
+
+  <!-- [#19] FAB Radial Menu — 4 items now -->
+  <div class="fab-menu" id="fabMenu">
+    <div class="fab-menu-item" role="button" aria-label="Photo Report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--saffron)" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span class="tooltip">Photo Report</span>
+    </div>
+    <div class="fab-menu-item" role="button" aria-label="Voice Report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+      <span class="tooltip">Voice Report</span>
+    </div>
+    <div class="fab-menu-item" role="button" aria-label="Text Report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="tooltip">Text Report</span>
+    </div>
+    <div class="fab-menu-item" role="button" aria-label="Pin Location">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span class="tooltip">Pin Location</span>
+    </div>
+    <div class="fab-menu-item" role="button" aria-label="Start Community Action" style="background:var(--saffron-light)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--saffron)" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+      <span class="tooltip">Community Action</span>
+    </div>
+  </div>
+
+  <!-- === BOTTOM NAVIGATION === -->
+  <div class="bottom-nav">
+    <!-- Home -->
+    <div class="nav-item active" onclick="setActiveTab(this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <!-- Civic building home icon -->
+          <path d="M3 10.5L12 3l9 7.5V21H3V10.5z" fill="var(--saffron)" opacity="0.15"/>
+          <path d="M3 10.5L12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 10.5V21h18V10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 21v-6h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Mini columns -->
+          <line x1="8" y1="13" x2="8" y2="16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          <line x1="16" y1="13" x2="16" y2="16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+      <span class="nav-label">Home</span>
+    </div>
+
+    <!-- Report -->
+    <div class="nav-item" onclick="setActiveTab(this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+          <!-- Crosshair -->
+          <line x1="12" y1="9" x2="12" y2="10" stroke-width="1.2"/>
+          <line x1="12" y1="16" x2="12" y2="17" stroke-width="1.2"/>
+          <line x1="8" y1="13" x2="9" y2="13" stroke-width="1.2"/>
+          <line x1="15" y1="13" x2="16" y2="13" stroke-width="1.2"/>
+        </svg>
+      </div>
+      <span class="nav-label">Report</span>
+    </div>
+
+    <!-- Leaders -->
+    <div class="nav-item" onclick="setActiveTab(this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
+          <!-- Star badge -->
+          <path d="M18 4l.7 1.5H20l-1.2 1 .5 1.5L18 7.2l-1.3.8.5-1.5L16 5.5h1.3L18 4z" fill="currentColor" stroke="none" opacity="0.6"/>
+        </svg>
+      </div>
+      <span class="nav-label">Leaders</span>
+    </div>
+
+    <!-- Map -->
+    <div class="nav-item" onclick="setActiveTab(this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/>
+          <line x1="8" y1="2" x2="8" y2="18"/>
+          <line x1="16" y1="6" x2="16" y2="22"/>
+          <!-- Pin -->
+          <circle cx="12" cy="10" r="2" fill="currentColor" opacity="0.3"/>
+        </svg>
+      </div>
+      <span class="nav-label">Map</span>
+    </div>
+
+    <!-- Trending -->
+    <div class="nav-item" onclick="setActiveTab(this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+          <!-- Flame tip -->
+          <path d="M13 13c0 1.5-1 2-1 3a1 1 0 002 0c0-1-1-1.5-1-3z" fill="currentColor" opacity="0.3" stroke="none"/>
+        </svg>
+      </div>
+      <span class="nav-label">Trending</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// === [#2] TIME-AWARE GREETING ===
+(function() {
+  const hour = new Date().getHours();
+  let greeting = 'Good Morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
+  else if (hour >= 17) greeting = 'Good Evening';
+  const el = document.getElementById('greetingText');
+  if (el) el.textContent = greeting + ', Arjun';
+})();
+
+// === [#14] LAST SYNCED — update timestamp ===
+(function() {
+  const el = document.getElementById('lastSynced');
+  if (el) {
+    const now = new Date();
+    el.textContent = 'Last synced: ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+})();
+
+// === FAB Menu Toggle ===
+let fabMenuOpen = false;
+function toggleFabMenu() {
+  const menu = document.getElementById('fabMenu');
+  const fab = document.getElementById('mainFab');
+  fabMenuOpen = !fabMenuOpen;
+
+  if (fabMenuOpen) {
+    menu.classList.add('active');
+    fab.style.transform = 'rotate(45deg)';
+    fab.classList.remove('fab-breathing');
+  } else {
+    menu.classList.remove('active');
+    fab.style.transform = 'rotate(0deg)';
+    fab.classList.add('fab-breathing');
+  }
+}
+
+// Close FAB menu on outside click
+document.querySelector('.scroll-content').addEventListener('click', function(e) {
+  if (fabMenuOpen && !e.target.closest('.fab-menu') && !e.target.closest('.fab')) {
+    toggleFabMenu();
+  }
+});
+
+// === [#6] OFFLINE TOGGLE ===
+let isOffline = false;
+function toggleOffline() {
+  isOffline = !isOffline;
+  const banner = document.getElementById('connectivityBanner');
+  banner.classList.toggle('hidden', !isOffline);
+  // Update last synced
+  const syncEl = document.getElementById('lastSynced');
+  if (syncEl) {
+    syncEl.textContent = isOffline ? 'Offline — 3 reports queued' : 'Last synced: just now';
+    syncEl.style.color = isOffline ? '#D97706' : '';
+  }
+}
+
+// === [#7] DARK MODE TOGGLE ===
+let isDark = false;
+function toggleDarkMode() {
+  isDark = !isDark;
+  document.querySelector('.phone-frame').classList.toggle('dark', isDark);
+  document.querySelectorAll('.control-btn')[2].classList.toggle('active', isDark);
+}
+
+// === [#8] EMPTY STATE TOGGLE ===
+let isEmpty = false;
+function toggleEmptyState() {
+  isEmpty = !isEmpty;
+  document.getElementById('populatedContent').classList.toggle('hidden', isEmpty);
+  document.getElementById('emptyState').classList.toggle('visible', isEmpty);
+  document.querySelectorAll('.control-btn')[3].classList.toggle('active', isEmpty);
+}
+
+// === Bottom Nav Tab Switch ===
+function setActiveTab(el) {
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// === [#16] Card press animation + ripple ===
+document.querySelectorAll('.issue-card:not(.peek), .action-card, .ward-officer-section, .celebration-banner').forEach(card => {
+  card.addEventListener('mousedown', function(e) {
+    const rect = this.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width * 100);
+    const y = ((e.clientY - rect.top) / rect.height * 100);
+    this.style.setProperty('--ripple-x', x + '%');
+    this.style.setProperty('--ripple-y', y + '%');
+    this.style.transform = 'scale(0.97)';
+  });
+  card.addEventListener('mouseup', function() {
+    this.style.transform = '';
+  });
+  card.addEventListener('mouseleave', function() {
+    this.style.transform = '';
+  });
+  // Touch
+  card.addEventListener('touchstart', function(e) {
+    const touch = e.touches[0];
+    const rect = this.getBoundingClientRect();
+    this.style.setProperty('--ripple-x', ((touch.clientX - rect.left) / rect.width * 100) + '%');
+    this.style.setProperty('--ripple-y', ((touch.clientY - rect.top) / rect.height * 100) + '%');
+    this.style.transform = 'scale(0.97)';
+  }, { passive: true });
+  card.addEventListener('touchend', function() {
+    this.style.transform = '';
+  }, { passive: true });
+  // Add ripple class
+  card.classList.add('ripple-wrap');
+});
+
+// === Animated counter ===
+function animateCounter(el, target, duration) {
+  const startTime = performance.now();
+  function update(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(eased * target);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// Start counter animations
+setTimeout(() => {
+  const totalNum = document.querySelector('.donut-center .total-number');
+  if (totalNum) animateCounter(totalNum, 8, 800);
+}, 600);
+
+setTimeout(() => {
+  const scoreNum = document.querySelector('.score-value .number');
+  if (scoreNum) animateCounter(scoreNum, 15, 1000);
+}, 500);
+
+// === [#9] CONFETTI TRIGGER — replay on celebration banner click ===
+document.querySelector('.celebration-banner')?.addEventListener('click', function() {
+  const box = document.getElementById('confettiBox');
+  if (box) {
+    // Reset animations by removing and re-adding
+    box.querySelectorAll('.confetti-piece').forEach(p => {
+      p.style.animation = 'none';
+      p.offsetHeight; // force reflow
+      p.style.animation = '';
+    });
+  }
+});
+
+// === [#13] SCROLL-TRIGGERED ANIMATIONS ===
+(function() {
+  // Add scroll-reveal to sections below the fold
+  const sections = document.querySelectorAll('.ward-dashboard-section, .ward-mood-section, .community-pulse, .pattern-banner, .quick-actions-section, .community-actions-section, .celebration-banner, .issue-feed-section, .ward-comparison');
+  sections.forEach(s => s.classList.add('scroll-reveal'));
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Remove existing fadeSlideUp animation to avoid conflict
+        entry.target.style.animation = 'none';
+      }
+    });
+  }, { threshold: 0.15, root: document.querySelector('.scroll-content') });
+
+  // Delay observer to let entry animations play first
+  setTimeout(() => {
+    sections.forEach(s => {
+      // Only observe if not already visible
+      if (!s.classList.contains('visible')) {
+        observer.observe(s);
+      }
+    });
+  }, 1500);
+
+  // Mark above-fold items as visible immediately
+  setTimeout(() => {
+    sections.forEach(s => {
+      const rect = s.getBoundingClientRect();
+      if (rect.top < window.innerHeight) {
+        s.classList.add('visible');
+      }
+    });
+  }, 100);
+})();
+</script>
+</body>
+</html>
