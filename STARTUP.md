@@ -11,7 +11,7 @@
 - **Tagline:** "Democracy you can see"
 - **Type:** Citizen-Government Collaboration Platform
 - **Target:** India launch, 100M+ users scale
-- **Architecture:** 20 microservices, event-driven, mobile-first
+- **Architecture:** 23 microservices, event-driven, mobile-first
 
 ## Key Docs
 - `docs/civitro_2.html` — Full UI prototype (React mobile mockup)
@@ -19,8 +19,8 @@
 - `docs/config-architecture.md` — Centralized config system design
 
 ## Project Structure (Organized Monorepo)
-- `backend/` — 14 Go microservices + shared pkg
-- `ai/` — 6 Python AI/ML services + shared library
+- `backend/` — 15 Go microservices + shared pkg
+- `ai/` — 8 Python AI/ML services + shared library
 - `frontend/` — mobile (React Native) + web (Next.js)
 - `proto/` — 15 gRPC definitions (shared API contracts)
 - `infra/` — Docker Compose, Terraform, K8s manifests
@@ -29,8 +29,8 @@
 ## Tech Stack (Finalized)
 - Mobile: React Native 0.75+
 - Web: Next.js 14+
-- Backend (Go — 14 services): Gin/Fiber, GORM/sqlc, golang-jwt, gorilla/websocket, gRPC
-- Backend (Python — 6 AI services): FastAPI, SQLAlchemy 2.0, Celery, Pydantic v2, Uvicorn
+- Backend (Go — 15 services): Gin/Fiber, GORM/sqlc, golang-jwt, gorilla/websocket, gRPC
+- Backend (Python — 8 AI services): FastAPI, SQLAlchemy 2.0, Celery, Pydantic v2, Uvicorn
 - DB: Aurora PostgreSQL + PostGIS, DocumentDB, Redis, OpenSearch, TimescaleDB
 - Events: Apache Kafka (AWS MSK)
 - AI/ML: SageMaker, Bedrock (Claude), Rekognition
@@ -38,9 +38,9 @@
 - Payments: Razorpay (India) / Stripe (global)
 
 ## Development Phases
-- **MVP (30 days):** Auth, issue reporting, AI classify, ledger, leader profiles, ratings, notifications
-- **Wave 2 (M2-3):** Voices, polls, reputation, CHI, search, leader dashboard
-- **Wave 3 (M4-6):** Promise tracker, sentiment, DM, datamine, party/NGO tools
+- **MVP (30 days):** Auth, issue reporting, AI classify, ledger, leader profiles, ratings, notifications — COMPLETE
+- **Wave 2 (M2-3):** Voices, polls, reputation, CHI, search, leader dashboard — COMPLETE
+- **Wave 3 (M4-6):** Promise tracker, sentiment, DM, datamine, party/NGO tools — IN PROGRESS (Community Actions, Pattern Detection, DM, Ward Mood done)
 - **Wave 4 (M6-12):** Ads, exit polls, fraud detection, participatory budgeting
 - **Wave 5 (Year 2+):** International expansion, advanced AI, API marketplace
 

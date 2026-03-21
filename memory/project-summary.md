@@ -6,7 +6,7 @@
 - **Classification:** Citizen-Government Collaboration Platform
 - **Strategic Framing:** Collaboration & civic utility — NOT a political criticism tool
 
-## 20 Microservices
+## 23 Microservices
 1. **Identity & Auth** — Phone OTP, Aadhaar/DigiLocker KYC, JWT, device fingerprinting
 2. **Geospatial Mapping** — GPS→constituency, PostGIS boundaries, India admin hierarchy (Nation→Ward)
 3. **Representative Registry** — 500K+ elected officials, profile claims, staff accounts
@@ -27,6 +27,9 @@
 18. **Admin & Moderation** — AI+human 4-layer moderation, brigading detection
 19. **Party & Organization** — Political party/NGO/RWA management, hierarchy, broadcast
 20. **Advertising** — Self-serve ads, geo-targeted, CPM/CPC, political compliance
+21. **Ward Mood / Sentiment** — Ward-level sentiment arc gauge, mood endpoint
+22. **Community Action Engine** — 10 endpoints, 9-stage lifecycle, support/endorse, escalation, verification (Go, port 8022)
+23. **Pattern Detection Engine** — Category/geographic/temporal clustering, evidence packages (Python, port 8023)
 
 ## 6 User Personas
 1. Citizens (free + premium)
@@ -157,32 +160,37 @@ All civitro Docker services use 1xxxx host ports to avoid conflicts with local P
 - MinIO: **19000/19001**, Ollama: 11434, Jaeger: 16686/**14317**/**14318**
 - OpenSearch Dashboards: **15601**, Redpanda Console: **18888**
 
-## Current Status (Updated 2026-03-20, Session 9)
+## Current Status (Updated 2026-03-21, Session 10)
 - **AWS DEPLOYED** — Civitro-Dev account (431056843628), EC2 t3.xlarge in ap-south-1 (Mumbai)
-- **LIVE API:** https://api.civitro.com — 24+ Docker containers, all healthy
+- **LIVE API:** https://api.civitro.com — 28+ Docker containers, all healthy
 - **SSL:** Let's Encrypt (auto-renewal), https://civitro.com + api.civitro.com
 - **Domain:** civitro.com (GoDaddy → Route 53), DNS propagated
-- **Backend:** All 14 Go services running on AWS (5 MVP + 9 wave2)
-- **Python AI:** 7 Dockerfiles ready, docker-compose definitions added (not yet built on AWS)
+- **Backend:** 15 Go services + 8 Python services running on AWS (including new Community Action + Pattern Detection)
 - **Infrastructure:** Postgres, Redis, Redpanda, MongoDB, MinIO, OpenSearch, TimescaleDB, Jaeger
-- **Database:** 7 migrations applied (000001-000007), 630 boundary polygons loaded
+- **Database:** 8 migrations applied (000001-000008), 630 boundary polygons loaded, 8 new tables for actions/patterns
 - **MVP End-to-End WORKING:** Issue → auto Ledger entry → auto Notification → Upvote → Comment
 - **Inter-service wiring:** Issues calls Ledger + Notifications + Classification (async, fire-and-forget)
 - **Governance Chain:** Dual-track model (73rd/74th Amendment), 14 boundary levels, 4 tracks
 - **Geo Resolve:** POST /geo/resolve returns India→State→District for any GPS point in India
 - **Location Flow:** After login, app auto-requests GPS → resolves ward → stores on user profile
-- **Frontend Mobile:** React Native 0.76, 18+ screens, API pointing to https://api.civitro.com
+- **Frontend Mobile:** React Native 0.76, 22+ screens, dashboard fully redesigned with 18 sections, real data wired
+- **Dashboard:** 9 new components (CivicScoreRing, WardOfficerCard, CommunityPulse, PatternBanner, QuickActions, etc.)
+- **Map:** react-native-maps with clustering + heatmap mode (replaced "Coming Soon" placeholder)
+- **Direct Messaging:** WhatsApp-style ChatScreen, representative messaging working
+- **Community Actions:** 4 new screens (list, detail, create, timeline) with 7 hooks
+- **i18n:** 45+ new translation keys, all dashboard components localized (en + hi)
 - **Frontend Web:** Next.js 14, 24 pages, builds successfully
 - **Auth:** Phone + OTP (111111 dev) → JWT → auto GPS location
 - **Polls/Voices/Comments/RBAC/Civic Score:** All working on AWS
-- **Seeded Data:** 3 polls, 3 voices, 3 reps, 12 promises, 630 boundaries
-- **EAS Builds:** iOS + Android queued (newArch disabled, plugins fixed)
+- **Seeded Data:** Mumbai Ward 45 (Andheri East) — 6 citizens, 25 issues, 3 patterns, 4 community actions, 21 reps with boundaries
+- **Mobile on Mac:** Tested on physical iPhone, watchman/React/TestFlight crashes all fixed
+- **EAS Builds:** package-lock.json committed for reproducible builds
 - **GitHub:** pratik871/Civitro_Dev, deploy.yml ready (needs EC2_HOST + EC2_SSH_KEY secrets)
 - **EC2 Repo:** Cloned at ~/civitro for future deployments (git pull + rebuild)
-- **SSH:** Locked to owner IP (auto-updated via AWS CLI), key at ~/.ssh/civitro-dev
+- **SSH:** Locked to owner IP (auto-updated via AWS CLI), key at ~/.ssh/civitro-dev + Mac configured
 - **Cost:** ~$120/mo (t3.xlarge)
 
-## What's Working (Verified on api.civitro.com 2026-03-20)
+## What's Working (Verified on api.civitro.com 2026-03-21)
 - Register → OTP → JWT ✅
 - Create issue (22 categories) → auto ledger entry → auto notification ✅
 - Upvote (toggle) ✅, Comments (threaded) ✅
@@ -190,12 +198,22 @@ All civitro Docker services use 1xxxx host ports to avoid conflicts with local P
 - Notifications (cursor pagination, mark read, prefs) ✅
 - Classification call (graceful fallback when AI service not running) ✅
 - Voices feed, Polls (vote/retract), Geo resolve, Location flow ✅
+- Dashboard with 18 sections, real data from API ✅
+- Community Actions (create, support, endorse, lifecycle) ✅
+- Pattern Detection (category, geographic, temporal clustering) ✅
+- Ward Mood sentiment gauge ✅
+- Map with clustering + heatmap ✅
+- Direct messaging (WhatsApp-style chat) ✅
+- i18n (English + Hindi) across dashboard ✅
+- SVG tab icons, safe area padding ✅
 
-## Next Steps (Session 10+)
-- **Mobile app testing on Mac** — React Native, connect to api.civitro.com
-- **Build Python AI containers on AWS** — classification + sentiment (MVP)
-- **Load parliamentary boundaries** — run load-boundaries.py on AWS
-- **GitHub Actions secrets** — EC2_HOST + EC2_SSH_KEY for auto-deploy
-- **TestFlight submit** — needs Mac + App Store Connect
+## Next Steps (Session 11+)
+- **Fix messaging conversation creation** — remaining issue with creating new conversations
+- **Wire remaining dashboard sections** — some sections still need API fixes for full real data
+- **TestFlight build** — all crash fixes applied, ready to submit
+- **Android build** — EAS build for Google Play
 - **Real SMS provider** — replace fixed OTP with MSG91/Twilio
+- **Production deployment optimizations** — container resource tuning, health checks
+- **GitHub Actions secrets** — EC2_HOST + EC2_SSH_KEY for auto-deploy
+- **Load parliamentary boundaries** — run load-boundaries.py on AWS
 - **Ward-level boundaries** — long-term, no single public dataset

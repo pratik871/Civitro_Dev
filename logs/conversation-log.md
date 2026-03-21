@@ -666,3 +666,102 @@ Removed ALL hardcoded/mock data from the entire mobile frontend and wired to rea
 - Build + test Python AI containers on AWS
 
 ---
+
+## Session 10 — 2026-03-21
+**Goal:** Mobile testing on Mac, new services implementation, dashboard redesign, real data wiring
+
+### Mobile App on Mac
+- Cloned repo to Mac, ran `npx expo run:ios --device` on physical iPhone
+- Fixed watchman issue (disabled via metro.config.js `resolver.useWatchman = false`)
+- Fixed React version mismatch (locked to 19.1.4)
+- Fixed TestFlight crash (broken `import { ErrorUtils }` in index.js was crashing production builds)
+- Fixed package-lock.json not committed (EAS was installing different versions)
+- Committed package-lock.json for reproducible builds
+
+### New Backend Services (Wave 3)
+- **Service 22: Community Action Engine** (Go, port 8022) — 10 endpoints, 9-stage lifecycle, support/endorse, escalation, verification
+- **Service 23: Pattern Detection Engine** (Python, port 8023) — category, geographic, temporal clustering, evidence packages
+- **DB Migration 000008** — 8 new tables (community_actions, detected_patterns, action_supporters, etc.)
+- Both services deployed and healthy on AWS
+
+### Dashboard Redesign (18 sections)
+- 9 new dashboard components: CivicScoreRing, WardOfficerCard, WardDashboardChart, CommunityPulse, PatternBanner, QuickActions, CommunityActionCard, CelebrationBanner, IssueFeedCard
+- HomeScreen completely rewritten from HTML mockup
+- All hardcoded mock data replaced with real API calls
+- `GET /auth/dashboard-stats` — new aggregation endpoint (12 queries)
+- Sections show/hide based on data availability
+
+### Community Action Screens (4 new)
+- ActionsListScreen, ActionDetailScreen, CreateActionScreen, ActionTimelineScreen
+- 7 hooks (useActions, useSupportAction, useCreateAction, etc.)
+- Full navigation registered
+
+### Ward Mood
+- Sentiment arc gauge SVG component
+- `GET /sentiment/ward-mood/:ward_id` endpoint
+- Integrated into dashboard
+
+### Map Enhancement
+- react-native-maps + react-native-map-clustering installed
+- Cluster mode + heatmap mode with toggle
+- Replaced "Coming Soon" placeholder
+
+### Direct Messaging
+- ChatScreen — WhatsApp-style chat with saffron/gray bubbles
+- useMessages hooks (conversations, send, create)
+- Dashboard "Message" button opens direct chat with representative
+- Fixed messaging UUID generation (was timestamp, now proper UUID v4)
+
+### i18n
+- 45+ new translation keys added to en.json + hi.json
+- All 9 dashboard components use t() calls
+- Language switching applies to dashboard
+
+### Other Fixes
+- SVG bottom tab icons (react-native-svg) replacing emojis
+- Safe area padding fixed on VoiceDetail + CreateVoice
+- Leaders: backend level mapping (urban_ward→ward_councillor, etc.)
+- Notifications: handle wrapped response format
+- Rating: correct survey endpoint path
+- Avatar: null-safe getInitials()
+- Nginx: routes for /representatives, /actions, /patterns
+- Representative user accounts created for messaging
+
+### Seed Data (Mumbai Ward 45 - Andheri East)
+- 6 test citizens, 25 issues, 3 detected patterns, 4 community actions
+- 10 action supporters, 3 stakeholder responses
+- Civic scores, voices, ward boundary
+- 21 representatives with boundaries + assignments
+- Representative user accounts for messaging
+
+### AWS Infrastructure
+- 28+ Docker containers running
+- SSH from Mac configured (key + security group)
+- AWS CLI configured on Mac with cross-account role assumption
+
+### Files Created (50+)
+- backend/services/community-action/ (7 files)
+- ai/services/pattern-detection/ (8 files)
+- frontend/mobile/src/components/dashboard/ (9 files)
+- frontend/mobile/src/screens/actions/ (4 files)
+- frontend/mobile/src/screens/messages/ChatScreen.tsx
+- frontend/mobile/src/hooks/ (useDashboardStats, usePatterns, useCommunityActions, useWardMood)
+- infra/migrations/000008_*, seed_dashboard_data.sql, seed_leaders_boundaries.sql
+- docs/ARCHITECTURE_ADDENDUM_2026-03-20.md, docs/dashboard-preview.html
+
+### Current Status
+- **AWS:** 28+ containers running, all healthy
+- **Mobile:** Dashboard fully redesigned, real data wired, map working
+- **Services:** 23 microservices (15 Go + 8 Python)
+- **Database:** 8 migrations applied (000001-000008)
+- **Seed data:** Mumbai Ward 45 fully populated
+
+### Next Steps
+- Fix remaining messaging conversation creation issue
+- Wire all dashboard sections to real data (some still need API fixes)
+- TestFlight build with all fixes
+- Android build
+- Real SMS provider
+- Production deployment optimizations
+
+---

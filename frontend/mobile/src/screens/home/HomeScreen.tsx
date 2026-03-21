@@ -105,13 +105,13 @@ export const HomeScreen: React.FC = () => {
   const resolvedCount = issueList.filter((i) => i.status === 'completed').length;
   const verifiedCount = issueList.filter((i) => i.status === 'citizen_verified').length;
 
-  // Ward officer (first leader, or mock)
+  // Ward officer — find the ward-level rep (corporator), fallback to first leader
   const wardOfficer = useMemo(() => {
     if (leaders && leaders.length > 0) {
-      const l = leaders[0];
-      return { id: l.id, userId: l.userId || l.id, name: l.name, designation: 'Ward Corporator', party: l.partyAbbr || l.party };
+      const corporator = leaders.find(l => l.governanceLevel === 'ward_councillor') || leaders[0];
+      return { id: corporator.id, userId: corporator.userId || corporator.id, name: corporator.name, designation: corporator.constituency || 'Ward Corporator', party: corporator.partyAbbr || corporator.party };
     }
-    return { id: '', userId: '', name: 'Priya Sharma', designation: 'Ward Corporator', party: 'BJP' };
+    return { id: '', userId: '', name: 'Ward Officer', designation: 'Ward Corporator', party: '' };
   }, [leaders]);
 
   // Greeting
