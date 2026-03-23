@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Easing } from 'react-native';
 import Svg, {
   Circle,
   Defs,
   LinearGradient,
+  RadialGradient,
   Stop,
   Path,
 } from 'react-native-svg';
@@ -20,9 +21,72 @@ const SAFFRON_DEEP = '#E85D2A';
 const STATUS_VERIFIED = '#3B82F6';
 const PURPLE = '#7C3AED';
 
-const RING_SIZE = 90;
+const RING_SIZE = 76;
+const RING_VIEWBOX = 90;
 const RING_R = 36;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
+
+// ---------------------------------------------------------------------------
+// Civic level tiers — score thresholds and requirements
+// ---------------------------------------------------------------------------
+interface CivicTier {
+  name: string;
+  minScore: number;
+  minReported: number;
+}
+
+const CIVIC_TIERS: CivicTier[] = [
+  { name: 'Observer',    minScore: 0,   minReported: 0 },
+  { name: 'Reporter',    minScore: 10,  minReported: 3 },
+  { name: 'Validator',   minScore: 25,  minReported: 5 },
+  { name: 'Advocate',    minScore: 50,  minReported: 10 },
+  { name: 'Champion',    minScore: 75,  minReported: 20 },
+  { name: 'Guardian',    minScore: 100, minReported: 50 },
+];
+
+function computeMilestone(score: number, reported: number) {
+  let currentIdx = 0;
+  for (let i = CIVIC_TIERS.length - 1; i >= 0; i--) {
+    if (score >= CIVIC_TIERS[i].minScore && reported >= CIVIC_TIERS[i].minReported) {
+      currentIdx = i;
+      break;
+    }
+  }
+
+  const nextIdx = Math.min(currentIdx + 1, CIVIC_TIERS.length - 1);
+  const nextTier = CIVIC_TIERS[nextIdx];
+
+  if (currentIdx === CIVIC_TIERS.length - 1) {
+    return { prefix: 'Max level', highlight: '', suffix: 'reached!', progress: 1 };
+  }
+
+  const currentTier = CIVIC_TIERS[currentIdx];
+  const reportsNeeded = Math.max(0, nextTier.minReported - reported);
+  const reportsRange = nextTier.minReported - currentTier.minReported;
+  const reportsProgress = reportsRange > 0 ? Math.min((reported - currentTier.minReported) / reportsRange, 1) : 1;
+
+  const scoreRange = nextTier.minScore - currentTier.minScore;
+  const scoreProgress = scoreRange > 0 ? Math.min((score - currentTier.minScore) / scoreRange, 1) : 1;
+
+  // Use the lower of the two — whichever is the bottleneck
+  const overallProgress = Math.min(scoreProgress, reportsProgress);
+
+  if (reportsNeeded > 0) {
+    return {
+      prefix: 'Report ',
+      highlight: `${reportsNeeded} more`,
+      suffix: ` to reach ${nextTier.name}`,
+      progress: overallProgress,
+    };
+  }
+  const pointsNeeded = Math.max(0, nextTier.minScore - score);
+  return {
+    prefix: '',
+    highlight: `${pointsNeeded} more`,
+    suffix: ` points to reach ${nextTier.name}`,
+    progress: overallProgress,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Chip data
@@ -40,8 +104,6 @@ interface ScoreChip {
 interface CivicScoreRingProps {
   score: number;
   maxScore?: number;
-  milestoneLabel?: string;
-  milestoneProgress?: number; // 0-1
   reported?: number;
   pollsVoted?: number;
   validations?: number;
@@ -53,18 +115,29 @@ interface CivicScoreRingProps {
 export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
   score,
   maxScore = 100,
-  milestoneLabel = 'Report 2 more to reach Validator',
-  milestoneProgress = 0.6,
-  reported = 3,
-  pollsVoted = 1,
+  reported = 0,
+  pollsVoted = 0,
   validations = 0,
-  actionsSupported = 1,
+  actionsSupported = 0,
   actionsStarted = 0,
   onBoostPress,
 }) => {
   const { t } = useTranslation();
   const progress = Math.min(score / maxScore, 1);
   const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
+
+  const milestone = computeMilestone(score, reported);
+
+  // Arrow bounce animation (matches HTML: translateX 0→4px, 2s loop)
+  const arrowAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowAnim, { toValue: 4, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(arrowAnim, { toValue: 0, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [arrowAnim]);
 
   const chips: ScoreChip[] = [
     { label: t('home.reported', { count: reported }), value: reported, color: SAFFRON, iconPath: 'M3 8h10M8 3l5 5-5 5' },
@@ -76,11 +149,24 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
 
   return (
     <View style={styles.card}>
+      {/* Top-right saffron glow (radial gradient like HTML ::before) */}
+      <View style={styles.glowWrap} pointerEvents="none">
+        <Svg width={240} height={240} viewBox="0 0 240 240">
+          <Defs>
+            <RadialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+              <Stop offset="0%" stopColor={SAFFRON} stopOpacity={0.25} />
+              <Stop offset="70%" stopColor={SAFFRON} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Circle cx={120} cy={120} r={120} fill="url(#glowGrad)" />
+        </Svg>
+      </View>
+
       {/* Score header row */}
       <View style={styles.scoreHeader}>
         {/* Ring */}
         <View style={styles.ringContainer}>
-          <Svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}>
+          <Svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_VIEWBOX} ${RING_VIEWBOX}`}>
             <Defs>
               <LinearGradient id="saffronGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <Stop offset="0%" stopColor="#FF8F5E" />
@@ -89,8 +175,8 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
             </Defs>
             {/* Background ring */}
             <Circle
-              cx={RING_SIZE / 2}
-              cy={RING_SIZE / 2}
+              cx={RING_VIEWBOX / 2}
+              cy={RING_VIEWBOX / 2}
               r={RING_R}
               fill="none"
               stroke={colors.borderLight}
@@ -98,8 +184,8 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
             />
             {/* Progress ring */}
             <Circle
-              cx={RING_SIZE / 2}
-              cy={RING_SIZE / 2}
+              cx={RING_VIEWBOX / 2}
+              cy={RING_VIEWBOX / 2}
               r={RING_R}
               fill="none"
               stroke="url(#saffronGradient)"
@@ -107,7 +193,7 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
               strokeLinecap="round"
               strokeDasharray={`${RING_CIRCUMFERENCE}`}
               strokeDashoffset={strokeDashoffset}
-              transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+              transform={`rotate(-90 ${RING_VIEWBOX / 2} ${RING_VIEWBOX / 2})`}
             />
           </Svg>
           {/* Center text */}
@@ -126,18 +212,22 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
 
           {/* Milestone bar */}
           <View style={styles.milestoneBar}>
-            <View style={[styles.milestoneBarFill, { width: `${milestoneProgress * 100}%` }]} />
+            <View style={[styles.milestoneBarFill, { width: `${milestone.progress * 100}%` }]} />
           </View>
 
           <View style={styles.milestoneRow}>
             <Text style={styles.milestoneText}>
-              {milestoneLabel}
+              {milestone.prefix}
+              {milestone.highlight ? <Text style={styles.milestoneHighlight}>{milestone.highlight}</Text> : null}
+              {milestone.suffix}
             </Text>
             <TouchableOpacity style={styles.boostCta} onPress={onBoostPress} activeOpacity={0.7}>
               <Text style={styles.boostCtaText}>{t('home.boost')}</Text>
-              <Svg width={12} height={12} viewBox="0 0 12 12" fill="none">
-                <Path d="M2 6h8M7 3l3 3-3 3" stroke="white" strokeWidth={2} strokeLinecap="round" />
-              </Svg>
+              <Animated.View style={{ transform: [{ translateX: arrowAnim }] }}>
+                <Svg width={16} height={16} viewBox="0 0 12 12" fill="none">
+                  <Path d="M2 6h8M7 3l3 3-3 3" stroke="white" strokeWidth={2} strokeLinecap="round" />
+                </Svg>
+              </Animated.View>
             </TouchableOpacity>
           </View>
         </View>
@@ -152,7 +242,7 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
       >
         {chips.map((chip, i) => (
           <View key={i} style={styles.chip}>
-            <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
+            <Svg width={12} height={12} viewBox="0 0 16 16" fill="none">
               {chip.iconPath ? (
                 <Path
                   d={chip.iconPath}
@@ -180,16 +270,28 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.card,
-    padding: spacing.lg,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowRadius: 3,
     elevation: 2,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  glowWrap: {
+    position: 'absolute',
+    top: -100,
+    right: -100,
+    width: 240,
+    height: 240,
   },
   scoreHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   ringContainer: {
     width: RING_SIZE,
@@ -202,19 +304,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreNumber: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
-    color: colors.navy,
+    color: SAFFRON,
   },
   scoreLabel: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginTop: -2,
   },
   scoreDetails: {
     flex: 1,
-    marginLeft: spacing.lg,
+    marginLeft: 14,
   },
   journeyTitle: {
     fontSize: 16,
@@ -226,18 +330,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     lineHeight: 16,
-    marginBottom: spacing.sm,
+    marginBottom: 10,
   },
   milestoneBar: {
     height: 6,
-    borderRadius: 3,
+    borderRadius: 4,
     backgroundColor: colors.borderLight,
     overflow: 'hidden',
-    marginBottom: spacing.sm,
+    marginBottom: 6,
   },
   milestoneBarFill: {
     height: 6,
-    borderRadius: 3,
+    borderRadius: 4,
     backgroundColor: SAFFRON,
   },
   milestoneRow: {
@@ -247,44 +351,54 @@ const styles = StyleSheet.create({
   },
   milestoneText: {
     fontSize: 11,
+    fontWeight: '500',
     color: colors.textMuted,
     flex: 1,
-    marginRight: spacing.sm,
+    marginRight: 8,
+  },
+  milestoneHighlight: {
+    color: SAFFRON,
+    fontWeight: '700',
   },
   boostCta: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: SAFFRON,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 8,
     gap: 4,
+    shadowColor: SAFFRON,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   boostCtaText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   chipScrollView: {
-    marginTop: spacing.md,
-    marginHorizontal: -spacing.lg,
+    marginTop: 12,
+    marginHorizontal: -16,
   },
   chipScroll: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
+    paddingHorizontal: 16,
+    gap: 6,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.backgroundGray,
+    backgroundColor: colors.borderLight,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 20,
     gap: 4,
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
 });

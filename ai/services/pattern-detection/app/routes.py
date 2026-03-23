@@ -15,7 +15,7 @@ from app.models import (
 from app import service
 from app.repository import get_pattern, get_patterns_by_ward
 
-router = APIRouter(tags=["patterns"])
+router = APIRouter(prefix="/api/v1", tags=["patterns"])
 
 
 @router.post("/patterns/analyze", response_model=PatternReport)

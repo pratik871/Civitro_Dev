@@ -31,10 +31,10 @@ export const WardOfficerCard: React.FC<WardOfficerCardProps> = ({
       {/* Avatar */}
       <View style={styles.avatar}>
         <Svg viewBox="0 0 28 28" width={28} height={28} fill="none">
-          <Circle cx={14} cy={9} r={5} stroke={colors.navy} strokeWidth={2} />
+          <Circle cx={14} cy={9} r={5} stroke={SAFFRON} strokeWidth={2} />
           <Path
             d="M4 25c0-5.523 4.477-10 10-10s10 4.477 10 10"
-            stroke={colors.navy}
+            stroke={SAFFRON}
             strokeWidth={2}
             strokeLinecap="round"
           />
@@ -102,10 +102,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#FFF3ED',
+    borderWidth: 2,
+    borderColor: SAFFRON,
     alignItems: 'center',
     justifyContent: 'center',
   },

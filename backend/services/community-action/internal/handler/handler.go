@@ -24,6 +24,7 @@ func New(svc *service.Service) *Handler {
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	actions := rg.Group("/actions")
 	{
+		actions.GET("", h.ListTrending)
 		actions.POST("", h.CreateAction)
 		actions.GET("/trending", h.ListTrending)
 		actions.GET("/:id", h.GetAction)

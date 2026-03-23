@@ -37,7 +37,7 @@ import type { RootStackParamList } from '../../navigation/types';
 
 // Dashboard components
 import { CivicScoreRing } from '../../components/dashboard/CivicScoreRing';
-import { WardOfficerCard } from '../../components/dashboard/WardOfficerCard';
+import { RepresentativesPyramid } from '../../components/dashboard/RepresentativesPyramid';
 import { WardDashboardChart } from '../../components/dashboard/WardDashboardChart';
 import { WardMood } from '../../components/dashboard/WardMood';
 import { CommunityPulse } from '../../components/dashboard/CommunityPulse';
@@ -53,6 +53,7 @@ import { IssueFeedCard } from '../../components/dashboard/IssueFeedCard';
 const SAFFRON = '#FF6B35';
 const SAFFRON_LIGHT = '#FFF3ED';
 const NAVY = '#0B1426';
+const NAVY_SOFT = '#1E3A5F';
 
 // ---------------------------------------------------------------------------
 // Navigation
@@ -105,15 +106,6 @@ export const HomeScreen: React.FC = () => {
   const resolvedCount = issueList.filter((i) => i.status === 'completed').length;
   const verifiedCount = issueList.filter((i) => i.status === 'citizen_verified').length;
 
-  // Ward officer — find the ward-level rep (corporator), fallback to first leader
-  const wardOfficer = useMemo(() => {
-    if (leaders && leaders.length > 0) {
-      const corporator = leaders.find(l => l.governanceLevel === 'ward_councillor') || leaders[0];
-      return { id: corporator.id, userId: corporator.userId || corporator.id, name: corporator.name, designation: corporator.constituency || 'Ward Corporator', party: corporator.partyAbbr || corporator.party };
-    }
-    return { id: '', userId: '', name: 'Ward Officer', designation: 'Ward Corporator', party: '' };
-  }, [leaders]);
-
   // Greeting
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -122,7 +114,9 @@ export const HomeScreen: React.FC = () => {
     return t('home.goodEvening');
   }, [t]);
 
-  const firstName = user?.name?.split(' ')[0] || 'Citizen';
+  const rawName = user?.name || '';
+  const isPhoneNumber = /^\+?\d{10,}$/.test(rawName.replace(/\s/g, ''));
+  const firstName = isPhoneNumber ? t('home.citizen', 'Citizen') : (rawName.split(' ')[0] || t('home.citizen', 'Citizen'));
 
   // Civic level from dashboard stats (fall back to computed from profile)
   const civicLevel = useMemo(() => {
@@ -142,32 +136,47 @@ export const HomeScreen: React.FC = () => {
 
   const unreadCount = dashboardStats?.unread_messages ?? unreadData?.count ?? 0;
 
-  // Map community actions from API to the card component shape
+  // Map community actions from API to the card component shape — fallback to mock
   const communityActions: CommunityAction[] = useMemo(() => {
-    if (!actionsData || actionsData.length === 0) return [];
-    return actionsData.slice(0, 4).map((a) => ({
-      id: a.id,
-      title: a.title,
-      badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
-      badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
-      ward: a.wardName,
-      supporters: a.supportCount,
-      goalPercent: a.supportGoal > 0 ? Math.round((a.supportCount / a.supportGoal) * 100) : 0,
-      incidents: a.evidenceCount,
-      locations: 0,
-      impactLabel: a.economicImpact ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
-      impactColor: '#0F766E',
-      creatorInitial: a.creatorName.charAt(0),
-      creatorName: a.creatorName,
-      createdAgo: formatTimeAgo(a.createdAt),
-    }));
+    if (actionsData && actionsData.length > 0) {
+      return actionsData.slice(0, 4).map((a) => ({
+        id: a.id,
+        title: a.title,
+        badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
+        badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
+        ward: a.wardName,
+        supporters: a.supportCount,
+        goalPercent: a.supportGoal > 0 ? Math.round((a.supportCount / a.supportGoal) * 100) : 0,
+        incidents: a.evidenceCount,
+        locations: 0,
+        impactLabel: a.economicImpact ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
+        impactColor: '#0F766E',
+        creatorInitial: a.creatorName.charAt(0),
+        creatorName: a.creatorName,
+        createdAgo: formatTimeAgo(a.createdAt),
+      }));
+    }
+    // Mock fallback
+    return [
+      { id: 'mock-1', title: "Fix Andheri East's chronic water supply failures", badge: 'Trending', badgeType: 'trending' as const, ward: 'Ward 45', supporters: 312, goalPercent: 78, incidents: 47, locations: 8, impactLabel: '\u20B923L', impactColor: '#0F766E', creatorInitial: 'M', creatorName: 'Meena R.', createdAgo: '5 days ago' },
+      { id: 'mock-2', title: 'Install proper streetlighting on SV Road stretch', badge: 'Acknowledged', badgeType: 'acknowledged' as const, ward: 'Ward 45', supporters: 89, goalPercent: 45, incidents: 19, locations: 5, impactLabel: 'Responded', impactColor: '#059669', creatorInitial: 'R', creatorName: 'Rajesh K.', createdAgo: '12 days ago' },
+    ];
   }, [actionsData]);
 
-  // First pattern for the banner
-  const firstPattern = patternsData?.patterns?.[0];
+  // First pattern for the banner — fallback to mock
+  const firstPattern = patternsData?.patterns?.[0] || {
+    description: '12 water leak reports in your ward this month — 0 resolved',
+    locations: 8,
+    days_unresolved: 23,
+    estimated_damage: '\u20B918.2L',
+  };
 
-  // Recently resolved for celebration banner
-  const recentResolution = dashboardStats?.recently_resolved?.[0];
+  // Recently resolved for celebration banner — fallback to mock
+  const recentResolution = dashboardStats?.recently_resolved?.[0] || {
+    title: 'Water leak on MG Road',
+    citizen_reports: 12,
+    resolved_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  };
 
   // Quick action handler
   const handleQuickAction = useCallback(
@@ -231,19 +240,20 @@ export const HomeScreen: React.FC = () => {
 
           {/* Greeting */}
           <View style={styles.greetingBlock}>
-            <Text style={styles.greetingText} numberOfLines={1}>
+            <Text style={styles.greetingText}>
               {greeting}, {firstName}
             </Text>
             <Text style={styles.greetingSubText}>
               {civicLevel} Level · {dashboardStats?.ward_name || user?.ward || 'Ward 45'}
             </Text>
+            <Text style={styles.lastSynced}>Last synced: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
           </View>
         </View>
 
         <View style={styles.headerRight}>
           {/* Streak flame */}
           <View style={styles.streakBadge}>
-            <Svg viewBox="0 0 16 16" width={14} height={14} fill="none">
+            <Svg viewBox="0 0 16 16" width={12} height={12} fill="none">
               <Path d="M8 1c0 3-3 4.5-3 7.5a3.5 3.5 0 007 0C12 5.5 8 4 8 1z" fill={SAFFRON} />
               <Path d="M8 7c0 1.5-1.5 2.25-1.5 3.75a1.75 1.75 0 003.5 0C10 9.25 8 8.5 8 7z" fill="#FFD700" />
             </Svg>
@@ -257,10 +267,10 @@ export const HomeScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
-              <Circle cx={12} cy={12} r={10} stroke={NAVY} strokeWidth={2} />
+              <Circle cx={12} cy={12} r={10} stroke={NAVY_SOFT} strokeWidth={2} />
               <Path
                 d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"
-                stroke={NAVY}
+                stroke={NAVY_SOFT}
                 strokeWidth={2}
               />
             </Svg>
@@ -273,8 +283,8 @@ export const HomeScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
-              <Circle cx={10.5} cy={10.5} r={7} stroke={NAVY} strokeWidth={2} />
-              <Path d="M15.5 15.5L21 21" stroke={NAVY} strokeWidth={2} strokeLinecap="round" />
+              <Circle cx={10.5} cy={10.5} r={7} stroke={NAVY_SOFT} strokeWidth={2} />
+              <Path d="M15.5 15.5L21 21" stroke={NAVY_SOFT} strokeWidth={2} strokeLinecap="round" />
             </Svg>
           </TouchableOpacity>
 
@@ -287,14 +297,14 @@ export const HomeScreen: React.FC = () => {
             <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
               <Path
                 d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"
-                stroke={NAVY}
+                stroke={NAVY_SOFT}
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <Path
                 d="M13.73 21a2 2 0 01-3.46 0"
-                stroke={NAVY}
+                stroke={NAVY_SOFT}
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -329,11 +339,12 @@ export const HomeScreen: React.FC = () => {
         {/* 2. TAGLINE                                                    */}
         {/* ============================================================ */}
         <View style={styles.taglineWrap}>
-          <Text style={styles.taglineText}>
-            {t('home.democracyTagline')}<Text style={styles.taglineDot}> {'\u2022'} </Text>{t('home.youShape')}
-            <Text style={styles.taglineTM}>.TM</Text>
-          </Text>
-          <View style={styles.taglineLine} />
+          <View style={styles.taglineRow}>
+            <Text style={styles.taglineText}>{'DEMOCRACY'}</Text>
+            <Text style={styles.taglineDot}>{'\u2022'}</Text>
+            <Text style={styles.taglineText}>{'YOU SHAPE'}</Text>
+            <Text style={styles.taglineTM}>{'.TM'}</Text>
+          </View>
         </View>
 
         {/* ============================================================ */}
@@ -365,29 +376,25 @@ export const HomeScreen: React.FC = () => {
             validations={dashboardStats?.validations ?? 0}
             actionsSupported={dashboardStats?.actions_supported ?? 0}
             actionsStarted={dashboardStats?.actions_started ?? 0}
-            milestoneProgress={0.6}
-            milestoneLabel={t('home.reportMore', { count: 2, level: 'Validator' })}
             onBoostPress={() => navigation.navigate('Main', { screen: 'Report' } as any)}
           />
         </View>
 
         {/* ============================================================ */}
-        {/* 5. WARD OFFICER CARD                                          */}
+        {/* 5. YOUR REPRESENTATIVES — Governance Pyramid Strip            */}
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
-          <WardOfficerCard
-            name={wardOfficer.name}
-            designation={wardOfficer.designation}
-            party={wardOfficer.party}
-            onMessage={() => navigation.navigate('Chat', {
-              recipientId: wardOfficer.userId || wardOfficer.id,
-              recipientName: wardOfficer.name,
+          <RepresentativesPyramid
+            onMessage={(rep) => navigation.navigate('Chat', {
+              recipientId: rep.id,
+              recipientName: rep.name,
             })}
-            onRate={() => {
+            onRate={(rep) => {
               if (leaders && leaders.length > 0) {
                 navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
               }
             }}
+            onViewIssues={() => navigation.navigate('Main', { screen: 'Map' } as any)}
           />
         </View>
 
@@ -452,8 +459,7 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         {/* 9. PATTERN DETECTION BANNER                                   */}
         {/* ============================================================ */}
-        {firstPattern && (
-          <View style={styles.sectionSpacing}>
+        <View style={styles.sectionSpacing}>
             <PatternBanner
               description={firstPattern.description}
               stats={[
@@ -464,8 +470,7 @@ export const HomeScreen: React.FC = () => {
               onStartAction={() => {}}
               onViewEvidence={() => navigation.navigate('IssuesList')}
             />
-          </View>
-        )}
+        </View>
 
         {/* ============================================================ */}
         {/* 10. WARD COMPARISON NUDGE                                     */}
@@ -494,28 +499,24 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         {/* 12. COMMUNITY ACTIONS SECTION                                 */}
         {/* ============================================================ */}
-        {communityActions.length > 0 && (
-          <View style={styles.sectionSpacing}>
-            <CommunityActionsSection
-              actions={communityActions}
-              onSeeAll={() => {}}
-            />
-          </View>
-        )}
+        <View style={styles.sectionSpacing}>
+          <CommunityActionsSection
+            actions={communityActions}
+            onSeeAll={() => {}}
+          />
+        </View>
 
         {/* ============================================================ */}
         {/* 13. CELEBRATION BANNER                                        */}
         {/* ============================================================ */}
-        {recentResolution && (
-          <View style={styles.sectionSpacing}>
-            <CelebrationBanner
-              issueTitle={recentResolution.title}
-              reportCount={recentResolution.citizen_reports}
-              timeAgo={formatTimeAgo(recentResolution.resolved_at)}
-              onPress={() => {}}
-            />
-          </View>
-        )}
+        <View style={styles.sectionSpacing}>
+          <CelebrationBanner
+            issueTitle={recentResolution.title}
+            reportCount={recentResolution.citizen_reports}
+            timeAgo={formatTimeAgo(recentResolution.resolved_at)}
+            onPress={() => {}}
+          />
+        </View>
 
         {/* ============================================================ */}
         {/* 14. ISSUE FEED                                                */}
@@ -657,16 +658,17 @@ const styles = StyleSheet.create({
   // ---- HEADER ----
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     backgroundColor: colors.background,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 12,
+    marginRight: 8,
   },
   shieldWrap: {
     width: 44,
@@ -679,21 +681,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#FFFFFF',
-    top: 14,
   },
   greetingBlock: {
-    marginLeft: spacing.md,
     flex: 1,
   },
   greetingText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: NAVY,
+    lineHeight: 24,
   },
   greetingSubText: {
     fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 1,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  lastSynced: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',
@@ -703,22 +710,24 @@ const styles = StyleSheet.create({
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 3,
     backgroundColor: '#FFF3ED',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 2,
   },
   streakText: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
     color: SAFFRON,
   },
   headerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.backgroundGray,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -727,7 +736,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: '#EF4444',
+    backgroundColor: SAFFRON,
     borderRadius: 9,
     minWidth: 18,
     height: 18,
@@ -735,7 +744,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: colors.background,
+    borderColor: '#FFFFFF',
   },
   notifBadgeText: {
     fontSize: 10,
@@ -754,31 +763,31 @@ const styles = StyleSheet.create({
 
   // ---- 2. TAGLINE ----
   taglineWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  taglineRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    gap: 3,
   },
   taglineText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '600',
-    color: NAVY,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
+    color: '#9CA3AF',
+    letterSpacing: 1.5,
   },
   taglineDot: {
     color: SAFFRON,
-    fontSize: 16,
+    fontSize: 24,
+    marginTop: 4,
   },
   taglineTM: {
     fontSize: 8,
-    color: colors.textMuted,
-    fontWeight: '400',
-  },
-  taglineLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: SAFFRON,
-    borderRadius: 1,
-    marginTop: spacing.xs,
+    color: SAFFRON,
+    fontWeight: '600',
+    marginTop: -6,
+    marginLeft: -2,
   },
 
   // ---- 3. WEATHER TIP ----

@@ -203,16 +203,15 @@ function mapVerification(raw: RawVerification): ActionVerification {
 
 export function useActions(wardId?: string) {
   return useQuery({
-    queryKey: ['actions', wardId],
+    queryKey: ['actions', wardId || 'trending'],
     queryFn: async () => {
       const endpoint = wardId
         ? `/api/v1/actions/ward/${wardId}`
-        : '/api/v1/actions';
+        : '/api/v1/actions/trending';
       const res = await api.get<{ actions: RawAction[]; count: number }>(endpoint);
       return (res.actions ?? []).map(mapAction);
     },
     staleTime: 30_000,
-    enabled: wardId !== undefined ? !!wardId : true,
   });
 }
 
