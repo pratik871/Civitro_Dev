@@ -86,6 +86,7 @@ func (s *Service) CreateAction(ctx context.Context, userID string, req *model.Cr
 		Status:            model.StatusOpen,
 		SupportCount:      0,
 		SupportGoal:       supportGoal,
+		Category:          req.Category,
 		PatternID:         req.PatternID,
 		CreatedAt:         now,
 	}
@@ -116,6 +117,12 @@ func (s *Service) CreateAction(ctx context.Context, userID string, req *model.Cr
 	// Regenerate evidence package if issues were linked
 	if len(req.LinkedIssueIDs) > 0 {
 		go s.regenerateEvidencePackage(action.ID)
+	}
+
+	// Calculate economic impact
+	impact := estimateEconomicImpact(action.Category, len(req.LinkedIssueIDs))
+	if impact > 0 {
+		s.repo.UpdateEconomicImpact(ctx, action.ID, impact)
 	}
 
 	// Publish action created event
@@ -421,6 +428,32 @@ func (s *Service) ListTrending(ctx context.Context, limit int) (*model.TrendingL
 		Actions: actions,
 		Count:   len(actions),
 	}, nil
+}
+
+// estimateEconomicImpact calculates estimated economic impact based on category and report count.
+func estimateEconomicImpact(category string, reportCount int) float64 {
+	// Per-issue daily economic impact estimates (in INR)
+	perIssueDailyImpact := map[string]float64{
+		"pothole":       3000,  // commuter delays
+		"water_supply":  5000,  // water tanker costs
+		"streetlight":   2000,  // safety/productivity loss
+		"garbage":       1500,  // health/sanitation costs
+		"drainage":      4000,  // flood damage risk
+		"road_damage":   3500,  // vehicle damage
+		"traffic":       2500,  // productivity loss
+		"construction":  2000,  // safety risk
+		"healthcare":    8000,  // health costs
+		"education":     3000,  // opportunity cost
+		"public_safety": 5000,  // security costs
+	}
+
+	daily, ok := perIssueDailyImpact[category]
+	if !ok {
+		daily = 2000 // default
+	}
+
+	// Estimate: daily impact × report count × 30 days average unresolved
+	return daily * float64(reportCount) * 30
 }
 
 // supportGoalLadder defines the dynamic escalation ladder for support goals.

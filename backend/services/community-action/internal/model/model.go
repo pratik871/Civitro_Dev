@@ -65,6 +65,7 @@ type CommunityAction struct {
 	SupportGoal             int             `json:"support_goal"`
 	EvidencePackageJSON     interface{}     `json:"evidence_package_json,omitempty"`
 	EconomicImpactEstimate  float64         `json:"economic_impact_estimate,omitempty"`
+	Category                string          `json:"category,omitempty"`
 	PatternID               string          `json:"pattern_id,omitempty"`
 	CreatedAt               time.Time       `json:"created_at"`
 	AcknowledgedAt          *time.Time      `json:"acknowledged_at,omitempty"`
@@ -148,6 +149,7 @@ type CreateActionRequest struct {
 	DesiredOutcome    string          `json:"desired_outcome" binding:"required"`
 	TargetAuthorityID string          `json:"target_authority_id,omitempty"`
 	EscalationLevel   EscalationLevel `json:"escalation_level"`
+	Category          string          `json:"category,omitempty"`
 	PatternID         string          `json:"pattern_id,omitempty"`
 	LinkedIssueIDs    []string        `json:"linked_issue_ids"`
 }

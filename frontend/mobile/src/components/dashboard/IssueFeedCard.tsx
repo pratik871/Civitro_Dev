@@ -275,6 +275,16 @@ export const IssueFeedCard: React.FC<IssueFeedCardProps> = ({
           </Text>
         </View>
       )}
+
+      {/* Escalation badge */}
+      {issue.status === 'assigned' && (
+        <View style={styles.escalationBadge}>
+          <Svg viewBox="0 0 12 12" width={12} height={12} fill="none">
+            <Path d="M6 1v10M3 4l3-3 3 3" stroke="#D97706" strokeWidth={1.5} strokeLinecap="round" />
+          </Svg>
+          <Text style={styles.escalationText}>Assigned to ward officer</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -386,5 +396,23 @@ const styles = StyleSheet.create({
     color: SAFFRON,
     fontWeight: '500',
     flex: 1,
+  },
+  escalationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 8,
+    marginLeft: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 8,
+  },
+  escalationText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#92400E',
   },
 });

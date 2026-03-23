@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/civitro/services/identity/internal/model"
 	"github.com/jackc/pgx/v5"
@@ -401,8 +402,10 @@ func (r *PostgresRepository) GetGovernanceChain(ctx context.Context, wardID stri
 // Ward Mood
 // ---------------------------------------------------------------------------
 
-// GetWardMood retrieves the precomputed ward mood/sentiment data.
+// GetWardMood retrieves ward mood data. First tries precomputed table,
+// falls back to computing from real issue data.
 func (r *PostgresRepository) GetWardMood(ctx context.Context, wardID string) (*model.WardMood, error) {
+	// Try precomputed table first
 	var mood model.WardMood
 	var topicsJSON, sparklineJSON []byte
 	err := r.pool.QueryRow(ctx, `
@@ -412,12 +415,120 @@ func (r *PostgresRepository) GetWardMood(ctx context.Context, wardID string) (*m
 		&mood.WardID, &mood.Mood, &mood.Score, &topicsJSON,
 		&mood.TrendDirection, &mood.TrendChangePercent, &sparklineJSON, &mood.UpdatedAt,
 	)
+	if err == nil {
+		json.Unmarshal(topicsJSON, &mood.Topics)
+		json.Unmarshal(sparklineJSON, &mood.TrendSparkline)
+		return &mood, nil
+	}
+
+	// Fallback: compute from real issue data
+	return r.computeWardMood(ctx, wardID)
+}
+
+// computeWardMood builds mood data from issue categories and resolution rates.
+func (r *PostgresRepository) computeWardMood(ctx context.Context, wardID string) (*model.WardMood, error) {
+	mood := &model.WardMood{
+		WardID:         wardID,
+		TrendDirection: "stable",
+	}
+
+	// Get category distribution
+	rows, err := r.pool.Query(ctx, `
+		SELECT category, COUNT(*) as cnt
+		FROM issues WHERE boundary_id = $1::uuid AND created_at > NOW() - INTERVAL '30 days'
+		GROUP BY category ORDER BY cnt DESC LIMIT 4
+	`, wardID)
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(topicsJSON, &mood.Topics)
-	json.Unmarshal(sparklineJSON, &mood.TrendSparkline)
-	return &mood, nil
+	defer rows.Close()
+
+	var totalIssues int
+	var topics []model.WardMoodTopic
+	for rows.Next() {
+		var cat string
+		var cnt int
+		if err := rows.Scan(&cat, &cnt); err != nil {
+			continue
+		}
+		totalIssues += cnt
+		topics = append(topics, model.WardMoodTopic{Name: cat, Sentiment: -0.3, Percentage: cnt})
+	}
+
+	// Calculate percentages and sentiment
+	for i := range topics {
+		if totalIssues > 0 {
+			topics[i].Percentage = (topics[i].Percentage * 100) / totalIssues
+		}
+		// More resolved = better sentiment
+		var resolved int
+		_ = r.pool.QueryRow(ctx, `
+			SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND category = $2 AND status = 'resolved' AND created_at > NOW() - INTERVAL '30 days'
+		`, wardID, topics[i].Name).Scan(&resolved)
+		if totalIssues > 0 {
+			topics[i].Sentiment = float64(resolved)/float64(totalIssues)*2 - 0.5
+		}
+	}
+	mood.Topics = topics
+
+	// Calculate overall score (0-1): based on resolution rate
+	var totalAll, resolvedAll int
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND created_at > NOW() - INTERVAL '30 days'`, wardID).Scan(&totalAll)
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved' AND created_at > NOW() - INTERVAL '30 days'`, wardID).Scan(&resolvedAll)
+
+	if totalAll > 0 {
+		mood.Score = float64(resolvedAll) / float64(totalAll)
+	} else {
+		mood.Score = 0.5
+	}
+
+	// Determine mood label
+	if mood.Score >= 0.7 {
+		mood.Mood = "happy"
+	} else if mood.Score >= 0.5 {
+		mood.Mood = "hopeful"
+	} else if mood.Score >= 0.3 {
+		mood.Mood = "concerned"
+	} else if mood.Score >= 0.15 {
+		mood.Mood = "frustrated"
+	} else {
+		mood.Mood = "angry"
+	}
+
+	// 7-day sparkline
+	mood.TrendSparkline = make([]float64, 7)
+	sparkRows, err := r.pool.Query(ctx, `
+		SELECT (NOW()::date - created_at::date) as days_ago, COUNT(*)
+		FROM issues WHERE boundary_id = $1::uuid AND created_at > NOW() - INTERVAL '7 days'
+		GROUP BY days_ago
+	`, wardID)
+	if err == nil {
+		defer sparkRows.Close()
+		for sparkRows.Next() {
+			var daysAgo, cnt int
+			if sparkRows.Scan(&daysAgo, &cnt) == nil && daysAgo >= 0 && daysAgo < 7 {
+				mood.TrendSparkline[6-daysAgo] = float64(cnt)
+			}
+		}
+	}
+
+	// Trend: compare this week vs last week
+	var thisWeek, lastWeek int
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved' AND created_at > NOW() - INTERVAL '7 days'`, wardID).Scan(&thisWeek)
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved' AND created_at > NOW() - INTERVAL '14 days' AND created_at <= NOW() - INTERVAL '7 days'`, wardID).Scan(&lastWeek)
+
+	if lastWeek > 0 {
+		pct := ((thisWeek - lastWeek) * 100) / lastWeek
+		mood.TrendChangePercent = pct
+		if pct > 5 {
+			mood.TrendDirection = "improving"
+		} else if pct < -5 {
+			mood.TrendDirection = "declining"
+		}
+	}
+
+	mood.UpdatedAt = time.Now()
+	return mood, nil
 }
 
 // ---------------------------------------------------------------------------

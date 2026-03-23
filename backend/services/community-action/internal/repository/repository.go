@@ -37,6 +37,7 @@ type Repository interface {
 	ListStaleActions(ctx context.Context, noResponseDays int) ([]model.CommunityAction, error)
 	CreateEscalation(ctx context.Context, actionID, fromLevel, toLevel, reason string) error
 	UpdateEscalationLevel(ctx context.Context, actionID, newLevel string) error
+	UpdateEconomicImpact(ctx context.Context, actionID string, impact float64) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -645,6 +646,12 @@ func (r *PostgresRepository) UpdateEscalationLevel(ctx context.Context, actionID
 		`UPDATE community_actions SET escalation_level = $1 WHERE id = $2`,
 		newLevel, actionID,
 	)
+	return err
+}
+
+// UpdateEconomicImpact updates the economic impact estimate on a community action.
+func (r *PostgresRepository) UpdateEconomicImpact(ctx context.Context, actionID string, impact float64) error {
+	_, err := r.pool.Exec(ctx, `UPDATE community_actions SET economic_impact_estimate = $1 WHERE id = $2`, impact, actionID)
 	return err
 }
 

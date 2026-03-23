@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -98,6 +98,22 @@ export const HomeScreen: React.FC = () => {
   const { data: weatherTip } = useWeatherTip(19.12, 72.85);
   const [refreshing, setRefreshing] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  // Monitor connectivity
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const response = await fetch('https://api.civitro.com/health', { method: 'HEAD' });
+        setIsOffline(!response.ok);
+      } catch {
+        setIsOffline(true);
+      }
+    };
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Refresh on focus
   useFocusEffect(useCallback(() => { refreshProfile(); }, [refreshProfile]));
@@ -165,6 +181,14 @@ export const HomeScreen: React.FC = () => {
       createdAgo: formatTimeAgo(a.createdAt),
     }));
   }, [actionsData]);
+
+  // New user empty state check
+  const isNewUser = (dashboardStats?.civic_score ?? 0) === 0
+    && (dashboardStats?.issues_reported ?? 0) === 0
+    && (!issueList || issueList.length === 0);
+
+  // Skeleton loading state
+  const isLoadingDashboard = !dashboardStats && !user;
 
   // First pattern for the banner
   const firstPattern = patternsData?.patterns?.[0];
@@ -355,6 +379,18 @@ export const HomeScreen: React.FC = () => {
         </View>
 
         {/* ============================================================ */}
+        {/* OFFLINE BANNER                                                */}
+        {/* ============================================================ */}
+        {isOffline && (
+          <View style={styles.offlineBanner}>
+            <Svg viewBox="0 0 24 24" width={16} height={16} fill="none">
+              <Path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01" stroke="#D97706" strokeWidth={2} strokeLinecap="round" />
+            </Svg>
+            <Text style={styles.offlineText}>Offline — data may not be current</Text>
+          </View>
+        )}
+
+        {/* ============================================================ */}
         {/* 3. WEATHER TIP (dynamic from weather API)                     */}
         {/* ============================================================ */}
         {weatherTip?.show && (
@@ -373,6 +409,55 @@ export const HomeScreen: React.FC = () => {
             </Text>
           </View>
         )}
+
+        {/* ============================================================ */}
+        {/* SKELETON LOADING STATE                                        */}
+        {/* ============================================================ */}
+        {isLoadingDashboard && (
+          <View style={styles.skeletonWrap}>
+            <View style={[styles.skeletonBox, { width: '60%', height: 20, marginBottom: 8 }]} />
+            <View style={[styles.skeletonBox, { width: '40%', height: 14, marginBottom: 24 }]} />
+            <View style={[styles.skeletonBox, { width: '100%', height: 120, borderRadius: 16, marginBottom: 16 }]} />
+            <View style={[styles.skeletonBox, { width: '100%', height: 80, borderRadius: 16, marginBottom: 16 }]} />
+            <View style={[styles.skeletonBox, { width: '100%', height: 160, borderRadius: 16, marginBottom: 16 }]} />
+          </View>
+        )}
+
+        {/* ============================================================ */}
+        {/* EMPTY STATE — NEW USER                                        */}
+        {/* ============================================================ */}
+        {!isLoadingDashboard && isNewUser && (
+          <View style={styles.emptyState}>
+            <Svg viewBox="0 0 160 160" width={160} height={160} fill="none">
+              <Circle cx={80} cy={55} r={14} fill="#FFF3ED" stroke="#FF6B35" strokeWidth={2} />
+              <Path d="M80 69L80 105" stroke="#FF6B35" strokeWidth={3} strokeLinecap="round" />
+              <Path d="M80 80L65 95" stroke="#FF6B35" strokeWidth={2.5} strokeLinecap="round" />
+              <Path d="M80 80L95 72" stroke="#FF6B35" strokeWidth={2.5} strokeLinecap="round" />
+              <Path d="M80 105L68 135" stroke="#FF6B35" strokeWidth={2.5} strokeLinecap="round" />
+              <Path d="M80 105L92 135" stroke="#FF6B35" strokeWidth={2.5} strokeLinecap="round" />
+              <Path d="M95 72L95 35" stroke="#1E3A5F" strokeWidth={2} strokeLinecap="round" />
+              <Path d="M95 35L120 42L95 50" fill="#FF6B35" opacity={0.8} />
+              <Circle cx={75} cy={53} r={1.5} fill="#0B1426" />
+              <Circle cx={85} cy={53} r={1.5} fill="#0B1426" />
+              <Path d="M75 60Q80 65 85 60" stroke="#0B1426" strokeWidth={1.5} fill="none" strokeLinecap="round" />
+            </Svg>
+            <Text style={styles.emptyTitle}>Plant Your Flag</Text>
+            <Text style={styles.emptySubtitle}>Be the first to report an issue in your ward and start building your civic reputation.</Text>
+            <View style={styles.emptySteps}>
+              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>1</Text></View><Text style={styles.emptyStepText}>Spot an issue</Text></View>
+              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>2</Text></View><Text style={styles.emptyStepText}>Snap a photo</Text></View>
+              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>3</Text></View><Text style={styles.emptyStepText}>Watch it get fixed</Text></View>
+            </View>
+            <TouchableOpacity style={styles.emptyCta} onPress={() => navigation.navigate('Main', { screen: 'Report' } as any)} activeOpacity={0.7}>
+              <Text style={styles.emptyCtaText}>Report Your First Issue</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ============================================================ */}
+        {/* DASHBOARD SECTIONS (hidden when loading or new user)          */}
+        {/* ============================================================ */}
+        {!isLoadingDashboard && !isNewUser && (<>
 
         {/* ============================================================ */}
         {/* 4. CIVIC SCORE RING                                           */}
@@ -649,6 +734,8 @@ export const HomeScreen: React.FC = () => {
             </>
           )}
         </View>
+
+        </>)}
 
         {/* Bottom spacer for FAB clearance */}
         <View style={styles.bottomSpacer} />
@@ -996,4 +1083,40 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+
+  // ---- OFFLINE BANNER ----
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 10,
+    gap: 8,
+  },
+  offlineText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#92400E',
+    flex: 1,
+  },
+
+  // ---- EMPTY STATE ----
+  emptyState: { alignItems: 'center', padding: 40, paddingTop: 20 },
+  emptyTitle: { fontSize: 22, fontWeight: '800', color: '#0B1426', marginTop: 20, marginBottom: 8 },
+  emptySubtitle: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 10 },
+  emptySteps: { flexDirection: 'row', gap: 8, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'center' },
+  emptyStep: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F4F6', borderRadius: 20 },
+  emptyStepNum: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FF6B35', alignItems: 'center', justifyContent: 'center' },
+  emptyStepNumText: { fontSize: 10, fontWeight: '700', color: '#FFFFFF' },
+  emptyStepText: { fontSize: 12, fontWeight: '500', color: '#6B7280' },
+  emptyCta: { backgroundColor: '#FF6B35', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 16, shadowColor: '#FF6B35', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 4 },
+  emptyCtaText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+
+  // ---- SKELETON LOADING ----
+  skeletonWrap: { padding: 20 },
+  skeletonBox: { backgroundColor: '#F3F4F6', borderRadius: 8 },
 });

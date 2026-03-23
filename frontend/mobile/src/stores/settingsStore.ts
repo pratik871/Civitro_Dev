@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface SettingsState {
   language: string; // BCP-47 code, default 'en'
+  darkMode: boolean;
   privacySettings: {
     showProfilePublicly: boolean;
     allowAnonymousVoices: boolean;
@@ -12,6 +13,7 @@ interface SettingsState {
   };
   isLoaded: boolean;
   setLanguage: (code: string) => Promise<void>;
+  setDarkMode: (enabled: boolean) => Promise<void>;
   updatePrivacy: (key: string, value: boolean) => Promise<void>;
   loadSettings: () => Promise<void>;
 }
@@ -20,6 +22,7 @@ const SETTINGS_KEY = '@civitro_settings';
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   language: 'en',
+  darkMode: false,
   privacySettings: {
     showProfilePublicly: true,
     allowAnonymousVoices: false,
@@ -41,6 +44,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     } catch {
       set({ isLoaded: true });
     }
+  },
+
+  setDarkMode: async (enabled: boolean) => {
+    set({ darkMode: enabled });
+    const state = get();
+    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      language: state.language,
+      darkMode: enabled,
+      privacySettings: state.privacySettings,
+    }));
   },
 
   setLanguage: async (code: string) => {

@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Switch,
   ScrollView,
   TouchableOpacity,
   StatusBar,
@@ -19,6 +20,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
 import type { RootStackParamList } from '../../navigation/types';
@@ -39,6 +41,8 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileNavProp>();
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
+  const darkMode = useSettingsStore(state => state.darkMode);
+  const setDarkMode = useSettingsStore(state => state.setDarkMode);
   const { refreshProfile } = useAuth();
 
   // Refresh civic score whenever this screen comes into focus
@@ -174,6 +178,19 @@ export const ProfileScreen: React.FC = () => {
             <Text style={styles.settingArrow}>{'\u203A'}</Text>
           </TouchableOpacity>
         ))}
+        {/* Dark Mode Toggle */}
+        <View style={[styles.settingRow, { justifyContent: 'space-between' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Text style={styles.settingIcon}>{'\u{1F319}'}</Text>
+            <Text style={styles.settingLabel}>Dark Mode</Text>
+          </View>
+          <Switch
+            value={darkMode}
+            onValueChange={setDarkMode}
+            trackColor={{ false: '#E5E7EB', true: '#FF6B35' }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
       </Card>
 
       {/* Logout */}
