@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   StatusBar,
@@ -9,6 +10,8 @@ import {
   Share,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -18,7 +21,8 @@ import { Card } from '../../components/ui/Card';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
-import { useVoice, useLikeVoice, useShareVoice, useBookmarkVoice } from '../../hooks/useVoices';
+import { useVoice, useLikeVoice, useShareVoice } from '../../hooks/useVoices';
+import api from '../../lib/api';
 import type { RootStackParamList } from '../../navigation/types';
 
 type DetailRouteProp = RouteProp<RootStackParamList, 'VoiceDetail'>;
@@ -30,22 +34,23 @@ export const VoiceDetailScreen: React.FC = () => {
   const navigation = useNavigation();
   const { voiceId } = route.params;
 
-  const { data: voice, isLoading } = useVoice(voiceId);
+  const { data: voice, isLoading, refetch } = useVoice(voiceId);
   const likeMutation = useLikeVoice();
   const shareMutation = useShareVoice();
-  const bookmarkMutation = useBookmarkVoice();
 
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [commentText, setCommentText] = useState('');
 
-  const handleLike = () => {
-    setLiked(!liked);
-    likeMutation.mutate(voiceId);
+  const upvoted = voice?.hasUpvoted ?? false;
+
+  const handleUpvote = () => {
+    likeMutation.mutate(voiceId, { onSuccess: () => refetch() });
   };
 
-  const handleBookmark = () => {
-    setBookmarked(!bookmarked);
-    bookmarkMutation.mutate(voiceId);
+  const handleComment = () => {
+    if (!commentText.trim()) return;
+    api.post(`/api/v1/voices/${voiceId}/reply`, { text: commentText.trim() })
+      .then(() => { setCommentText(''); refetch(); })
+      .catch(() => Alert.alert('Error', 'Could not post comment'));
   };
 
   const handleShare = async () => {
@@ -127,15 +132,15 @@ export const VoiceDetailScreen: React.FC = () => {
       {/* Action Bar */}
       <View style={styles.actionsRow}>
         <TouchableOpacity
-          style={[styles.actionButton, liked && styles.actionButtonActive]}
-          onPress={handleLike}
+          style={[styles.actionButton, upvoted && styles.actionButtonActive]}
+          onPress={handleUpvote}
           disabled={likeMutation.isPending}
         >
-          <Text style={[styles.actionIcon, liked && styles.actionIconActive]}>
-            {liked ? '\u2764' : '\u2661'}
+          <Text style={[styles.actionIcon, upvoted && styles.actionIconActive]}>
+            {upvoted ? '\u2B06' : '\u2B06'}
           </Text>
-          <Text style={[styles.actionText, liked && styles.actionTextActive]}>
-            {liked ? 'Liked' : 'Like'}
+          <Text style={[styles.actionText, upvoted && styles.actionTextActive]}>
+            {upvoted ? 'Upvoted' : 'Upvote'}
           </Text>
         </TouchableOpacity>
 
@@ -146,19 +151,6 @@ export const VoiceDetailScreen: React.FC = () => {
         >
           <Text style={styles.actionIcon}>{'\u{1F4E4}'}</Text>
           <Text style={styles.actionText}>Share</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, bookmarked && styles.actionButtonActive]}
-          onPress={handleBookmark}
-          disabled={bookmarkMutation.isPending}
-        >
-          <Text style={[styles.actionIcon, bookmarked && styles.actionIconActive]}>
-            {bookmarked ? '\u{1F516}' : '\u{1F517}'}
-          </Text>
-          <Text style={[styles.actionText, bookmarked && styles.actionTextActive]}>
-            {bookmarked ? 'Saved' : 'Save'}
-          </Text>
         </TouchableOpacity>
       </View>
 
@@ -176,6 +168,37 @@ export const VoiceDetailScreen: React.FC = () => {
           </View>
         </View>
       </Card>
+
+      {/* Comments Section */}
+      <View style={styles.commentsSection}>
+        <Text style={styles.commentsTitle}>Comments</Text>
+
+        {/* Comment Input */}
+        <View style={styles.commentInputRow}>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Add a comment..."
+            placeholderTextColor={colors.textMuted}
+            value={commentText}
+            onChangeText={setCommentText}
+            multiline
+            maxLength={300}
+          />
+          <TouchableOpacity
+            style={[styles.commentSendBtn, !commentText.trim() && { opacity: 0.4 }]}
+            onPress={handleComment}
+            disabled={!commentText.trim()}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.commentSendText}>Post</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Comments list placeholder */}
+        {(voice?.repliesCount ?? 0) === 0 && !commentText && (
+          <Text style={styles.noComments}>No comments yet. Be the first!</Text>
+        )}
+      </View>
 
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -345,5 +368,50 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
     backgroundColor: colors.borderLight,
+  },
+  commentsSection: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+  },
+  commentsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 12,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+    marginBottom: 16,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.textPrimary,
+    maxHeight: 80,
+  },
+  commentSendBtn: {
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  commentSendText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  noComments: {
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });

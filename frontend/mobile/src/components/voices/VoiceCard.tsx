@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Share } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { Card } from '../ui/Card';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -9,19 +10,26 @@ import type { Voice } from '../../types/voice';
 interface VoiceCardProps {
   voice: Voice;
   onPress?: () => void;
-  onLike?: () => void;
+  onUpvote?: () => void;
+  onComment?: () => void;
 }
 
 export const VoiceCard: React.FC<VoiceCardProps> = ({
   voice,
   onPress,
-  onLike,
+  onUpvote,
+  onComment,
 }) => {
   const tags = voice.tags ?? voice.hashtags ?? [];
-  const likes = voice.likesCount ?? voice.upvotes ?? 0;
-  const replies = voice.repliesCount ?? voice.commentCount ?? 0;
-  const shares = voice.sharesCount ?? 0;
+  const upvotes = voice.likesCount ?? voice.upvotes ?? 0;
+  const comments = voice.repliesCount ?? voice.commentCount ?? 0;
   const text = voice.text ?? voice.content ?? '';
+
+  const handleShare = () => {
+    Share.share({
+      message: `${text}${tags.length > 0 ? '\n\n' + tags.map(t => '#' + t).join(' ') : ''}\n\n— via Civitro`,
+    });
+  };
 
   return (
     <Card onPress={onPress} style={styles.card}>
@@ -57,26 +65,44 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
         </View>
       )}
 
-      {/* Footer: like, comment, share counts */}
+      {/* Footer: upvote, comment, share */}
       <View style={styles.footer}>
         <TouchableOpacity
-          onPress={onLike}
+          onPress={onUpvote}
+          style={[styles.actionButton, voice.hasUpvoted && styles.actionButtonUpvoted]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
+            {voice.hasUpvoted ? (
+              <Path d="M8 2l5 6H9v6H7V8H3l5-6z" fill="#FF6B35" />
+            ) : (
+              <Path d="M8 3v10M5 6l3-3 3 3" stroke="#9CA3AF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            )}
+          </Svg>
+          <Text style={[styles.actionText, voice.hasUpvoted && styles.actionTextUpvoted]}>{formatNumber(upvotes)}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onComment}
           style={styles.actionButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={styles.actionIcon}>{'\u2661'}</Text>
-          <Text style={styles.actionText}>{formatNumber(likes)}</Text>
+          <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
+            <Path d="M14 10a1.5 1.5 0 01-1.5 1.5H5l-3 3V3.5A1.5 1.5 0 013.5 2h9A1.5 1.5 0 0114 3.5V10z" stroke="#9CA3AF" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+          <Text style={styles.actionText}>{formatNumber(comments)}</Text>
         </TouchableOpacity>
 
-        <View style={styles.actionButton}>
-          <Text style={styles.actionIcon}>{'\u{1F4AC}'}</Text>
-          <Text style={styles.actionText}>{formatNumber(replies)}</Text>
-        </View>
-
-        <View style={styles.actionButton}>
-          <Text style={styles.actionIcon}>{'\u{1F4E4}'}</Text>
-          <Text style={styles.actionText}>{formatNumber(shares)}</Text>
-        </View>
+        <TouchableOpacity
+          onPress={handleShare}
+          style={styles.actionButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
+            <Path d="M4 8v5a1 1 0 001 1h6a1 1 0 001-1V8M11 4L8 1 5 4M8 1v9" stroke="#9CA3AF" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+          <Text style={styles.actionText}>Share</Text>
+        </TouchableOpacity>
       </View>
     </Card>
   );
@@ -173,5 +199,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     fontWeight: '500',
+  },
+  actionButtonUpvoted: {
+    backgroundColor: '#FFF3ED',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: -8,
+    marginVertical: -4,
+  },
+  actionTextUpvoted: {
+    color: '#FF6B35',
+    fontWeight: '700',
   },
 });

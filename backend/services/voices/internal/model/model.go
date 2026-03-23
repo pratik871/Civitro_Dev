@@ -28,6 +28,7 @@ type Voice struct {
 	LikesCount   int64             `json:"likes_count"`
 	RepliesCount int64             `json:"replies_count"`
 	SharesCount  int64             `json:"shares_count"`
+	HasLiked     bool              `json:"has_liked"`
 	CreatedAt    time.Time         `json:"created_at"`
 }
 

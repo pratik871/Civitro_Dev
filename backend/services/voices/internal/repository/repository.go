@@ -23,6 +23,7 @@ type Repository interface {
 	DeleteReaction(ctx context.Context, voiceID, userID string, reactionType model.ReactionType) error
 	GetReaction(ctx context.Context, voiceID, userID string, reactionType model.ReactionType) (*model.VoiceReaction, error)
 	GetByHashtag(ctx context.Context, hashtag string, limit int) ([]model.Voice, error)
+	HasUserReaction(ctx context.Context, voiceID, userID string, reactionType string) bool
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -215,6 +216,16 @@ func (r *PostgresRepository) GetReaction(ctx context.Context, voiceID, userID st
 		return nil, err
 	}
 	return reaction, nil
+}
+
+// HasUserReaction checks if a user has a specific reaction on a voice.
+func (r *PostgresRepository) HasUserReaction(ctx context.Context, voiceID, userID string, reactionType string) bool {
+	var count int
+	err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM voice_reactions WHERE voice_id = $1 AND user_id = $2 AND type = $3`,
+		voiceID, userID, reactionType,
+	).Scan(&count)
+	return err == nil && count > 0
 }
 
 // GetByHashtag retrieves voices containing a specific hashtag.

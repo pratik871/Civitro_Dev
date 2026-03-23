@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from '../../components/ui/Card';
@@ -38,6 +39,7 @@ const SENTIMENT_CONFIG = {
 
 export const TrendingScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const [filter, setFilter] = useState<string>('all');
 
   const { data: trending, isLoading, refetch } = useQuery({
@@ -110,6 +112,22 @@ export const TrendingScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Community Voices card */}
+        <TouchableOpacity
+          style={styles.voicesCard}
+          onPress={() => navigation.navigate('VoicesList' as any)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.voicesLeft}>
+            <Text style={styles.voicesIcon}>{'\u{1F399}'}</Text>
+            <View>
+              <Text style={styles.voicesTitle}>Community Voices</Text>
+              <Text style={styles.voicesSubtitle}>See what citizens are saying</Text>
+            </View>
+          </View>
+          <Text style={styles.voicesArrow}>{'\u203A'}</Text>
+        </TouchableOpacity>
+
         {/* Sentiment Overview — only shown when data is available */}
         {sentimentSummary && (
           <Card style={styles.sentimentOverview}>
@@ -451,5 +469,39 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  voicesCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F5F3FF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#EDE9FE',
+  },
+  voicesLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  voicesIcon: {
+    fontSize: 28,
+  },
+  voicesTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0B1426',
+  },
+  voicesSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  voicesArrow: {
+    fontSize: 24,
+    color: '#7C3AED',
+    fontWeight: '300',
   },
 });

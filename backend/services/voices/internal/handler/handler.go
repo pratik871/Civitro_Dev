@@ -75,6 +75,16 @@ func (h *Handler) GetFeed(c *gin.Context) {
 		return
 	}
 
+	// Populate has_liked for the current user
+	if uid, ok := c.Get("user_id"); ok {
+		userID, _ := uid.(string)
+		if userID != "" && resp != nil {
+			for i := range resp.Voices {
+				resp.Voices[i].HasLiked = h.svc.HasUserLiked(c.Request.Context(), resp.Voices[i].ID, userID)
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, resp)
 }
 

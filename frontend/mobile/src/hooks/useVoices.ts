@@ -13,6 +13,7 @@ interface RawVoice {
   likes_count?: number;
   replies_count?: number;
   shares_count?: number;
+  has_liked?: boolean;
   created_at: string;
 }
 
@@ -29,7 +30,7 @@ function mapVoice(raw: RawVoice): Voice {
     constituency: '',
     upvotes: raw.likes_count ?? 0,
     commentCount: raw.replies_count ?? 0,
-    hasUpvoted: false,
+    hasUpvoted: raw.has_liked ?? false,
     tags: raw.hashtags ?? [],
     hashtags: raw.hashtags ?? [],
     mediaUrls: raw.media_urls ?? [],

@@ -14,7 +14,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useVoices, useLikeVoice } from '../../hooks/useVoices';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../types/navigation';
+import type { RootStackParamList } from '../../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -41,7 +41,8 @@ export const VoicesListScreen: React.FC = () => {
           <VoiceCard
             voice={item}
             onPress={() => navigation.navigate('VoiceDetail', { voiceId: item.id })}
-            onLike={() => likeMutation.mutate(item.id)}
+            onUpvote={() => likeMutation.mutate(item.id, { onSuccess: () => refetch() })}
+            onComment={() => navigation.navigate('VoiceDetail', { voiceId: item.id })}
           />
         )}
         contentContainerStyle={styles.list}

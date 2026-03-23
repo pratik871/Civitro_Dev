@@ -747,12 +747,14 @@ export const HomeScreen: React.FC = () => {
         onPress={(key) => {
           if (key === 'photo') {
             navigation.navigate('Main', { screen: 'Report' } as any);
+          } else if (key === 'voice') {
+            navigation.navigate('CreateVoice' as any);
+          } else if (key === 'community_action') {
+            navigation.navigate('CreateAction' as any);
           } else {
             const labels: Record<string, string> = {
-              voice: 'Voice Report',
               text: 'Text Report',
               pin: 'Pin Location',
-              community_action: 'Community Action',
             };
             setComingSoonFeature(labels[key] || key);
           }

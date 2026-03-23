@@ -67,6 +67,11 @@ func (s *Service) CreateVoice(ctx context.Context, userID string, req *model.Cre
 	return &model.VoiceResponse{Voice: *voice}, nil
 }
 
+// HasUserLiked checks if a user has liked a voice.
+func (s *Service) HasUserLiked(ctx context.Context, voiceID, userID string) bool {
+	return s.repo.HasUserReaction(ctx, voiceID, userID, "like")
+}
+
 // GetFeed retrieves a paginated feed of voices.
 func (s *Service) GetFeed(ctx context.Context, boundaryID, cursor string, limit int) (*model.FeedResponse, error) {
 	if limit <= 0 || limit > 50 {

@@ -11,7 +11,10 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  Pressable,
 } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -33,23 +36,24 @@ export const CreateVoiceScreen: React.FC = () => {
   const [voiceText, setVoiceText] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Mutation
   // ---------------------------------------------------------------------------
+
+  const language = useAuthStore(state => state.user?.language) || 'en';
 
   const createVoice = useMutation({
     mutationFn: () =>
       api.post('/api/v1/voices', {
         text: voiceText.trim(),
         hashtags: tags,
-        language: 'en', // TODO: use app language
+        language,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['voices'] });
-      Alert.alert('', t('voices.postSuccess'), [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      setShowSuccess(true);
     },
     onError: (err: any) => {
       Alert.alert(
@@ -214,9 +218,111 @@ export const CreateVoiceScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Success Modal */}
+      <Modal visible={showSuccess} transparent animationType="fade">
+        <Pressable style={successStyles.backdrop} onPress={() => { setShowSuccess(false); navigation.goBack(); }}>
+          <View style={successStyles.card}>
+            <View style={successStyles.iconWrap}>
+              <Svg viewBox="0 0 24 24" width={32} height={32} fill="none">
+                <Circle cx={12} cy={12} r={10} stroke="#10B981" strokeWidth={2} />
+                <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+            <Text style={successStyles.title}>Voice Posted!</Text>
+            <Text style={successStyles.subtitle}>Your voice has been shared with the community. It's now visible in the Trending feed.</Text>
+            <View style={successStyles.btnRow}>
+              <TouchableOpacity style={successStyles.btnPrimary} onPress={() => { setShowSuccess(false); navigation.goBack(); }} activeOpacity={0.7}>
+                <Text style={successStyles.btnPrimaryText}>Done</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={successStyles.btnSecondary} onPress={() => { setShowSuccess(false); setVoiceText(''); setTags([]); }} activeOpacity={0.7}>
+                <Text style={successStyles.btnSecondaryText}>Post Another</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Success Modal Styles
+// ---------------------------------------------------------------------------
+
+const successStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  iconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0B1426',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 20,
+  },
+  btnRow: {
+    width: '100%',
+    gap: 10,
+  },
+  btnPrimary: {
+    backgroundColor: '#FF6B35',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  btnPrimaryText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  btnSecondary: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  btnSecondaryText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Styles
