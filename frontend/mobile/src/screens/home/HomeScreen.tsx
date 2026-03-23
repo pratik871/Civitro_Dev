@@ -244,14 +244,16 @@ export const HomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.headerRight}>
-          {/* Streak flame */}
-          <View style={styles.streakBadge}>
-            <Svg viewBox="0 0 16 16" width={12} height={12} fill="none">
-              <Path d="M8 1c0 3-3 4.5-3 7.5a3.5 3.5 0 007 0C12 5.5 8 4 8 1z" fill={SAFFRON} />
-              <Path d="M8 7c0 1.5-1.5 2.25-1.5 3.75a1.75 1.75 0 003.5 0C10 9.25 8 8.5 8 7z" fill="#FFD700" />
-            </Svg>
-            <Text style={styles.streakText}>{dashboardStats?.streak_days ?? 0}</Text>
-          </View>
+          {/* Streak flame — only show when active */}
+          {(dashboardStats?.streak_days ?? 0) > 0 && (
+            <View style={styles.streakBadge}>
+              <Svg viewBox="0 0 16 16" width={12} height={12} fill="none">
+                <Path d="M8 1c0 3-3 4.5-3 7.5a3.5 3.5 0 007 0C12 5.5 8 4 8 1z" fill={SAFFRON} />
+                <Path d="M8 7c0 1.5-1.5 2.25-1.5 3.75a1.75 1.75 0 003.5 0C10 9.25 8 8.5 8 7z" fill="#FFD700" />
+              </Svg>
+              <Text style={styles.streakText}>{dashboardStats.streak_days}</Text>
+            </View>
+          )}
 
           {/* Language */}
           <TouchableOpacity
@@ -337,6 +339,17 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.taglineDot}>{'\u2022'}</Text>
             <Text style={styles.taglineText}>{'YOU SHAPE'}</Text>
             <Text style={styles.taglineTM}>{'.TM'}</Text>
+            <View style={styles.taglineLine}>
+              <Svg width="100%" height={1} viewBox="0 0 100 1" preserveAspectRatio="none">
+                <Defs>
+                  <LinearGradient id="fadeLineGrad" x1="0" y1="0" x2="1" y2="0">
+                    <Stop offset="0%" stopColor="#D1D5DB" stopOpacity={0.6} />
+                    <Stop offset="100%" stopColor="#D1D5DB" stopOpacity={0} />
+                  </LinearGradient>
+                </Defs>
+                <Path d="M0 0.5 H100" stroke="url(#fadeLineGrad)" strokeWidth={1} />
+              </Svg>
+            </View>
           </View>
         </View>
 
@@ -796,7 +809,7 @@ const styles = StyleSheet.create({
   taglineRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 6,
   },
   taglineText: {
     fontSize: 11,
@@ -807,14 +820,21 @@ const styles = StyleSheet.create({
   taglineDot: {
     color: SAFFRON,
     fontSize: 24,
+    fontWeight: '700',
     marginTop: 4,
   },
   taglineTM: {
-    fontSize: 8,
+    fontSize: 10,
     color: SAFFRON,
-    fontWeight: '600',
-    marginTop: -6,
-    marginLeft: -2,
+    fontWeight: '900',
+    marginTop: -8,
+    marginLeft: -1,
+  },
+  taglineLine: {
+    flex: 1,
+    height: 1,
+    marginLeft: 8,
+    alignSelf: 'center',
   },
 
   // ---- 3. WEATHER TIP ----

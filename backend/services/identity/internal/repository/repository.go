@@ -489,8 +489,35 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		return nil, err
 	}
 
-	// 8. Streak days (civic_scores has no streak_days column; use reports_filed as proxy)
-	// stats.StreakDays stays 0
+	// 8. Streak days — count consecutive days (from today backwards) with any activity
+	err = r.pool.QueryRow(ctx, `
+		WITH activity_dates AS (
+			SELECT DISTINCT created_at::date AS d FROM issues WHERE user_id = $1
+			UNION
+			SELECT DISTINCT created_at::date FROM poll_votes WHERE user_id = $1
+			UNION
+			SELECT DISTINCT created_at::date FROM issue_confirmations WHERE user_id = $1
+			UNION
+			SELECT DISTINCT created_at::date FROM action_supporters WHERE user_id = $1
+			UNION
+			SELECT DISTINCT created_at::date FROM issue_comments WHERE user_id = $1
+		),
+		numbered AS (
+			SELECT d, d - (ROW_NUMBER() OVER (ORDER BY d DESC))::int AS grp
+			FROM activity_dates
+			WHERE d <= CURRENT_DATE
+		),
+		streaks AS (
+			SELECT grp, COUNT(*) AS streak_len, MAX(d) AS last_day
+			FROM numbered GROUP BY grp
+		)
+		SELECT COALESCE(streak_len, 0) FROM streaks
+		WHERE last_day >= CURRENT_DATE - INTERVAL '1 day'
+		ORDER BY streak_len DESC LIMIT 1
+	`, userID).Scan(&stats.StreakDays)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
 
 	// 9. Active citizens in user's ward (users table has no last_active; use updated_at)
 	if wardID != "" {
