@@ -36,6 +36,7 @@ import { usePatterns } from '../../hooks/usePatterns';
 import { useActions } from '../../hooks/useCommunityActions';
 import { useGovernanceChain } from '../../hooks/useGovernanceChain';
 import { useWeatherTip } from '../../hooks/useWeatherTip';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { FAB } from '../../components/ui/FAB';
 import api from '../../lib/api';
 import type { RootStackParamList } from '../../navigation/types';
@@ -96,6 +97,7 @@ export const HomeScreen: React.FC = () => {
   const { data: governanceChain } = useGovernanceChain(wardId);
   // Weather tip — use Andheri East coordinates (Ward 45 default)
   const { data: weatherTip } = useWeatherTip(19.12, 72.85);
+  const darkMode = useSettingsStore(state => state.darkMode);
   const [refreshing, setRefreshing] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -223,13 +225,13 @@ export const HomeScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <View style={[styles.container, darkMode && { backgroundColor: '#0F1419' }]}>
+      <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} backgroundColor={darkMode ? '#0F1419' : colors.background} />
 
       {/* ================================================================ */}
       {/* 1. HEADER                                                        */}
       {/* ================================================================ */}
-      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }, darkMode && { backgroundColor: '#0F1419' }]}>
         <View style={styles.headerLeft}>
           {/* Civic Shield Badge */}
           <TouchableOpacity onPress={() => navigation.navigate('Profile')} activeOpacity={0.7}>
@@ -735,10 +737,9 @@ export const HomeScreen: React.FC = () => {
           )}
         </View>
 
-        </>)}
-
         {/* Bottom spacer for FAB clearance */}
         <View style={styles.bottomSpacer} />
+        </>)}
       </ScrollView>
 
       {/* FAB */}

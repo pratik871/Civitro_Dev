@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
@@ -30,6 +30,7 @@ import { CreateActionScreen } from '../screens/actions/CreateActionScreen';
 import { ActionTimelineScreen } from '../screens/actions/ActionTimelineScreen';
 import { useAuthStore } from '../stores/authStore';
 import { colors } from '../theme/colors';
+import { useSettingsStore } from '../stores/settingsStore';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,12 +46,24 @@ export const RootNavigator: React.FC = () => {
     return null;
   }
 
+  const darkMode = useSettingsStore(state => state.darkMode);
+
+  const CivitroLightTheme = {
+    ...DefaultTheme,
+    colors: { ...DefaultTheme.colors, background: '#FFFCF8', card: '#FFFFFF', text: '#111827', border: '#E5E7EB', primary: '#FF6B35' },
+  };
+
+  const CivitroDarkTheme = {
+    ...DarkTheme,
+    colors: { ...DarkTheme.colors, background: '#0F1419', card: '#1A2332', text: '#F1F5F9', border: '#2D3B4E', primary: '#FF6B35' },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={darkMode ? CivitroDarkTheme : CivitroLightTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
+          contentStyle: { backgroundColor: darkMode ? '#0F1419' : colors.background },
           animation: 'slide_from_right',
         }}
       >
