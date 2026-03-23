@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { colors } from '../../theme/colors';
@@ -81,6 +82,7 @@ const CARD_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2;
 export const LanguageScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const language = useSettingsStore(state => state.language);
   const setLanguage = useSettingsStore(state => state.setLanguage);
 
@@ -102,7 +104,7 @@ export const LanguageScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -237,7 +239,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['2xl'],
     paddingBottom: spacing.md,
     backgroundColor: colors.background,
     borderBottomWidth: 1,

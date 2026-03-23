@@ -23,6 +23,7 @@ export const GOVERNANCE_TIERS: GovernanceTier[] = [
 
 export interface GovernanceRep {
   id: string;
+  userId?: string;
   tierKey: string;
   name: string;
   title: string;

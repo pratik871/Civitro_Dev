@@ -346,7 +346,7 @@ func (r *PostgresRepository) GetGovernanceChain(ctx context.Context, wardID stri
 	rows, err := r.pool.Query(ctx, `
 		SELECT id, ward_id, tier, level, is_department_routed, department_category,
 		       name, title, initials, party, is_elected,
-		       response_time_days, rating, issues_label
+		       response_time_days, rating, issues_label, user_id
 		FROM governance_chain
 		WHERE ward_id = $1::uuid
 		ORDER BY tier, level
@@ -360,11 +360,11 @@ func (r *PostgresRepository) GetGovernanceChain(ctx context.Context, wardID stri
 	for rows.Next() {
 		var e model.GovernanceChainEntry
 		var respDays, rating *float64
-		var deptCat, party, issuesLabel *string
+		var deptCat, party, issuesLabel, userID *string
 		if err := rows.Scan(
 			&e.ID, &e.WardID, &e.Tier, &e.Level, &e.IsDepartmentRouted, &deptCat,
 			&e.Name, &e.Title, &e.Initials, &party, &e.IsElected,
-			&respDays, &rating, &issuesLabel,
+			&respDays, &rating, &issuesLabel, &userID,
 		); err != nil {
 			return nil, err
 		}
@@ -382,6 +382,9 @@ func (r *PostgresRepository) GetGovernanceChain(ctx context.Context, wardID stri
 		}
 		if issuesLabel != nil {
 			e.IssuesLabel = *issuesLabel
+		}
+		if userID != nil {
+			e.UserID = *userID
 		}
 		chain = append(chain, e)
 	}

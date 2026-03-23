@@ -395,10 +395,13 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.sectionSpacing}>
             <RepresentativesPyramid
               reps={governanceChain}
-              onMessage={(rep) => navigation.navigate('Chat', {
-                recipientId: rep.id,
-                recipientName: rep.name,
-              })}
+              onMessage={(rep) => {
+                if (rep.userId) {
+                  navigation.navigate('Chat', { recipientId: rep.userId, recipientName: rep.name });
+                } else {
+                  setComingSoonFeature('Direct Messaging with Representatives');
+                }
+              }}
               onRate={(rep) => {
                 if (leaders && leaders.length > 0) {
                   navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
@@ -715,6 +718,11 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: SAFFRON,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   shieldLevel: {
     position: 'absolute',

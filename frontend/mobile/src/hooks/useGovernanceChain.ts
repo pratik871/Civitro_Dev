@@ -17,6 +17,7 @@ interface RawChainEntry {
   response_time_days: number | null;
   rating: number | null;
   issues_label: string | null;
+  user_id: string | null;
 }
 
 function mapEntry(raw: RawChainEntry): GovernanceRep {
@@ -45,6 +46,7 @@ function mapEntry(raw: RawChainEntry): GovernanceRep {
     issuesLabel: raw.issues_label,
     isDepartmentRouted: raw.is_department_routed,
     department: raw.department_category || undefined,
+    userId: raw.user_id || undefined,
   };
 }
 

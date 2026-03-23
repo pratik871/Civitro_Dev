@@ -169,6 +169,7 @@ type GovernanceChainEntry struct {
 	ResponseTimeDays   *float64 `json:"response_time_days"`
 	Rating             *float64 `json:"rating"`
 	IssuesLabel        string   `json:"issues_label,omitempty"`
+	UserID             string   `json:"user_id,omitempty"`
 }
 
 // WardMoodTopic represents a single topic within a ward's mood breakdown.
