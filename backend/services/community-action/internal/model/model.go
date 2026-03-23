@@ -143,7 +143,7 @@ type TimelineEntry struct {
 
 // CreateActionRequest is the payload for creating a new community action.
 type CreateActionRequest struct {
-	WardID            string          `json:"ward_id" binding:"required"`
+	WardID            string          `json:"ward_id"`
 	Title             string          `json:"title" binding:"required"`
 	Description       string          `json:"description" binding:"required"`
 	DesiredOutcome    string          `json:"desired_outcome" binding:"required"`

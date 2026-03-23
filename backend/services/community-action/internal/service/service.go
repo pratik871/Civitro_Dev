@@ -31,6 +31,13 @@ func New(repo repository.Repository, producer *events.Producer) *Service {
 
 // CreateAction creates a new community action.
 func (s *Service) CreateAction(ctx context.Context, userID string, req *model.CreateActionRequest) (*model.ActionDetailResponse, error) {
+	// Auto-fill ward_id from user if not provided
+	if req.WardID == "" {
+		var wardID string
+		_ = s.repo.GetUserCivicScoreAndWard(ctx, userID, &wardID)
+		req.WardID = wardID
+	}
+
 	// --- Guardrail: Civic score check ---
 	civicScore, err := s.repo.GetUserCivicScore(ctx, userID)
 	if err != nil {

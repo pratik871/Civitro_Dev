@@ -38,6 +38,7 @@ type Repository interface {
 	CreateEscalation(ctx context.Context, actionID, fromLevel, toLevel, reason string) error
 	UpdateEscalationLevel(ctx context.Context, actionID, newLevel string) error
 	UpdateEconomicImpact(ctx context.Context, actionID string, impact float64) error
+	GetUserCivicScoreAndWard(ctx context.Context, userID string, wardID *string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -578,6 +579,12 @@ func (r *PostgresRepository) GetUserCivicScore(ctx context.Context, userID strin
 		return 0, err
 	}
 	return score, nil
+}
+
+func (r *PostgresRepository) GetUserCivicScoreAndWard(ctx context.Context, userID string, wardID *string) error {
+	return r.pool.QueryRow(ctx,
+		`SELECT COALESCE(primary_boundary_id::text, '') FROM users WHERE id = $1`, userID,
+	).Scan(wardID)
 }
 
 // CountUserActionsInPeriod returns the number of actions created by a user since a given time.
