@@ -502,18 +502,15 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 			UNION
 			SELECT DISTINCT created_at::date FROM issue_comments WHERE user_id = $1
 		),
-		numbered AS (
-			SELECT d, d - (ROW_NUMBER() OVER (ORDER BY d DESC))::int AS grp
-			FROM activity_dates
-			WHERE d <= CURRENT_DATE
+		recent AS (
+			SELECT d FROM activity_dates WHERE d <= CURRENT_DATE ORDER BY d DESC
 		),
-		streaks AS (
-			SELECT grp, COUNT(*) AS streak_len, MAX(d) AS last_day
-			FROM numbered GROUP BY grp
+		numbered AS (
+			SELECT d, CURRENT_DATE - d AS days_ago,
+			       (CURRENT_DATE - d) - (ROW_NUMBER() OVER (ORDER BY d DESC) - 1)::int AS gap
+			FROM recent
 		)
-		SELECT COALESCE(streak_len, 0) FROM streaks
-		WHERE last_day >= CURRENT_DATE - INTERVAL '1 day'
-		ORDER BY streak_len DESC LIMIT 1
+		SELECT COUNT(*) FROM numbered WHERE gap = 0
 	`, userID).Scan(&stats.StreakDays)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
