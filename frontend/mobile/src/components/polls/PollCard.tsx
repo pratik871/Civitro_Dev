@@ -47,8 +47,9 @@ export const PollCard: React.FC<PollCardProps> = ({
   voting = false,
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const showResults = poll.hasVoted || !poll.isActive;
-  const canRetract = poll.hasVoted && poll.isActive && !!onRetract;
+  const [changingVote, setChangingVote] = useState(false);
+  const showResults = (poll.hasVoted && !changingVote) || !poll.isActive;
+  const canRetract = poll.hasVoted && poll.isActive && !changingVote && !!onRetract;
   const meta = CATEGORY_META[poll.category] ?? CATEGORY_META.custom;
   const timeLeft = getTimeLeft(poll.expiresAt);
   const isEnded = timeLeft === 'Ended';
@@ -57,10 +58,12 @@ export const PollCard: React.FC<PollCardProps> = ({
   const handleSubmit = () => {
     if (!selectedId || !onVote) return;
     onVote(selectedId);
+    setChangingVote(false);
   };
 
   const handleCancel = () => {
     setSelectedId(null);
+    setChangingVote(false);
   };
 
   // Find the winning option
@@ -224,15 +227,14 @@ export const PollCard: React.FC<PollCardProps> = ({
         {canRetract && (
           <TouchableOpacity
             style={styles.retractButton}
-            onPress={onRetract}
+            onPress={() => {
+              onRetract?.();
+              setChangingVote(true);
+              setSelectedId(null);
+            }}
             activeOpacity={0.7}
-            disabled={voting}
           >
-            {voting ? (
-              <ActivityIndicator size={14} color={colors.primary} />
-            ) : (
-              <Text style={styles.retractText}>Change my vote</Text>
-            )}
+            <Text style={styles.retractText}>Change my vote</Text>
           </TouchableOpacity>
         )}
 

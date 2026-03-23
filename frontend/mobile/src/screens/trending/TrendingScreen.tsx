@@ -205,7 +205,7 @@ export const TrendingScreen: React.FC = () => {
           filteredTopics.map((topic, index) => {
             const sentimentConfig = SENTIMENT_CONFIG[topic.sentiment];
             return (
-              <Card key={topic.id} style={styles.topicCard}>
+              <Card key={topic.id} style={styles.topicCard} onPress={() => navigation.navigate('IssuesList' as any, { category: topic.id })}>
                 <View style={styles.topicHeader}>
                   <View style={styles.topicRank}>
                     <Text style={styles.rankNumber}>#{index + 1}</Text>

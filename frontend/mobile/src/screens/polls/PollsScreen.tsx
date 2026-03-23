@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -33,7 +33,29 @@ export const PollsScreen: React.FC = () => {
     retractMutation.mutate(pollId);
   };
 
-  const allPolls = polls ?? [];
+  // Sort only on first load — preserve order after voting
+  const sortedOnce = useRef(false);
+  const sortedOrderRef = useRef<string[]>([]);
+
+  const rawPolls = polls ?? [];
+
+  if (!sortedOnce.current && rawPolls.length > 0) {
+    const sorted = [...rawPolls].sort((a, b) => {
+      if (a.isActive && !a.hasVoted && (!b.isActive || b.hasVoted)) return -1;
+      if (b.isActive && !b.hasVoted && (!a.isActive || a.hasVoted)) return 1;
+      if (a.isActive && !b.isActive) return -1;
+      if (b.isActive && !a.isActive) return 1;
+      return 0;
+    });
+    sortedOrderRef.current = sorted.map(p => p.id);
+    sortedOnce.current = true;
+  }
+
+  // Use saved order, fall back to raw order
+  const allPolls = sortedOrderRef.current.length > 0
+    ? sortedOrderRef.current.map(id => rawPolls.find(p => p.id === id)).filter(Boolean) as typeof rawPolls
+    : rawPolls;
+
   const activeCount = allPolls.filter(p => p.isActive).length;
   const totalVotes = allPolls.reduce((sum, p) => sum + p.totalVotes, 0);
 

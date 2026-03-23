@@ -223,6 +223,9 @@ export const HomeScreen: React.FC = () => {
         case 'messages':
           navigation.navigate('Messages');
           break;
+        case 'actions':
+          navigation.navigate('ActionsList' as any);
+          break;
         default:
           break;
       }

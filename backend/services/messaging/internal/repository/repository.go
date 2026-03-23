@@ -95,9 +95,14 @@ func (r *MessageRepository) GetConversations(ctx context.Context, userID string)
 		            WHERE m.conversation_id = c.id
 		              AND m.created_at > COALESCE(cp.last_read_at, '1970-01-01'::timestamp)),
 		           0
-		       ) AS unread_count
+		       ) AS unread_count,
+		       COALESCE(other_user.id::text, '') AS other_user_id,
+		       COALESCE(other_user.name, 'Citizen') AS other_user_name,
+		       COALESCE(other_user.role, '') AS other_user_role
 		FROM conversations c
 		JOIN conversation_participants cp ON cp.conversation_id = c.id AND cp.user_id = $1
+		LEFT JOIN conversation_participants cp2 ON cp2.conversation_id = c.id AND cp2.user_id != $1
+		LEFT JOIN users other_user ON other_user.id = cp2.user_id
 		ORDER BY (
 			SELECT MAX(created_at) FROM messages WHERE conversation_id = c.id
 		) DESC NULLS LAST`
@@ -113,11 +118,10 @@ func (r *MessageRepository) GetConversations(ctx context.Context, userID string)
 		var p model.ConversationPreview
 		if err := rows.Scan(
 			&p.ConversationID, &p.LastMessage, &p.UnreadCount,
+			&p.OtherUserID, &p.OtherUserName, &p.OtherUserRole,
 		); err != nil {
 			return nil, err
 		}
-		// OtherUserName, OtherUserRole, and Online status would be enriched
-		// via a call to the identity service in production.
 		previews = append(previews, p)
 	}
 	return previews, rows.Err()

@@ -47,12 +47,12 @@ const SEVERITY_WEIGHT: Record<string, number> = {
   low: 0.3,
 };
 
-// Default to Mumbai center
+// Default to Ward 45 - Andheri East
 const DEFAULT_REGION: Region = {
-  latitude: 19.076,
-  longitude: 72.8777,
-  latitudeDelta: 0.05,
-  longitudeDelta: 0.05,
+  latitude: 19.125,
+  longitude: 72.835,
+  latitudeDelta: 0.03,
+  longitudeDelta: 0.03,
 };
 
 type ViewMode = 'clusters' | 'heatmap';
@@ -68,9 +68,13 @@ export const MapScreen: React.FC = () => {
 
   const issuesList = issues ?? [];
 
-  // Filter issues with valid coordinates
+  // Filter issues with valid coordinates near the ward (exclude far-away issues)
   const validIssues = useMemo(
-    () => issuesList.filter(i => i.latitude !== 0 && i.longitude !== 0),
+    () => issuesList.filter(i =>
+      i.latitude !== 0 && i.longitude !== 0 &&
+      Math.abs(i.latitude - DEFAULT_REGION.latitude) < 0.5 &&
+      Math.abs(i.longitude - DEFAULT_REGION.longitude) < 0.5
+    ),
     [issuesList],
   );
 
@@ -98,42 +102,26 @@ export const MapScreen: React.FC = () => {
     return Object.values(grid);
   }, [validIssues]);
 
-  // Get user location to center map
+  // Center map on ward issues
   useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        try {
-          const loc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          setRegion({
-            latitude: loc.coords.latitude,
-            longitude: loc.coords.longitude,
-            latitudeDelta: 0.04,
-            longitudeDelta: 0.04,
-          });
-        } catch {
-          // Keep default region
-        }
-      }
-      setLocationReady(true);
-    })();
+    setLocationReady(true);
   }, []);
 
-  // Fit map to all issue markers
+  // Fit map to ward issues when loaded
   useEffect(() => {
-    if (locationReady && validIssues.length > 0 && mapRef.current) {
+    if (validIssues.length > 0 && mapRef.current) {
       const coords = validIssues.map(i => ({
         latitude: i.latitude,
         longitude: i.longitude,
       }));
-      mapRef.current.fitToCoordinates(coords, {
-        edgePadding: { top: 60, right: 40, bottom: 200, left: 40 },
-        animated: true,
-      });
+      setTimeout(() => {
+        mapRef.current?.fitToCoordinates(coords, {
+          edgePadding: { top: 60, right: 40, bottom: 200, left: 40 },
+          animated: true,
+        });
+      }, 500);
     }
-  }, [locationReady, validIssues]);
+  }, [validIssues]);
 
   // Group issues by category for the zone list
   const categoryGroups = useMemo(() => {
@@ -274,20 +262,26 @@ export const MapScreen: React.FC = () => {
           {/* Heatmap overlay — density circles */}
           {viewMode === 'heatmap' &&
             heatCells.map((cell, idx) => {
-              const intensity = Math.min(cell.count / 5, 1); // normalize: 5+ issues = max
-              const r = Math.round(220 - intensity * 180);
-              const g = Math.round(100 + (1 - intensity) * 120);
-              const b = Math.round(40);
-              const fillColor = `rgba(${r}, ${g}, ${b}, ${0.25 + intensity * 0.35})`;
-              const strokeColor = `rgba(${r}, ${g}, ${b}, ${0.5 + intensity * 0.3})`;
+              const intensity = Math.min(cell.count / 3, 1); // normalize: 3+ issues = max
+              // Red-orange gradient: more issues = darker red
+              const fillColor = intensity > 0.7
+                ? `rgba(220, 38, 38, 0.55)`   // red - critical
+                : intensity > 0.4
+                ? `rgba(255, 107, 53, 0.50)`   // saffron - moderate
+                : `rgba(251, 191, 36, 0.45)`;  // amber - low
+              const strokeColor = intensity > 0.7
+                ? `rgba(220, 38, 38, 0.8)`
+                : intensity > 0.4
+                ? `rgba(255, 107, 53, 0.7)`
+                : `rgba(251, 191, 36, 0.6)`;
               return (
                 <Circle
                   key={`heat-${idx}`}
                   center={{ latitude: cell.lat, longitude: cell.lng }}
-                  radius={250 + cell.count * 80}
+                  radius={300 + cell.count * 120}
                   fillColor={fillColor}
                   strokeColor={strokeColor}
-                  strokeWidth={1}
+                  strokeWidth={2}
                 />
               );
             })}

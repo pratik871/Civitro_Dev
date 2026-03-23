@@ -138,12 +138,23 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
 
       {/* Topic pills */}
       <View style={styles.topicPills}>
-        {data.topics.map(topic => (
-          <TouchableOpacity key={topic.name} style={styles.topicPill} activeOpacity={0.7}>
-            <View style={[styles.topicBar, { backgroundColor: topicColor(topic.sentiment) }]} />
-            <Text style={styles.topicText}>{topic.name} ({topic.percentage}%)</Text>
-          </TouchableOpacity>
-        ))}
+        {console.log('MOOD TOPICS:', data.topics.map(t => `${t.name}:${t.sentiment}`))}
+      {data.topics.map(topic => {
+          const color = topicColor(topic.sentiment);
+          const isPositive = topic.sentiment > 0.1;
+          return (
+            <TouchableOpacity
+              key={topic.name}
+              style={[styles.topicPill, { borderWidth: 1, borderColor: color + '40', backgroundColor: isPositive ? color + '10' : colors.borderLight }]}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 10 }}>{isPositive ? '✓' : '!'}</Text>
+              <Text style={[styles.topicText, { color: isPositive ? color : colors.textSecondary }]}>
+                {topic.name} ({topic.percentage}%)
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* 7-day trend */}
