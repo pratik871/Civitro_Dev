@@ -28,14 +28,9 @@ async def analyze(req: AnalyzeRequest) -> PatternReport:
 @router.get("/patterns/ward/{ward_id}", response_model=PatternReport)
 async def ward_patterns(ward_id: str) -> PatternReport:
     """List all patterns for a ward."""
-    import traceback
-    try:
-        rows = await get_patterns_by_ward(ward_id)
-        patterns = [service._row_to_pattern(r) for r in rows]
-        return PatternReport(patterns=patterns)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    rows = await get_patterns_by_ward(ward_id)
+    patterns = [service._row_to_pattern(r) for r in rows]
+    return PatternReport(patterns=patterns)
 
 
 @router.get("/patterns/{pattern_id}", response_model=DetectedPattern)

@@ -626,6 +626,15 @@ async def start_consumer() -> None:
 
 def _row_to_pattern(row: dict[str, Any]) -> DetectedPattern:
     """Convert a database row dict to a DetectedPattern model."""
+    # evidence_package_json may come back as a JSON string from the query
+    epj = row.get("evidence_package_json")
+    if isinstance(epj, str):
+        import json
+        try:
+            epj = json.loads(epj)
+        except (json.JSONDecodeError, TypeError):
+            epj = None
+
     return DetectedPattern(
         id=str(row["id"]),
         ward_id=str(row["ward_id"]),
@@ -640,8 +649,8 @@ def _row_to_pattern(row: dict[str, Any]) -> DetectedPattern:
         first_report_at=row.get("first_report_at"),
         last_report_at=row.get("last_report_at"),
         days_unresolved=row.get("days_unresolved", 0),
-        economic_impact=row.get("economic_impact"),
-        evidence_package_json=row.get("evidence_package_json"),
+        economic_impact=float(row["economic_impact"]) if row.get("economic_impact") else None,
+        evidence_package_json=epj,
         community_action_id=str(row["community_action_id"]) if row.get("community_action_id") else None,
         status=PatternStatus(row["status"]) if row.get("status") else PatternStatus.ACTIVE,
         created_at=row.get("created_at"),
