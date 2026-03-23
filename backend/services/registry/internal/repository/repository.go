@@ -103,6 +103,60 @@ func (r *PostgresRepository) ListAll(ctx context.Context) ([]model.Representativ
 }
 
 // GetByID retrieves a representative by ID.
+// GetRepresentativeStats returns enriched stats for a representative.
+func (r *PostgresRepository) GetRepresentativeStats(ctx context.Context, id string) (map[string]interface{}, error) {
+	stats := map[string]interface{}{
+		"total_ratings":      0,
+		"issues_total":       0,
+		"issues_resolved":    0,
+		"response_rate":      0.0,
+		"promises_total":     0,
+		"promises_fulfilled": 0,
+		"chi_score":          0,
+		"boundary_name":      "",
+	}
+
+	// Total ratings
+	var totalRatings int
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM satisfaction_surveys WHERE representative_id = $1`, id).Scan(&totalRatings)
+	stats["total_ratings"] = totalRatings
+
+	// Get boundary_id and name
+	var boundaryID, boundaryName string
+	_ = r.pool.QueryRow(ctx, `
+		SELECT COALESCE(r.boundary_id::text, ''), COALESCE(b.name, '')
+		FROM representatives r LEFT JOIN boundaries b ON b.id = r.boundary_id
+		WHERE r.id = $1
+	`, id).Scan(&boundaryID, &boundaryName)
+	stats["boundary_name"] = boundaryName
+
+	if boundaryID != "" {
+		// Issues
+		var issuesTotal, issuesResolved int
+		_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid`, boundaryID).Scan(&issuesTotal)
+		_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved'`, boundaryID).Scan(&issuesResolved)
+		stats["issues_total"] = issuesTotal
+		stats["issues_resolved"] = issuesResolved
+		if issuesTotal > 0 {
+			stats["response_rate"] = float64(issuesResolved) / float64(issuesTotal)
+		}
+
+		// CHI
+		var chiScore float64
+		_ = r.pool.QueryRow(ctx, `SELECT COALESCE(overall_score, 0) FROM chi_scores WHERE boundary_id = $1::uuid ORDER BY computed_at DESC LIMIT 1`, boundaryID).Scan(&chiScore)
+		stats["chi_score"] = int(chiScore)
+	}
+
+	// Promises
+	var promisesTotal, promisesFulfilled int
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM promises WHERE leader_id = $1`, id).Scan(&promisesTotal)
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM promises WHERE leader_id = $1 AND status = 'fulfilled'`, id).Scan(&promisesFulfilled)
+	stats["promises_total"] = promisesTotal
+	stats["promises_fulfilled"] = promisesFulfilled
+
+	return stats, nil
+}
+
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.Representative, error) {
 	query := `SELECT ` + repColumns + ` FROM representatives WHERE id = $1`
 	return scanRep(r.pool.QueryRow(ctx, query, id))

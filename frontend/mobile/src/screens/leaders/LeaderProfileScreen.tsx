@@ -106,11 +106,11 @@ export const LeaderProfileScreen: React.FC = () => {
         <Text style={styles.role}>
           {GOVERNANCE_LEVEL_LABELS[leader.governanceLevel]}
         </Text>
-        <Text style={styles.constituency}>
-          {leader.ward || leader.constituency}
-        </Text>
+        {leader.constituency ? (
+          <Text style={styles.constituency}>{leader.constituency}</Text>
+        ) : null}
         <Badge
-          text={`${leader.party} (${leader.partyAbbr})`}
+          text={leader.partyAbbr || leader.party}
           backgroundColor={colors.navy + '10'}
           color={colors.navy}
           size="md"

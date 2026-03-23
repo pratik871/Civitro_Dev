@@ -35,6 +35,11 @@ func (s *Service) ListAll(ctx context.Context) ([]model.Representative, error) {
 }
 
 // GetRepresentative retrieves a representative by ID.
+// GetRepresentativeStats returns enriched stats for a representative profile.
+func (s *Service) GetRepresentativeStats(ctx context.Context, id string) (map[string]interface{}, error) {
+	return s.repo.GetRepresentativeStats(ctx, id)
+}
+
 func (s *Service) GetRepresentative(ctx context.Context, id string) (*model.RepresentativeResponse, error) {
 	rep, err := s.repo.GetByID(ctx, id)
 	if err != nil {
