@@ -25,6 +25,7 @@ type Repository interface {
 	CreateStaff(ctx context.Context, staff *model.StaffAccount) error
 	GetStaffByRepID(ctx context.Context, repID string) ([]model.StaffAccount, error)
 	GetSeatReservation(ctx context.Context, boundaryID, electionCycleID string) (*model.SeatReservation, error)
+	GetRepresentativeStats(ctx context.Context, id string) (map[string]interface{}, error)
 }
 
 // ErrNotFound is returned when a record is not found.
