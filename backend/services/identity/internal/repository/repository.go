@@ -426,7 +426,7 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 
 	// 11. Unread messages
 	err = r.pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read_at IS NULL`, userID,
+		`SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read = false`, userID,
 	).Scan(&stats.UnreadMessages)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
