@@ -23,14 +23,16 @@ interface PromiseItem {
   leaderRole: string;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'fulfilled' | 'broken';
+  status: 'pending' | 'in_progress' | 'fulfilled' | 'broken' | 'detected' | 'on_track';
   progress: number;
   deadline: string;
   category: string;
 }
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { color: string; label: string; icon: string }> = {
+  detected: { color: colors.info, label: 'Detected', icon: '\u{1F50D}' },
   pending: { color: colors.textMuted, label: 'Pending', icon: '\u23F3' },
+  on_track: { color: colors.warning, label: 'On Track', icon: '\u{1F3D7}' },
   in_progress: { color: colors.warning, label: 'In Progress', icon: '\u{1F3D7}' },
   fulfilled: { color: colors.success, label: 'Fulfilled', icon: '\u2705' },
   broken: { color: colors.error, label: 'Broken', icon: '\u274C' },
@@ -40,7 +42,10 @@ export const PromisesScreen: React.FC = () => {
   const [filter, setFilter] = useState<string>('all');
   const { data: promises, isLoading } = useQuery<PromiseItem[]>({
     queryKey: ['promises'],
-    queryFn: () => api.get('/api/v1/issues/promises'),
+    queryFn: async () => {
+      const res = await api.get<{ promises: PromiseItem[] } | PromiseItem[]>('/api/v1/promises');
+      return Array.isArray(res) ? res : (res.promises ?? []);
+    },
     staleTime: 60000,
   });
 

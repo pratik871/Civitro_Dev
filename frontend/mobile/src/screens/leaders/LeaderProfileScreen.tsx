@@ -191,7 +191,17 @@ export const LeaderProfileScreen: React.FC = () => {
             {leader.promisesFulfilled}/{leader.promisesTotal} kept
           </Text>
         </View>
-        <Text style={styles.noPromisesText}>No promises tracked yet</Text>
+        {leader.promisesTotal === 0 ? (
+          <Text style={styles.noPromisesText}>No promises tracked yet</Text>
+        ) : (
+          <TouchableOpacity
+            style={styles.viewPromisesBtn}
+            onPress={() => navigation.navigate('Promises' as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.viewPromisesBtnText}>View All Promises</Text>
+          </TouchableOpacity>
+        )}
       </Card>
 
       {/* Key Stats */}
@@ -636,5 +646,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     fontStyle: 'italic',
+  },
+  viewPromisesBtn: {
+    backgroundColor: '#FFF3ED',
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  viewPromisesBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FF6B35',
   },
 });

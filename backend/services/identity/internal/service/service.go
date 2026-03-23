@@ -453,6 +453,11 @@ func (s *Service) VerifyAadhaar(ctx context.Context, userID string, zipData []by
 	}, nil
 }
 
+// ListPromises returns all promises with leader names.
+func (s *Service) ListPromises(ctx context.Context) ([]map[string]interface{}, error) {
+	return s.repo.ListPromises(ctx)
+}
+
 // GetGovernanceChain retrieves the governance escalation chain for a ward.
 func (s *Service) GetGovernanceChain(ctx context.Context, wardID string) ([]model.GovernanceChainEntry, error) {
 	return s.repo.GetGovernanceChain(ctx, wardID)

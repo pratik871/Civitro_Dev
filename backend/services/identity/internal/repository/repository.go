@@ -59,6 +59,9 @@ type Repository interface {
 
 	// Ward mood
 	GetWardMood(ctx context.Context, wardID string) (*model.WardMood, error)
+
+	// Promises
+	ListPromises(ctx context.Context) ([]map[string]interface{}, error)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -415,6 +418,54 @@ func (r *PostgresRepository) GetWardMood(ctx context.Context, wardID string) (*m
 	json.Unmarshal(topicsJSON, &mood.Topics)
 	json.Unmarshal(sparklineJSON, &mood.TrendSparkline)
 	return &mood, nil
+}
+
+// ---------------------------------------------------------------------------
+// Promises
+// ---------------------------------------------------------------------------
+
+// ListPromises returns all promises with leader names.
+func (r *PostgresRepository) ListPromises(ctx context.Context) ([]map[string]interface{}, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT p.id, p.promise_text, p.category, p.status, p.progress_pct,
+		       p.timeline, p.created_at,
+		       COALESCE(r.name, '') as leader_name,
+		       COALESCE(r.position, '') as leader_role
+		FROM promises p
+		LEFT JOIN representatives r ON r.id = p.leader_id
+		ORDER BY p.created_at DESC
+		LIMIT 50
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []map[string]interface{}
+	for rows.Next() {
+		var id, text, category, status, timeline, leaderName, leaderRole string
+		var progressPct int
+		var createdAt interface{}
+		if err := rows.Scan(&id, &text, &category, &status, &progressPct, &timeline, &createdAt, &leaderName, &leaderRole); err != nil {
+			return nil, err
+		}
+		result = append(result, map[string]interface{}{
+			"id":          id,
+			"title":       text,
+			"description": text,
+			"category":    category,
+			"status":      status,
+			"progress":    progressPct,
+			"deadline":    timeline,
+			"leaderName":  leaderName,
+			"leaderRole":  leaderRole,
+			"created_at":  createdAt,
+		})
+	}
+	if result == nil {
+		result = []map[string]interface{}{}
+	}
+	return result, nil
 }
 
 // ---------------------------------------------------------------------------

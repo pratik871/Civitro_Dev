@@ -37,6 +37,7 @@ func (h *Handler) RegisterPublicRoutes(rg *gin.RouterGroup) {
 	// Public governance chain (no auth required for viewing)
 	rg.GET("/governance/ward/:ward_id/chain", h.GetGovernanceChain)
 	rg.GET("/ward-mood/:ward_id", h.GetWardMood)
+	rg.GET("/promises", h.ListPromises)
 }
 
 // RegisterProtectedRoutes registers routes that require JWT authentication.
@@ -204,6 +205,16 @@ func (h *Handler) GetWardMood(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, mood)
+}
+
+// ListPromises handles GET /promises.
+func (h *Handler) ListPromises(c *gin.Context) {
+	promises, err := h.svc.ListPromises(c.Request.Context())
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"promises": promises})
 }
 
 // VerifyAadhaar handles POST /auth/verify-aadhaar (multipart form).
