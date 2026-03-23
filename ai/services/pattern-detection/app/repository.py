@@ -148,7 +148,7 @@ async def list_active_patterns(ward_id: Optional[str] = None) -> list[dict[str, 
 
 
 async def get_patterns_by_ward(ward_id: str) -> list[dict[str, Any]]:
-    """Return all patterns (any status) for a ward, most recent first."""
+    """Return active patterns for a ward, most recent first."""
     pool = await get_postgres()
     rows = await pool.fetch(
         """
@@ -159,7 +159,7 @@ async def get_patterns_by_ward(ward_id: str) -> list[dict[str, Any]]:
                economic_impact, evidence_package_json,
                community_action_id::text, status, created_at, updated_at
         FROM detected_patterns
-        WHERE ward_id = $1::uuid
+        WHERE ward_id = $1::uuid AND status = 'active'
         ORDER BY updated_at DESC
         LIMIT 100
         """,

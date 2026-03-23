@@ -39,6 +39,7 @@ type Repository interface {
 	UpdateEscalationLevel(ctx context.Context, actionID, newLevel string) error
 	UpdateEconomicImpact(ctx context.Context, actionID string, impact float64) error
 	GetUserCivicScoreAndWard(ctx context.Context, userID string, wardID *string) error
+	UpdatePatternStatus(ctx context.Context, patternID, actionID string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -579,6 +580,14 @@ func (r *PostgresRepository) GetUserCivicScore(ctx context.Context, userID strin
 		return 0, err
 	}
 	return score, nil
+}
+
+func (r *PostgresRepository) UpdatePatternStatus(ctx context.Context, patternID, actionID string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE detected_patterns SET status = 'action_created', community_action_id = $1 WHERE id = $2`,
+		actionID, patternID,
+	)
+	return err
 }
 
 func (r *PostgresRepository) GetUserCivicScoreAndWard(ctx context.Context, userID string, wardID *string) error {

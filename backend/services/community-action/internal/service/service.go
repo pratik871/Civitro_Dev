@@ -132,6 +132,11 @@ func (s *Service) CreateAction(ctx context.Context, userID string, req *model.Cr
 		s.repo.UpdateEconomicImpact(ctx, action.ID, impact)
 	}
 
+	// Mark pattern as action_created if linked to a pattern
+	if req.PatternID != "" {
+		s.repo.UpdatePatternStatus(ctx, req.PatternID, action.ID)
+	}
+
 	// Publish action created event
 	payload, _ := json.Marshal(map[string]interface{}{
 		"action_id": action.ID,

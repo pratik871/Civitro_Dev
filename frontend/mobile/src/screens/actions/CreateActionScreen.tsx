@@ -129,20 +129,35 @@ export const CreateActionScreen: React.FC = () => {
 
   const handleSubmit = () => {
     if (!canSubmit) return;
+    const payload = {
+      title: title.trim(),
+      description: description.trim(),
+      desiredOutcome: desiredOutcome.trim(),
+      targetAuthorityId,
+      linkedIssueIds,
+      ...(patternId ? { patternId } : {}),
+    };
+    console.log('=== CREATE ACTION PAYLOAD ===');
+    console.log('title:', payload.title);
+    console.log('description:', payload.description?.substring(0, 50));
+    console.log('desiredOutcome:', payload.desiredOutcome?.substring(0, 50));
+    console.log('targetAuthorityId:', payload.targetAuthorityId);
+    console.log('linkedIssueIds:', JSON.stringify(payload.linkedIssueIds));
+    console.log('patternId:', (payload as any).patternId);
+    console.log('canSubmit:', canSubmit);
+
     createMutation.mutate(
+      payload,
       {
-        title: title.trim(),
-        description: description.trim(),
-        desiredOutcome: desiredOutcome.trim(),
-        targetAuthorityId,
-        linkedIssueIds,
-        ...(patternId ? { patternId } : {}),
-      },
-      {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          console.log('=== CREATE ACTION SUCCESS ===', JSON.stringify(data));
           setShowSuccess(true);
         },
-        onError: (err: Error) => {
+        onError: (err: any) => {
+          console.log('=== CREATE ACTION ERROR ===');
+          console.log('error message:', err?.message);
+          console.log('error response:', JSON.stringify(err?.response?.data));
+          console.log('error status:', err?.response?.status);
           Alert.alert('Error', err.message || 'Could not create action.');
         },
       },
@@ -151,6 +166,7 @@ export const CreateActionScreen: React.FC = () => {
 
   if (showPreview) {
     return (
+      <>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
@@ -206,6 +222,24 @@ export const CreateActionScreen: React.FC = () => {
           />
         </View>
       </ScrollView>
+      <Modal visible={showSuccess} transparent animationType="fade">
+        <Pressable style={successStyles.backdrop} onPress={() => { setShowSuccess(false); navigation.goBack(); }}>
+          <View style={successStyles.card}>
+            <View style={successStyles.iconWrap}>
+              <Svg viewBox="0 0 24 24" width={32} height={32} fill="none">
+                <Circle cx={12} cy={12} r={10} stroke="#10B981" strokeWidth={2} />
+                <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+            <Text style={successStyles.title}>Action Published!</Text>
+            <Text style={successStyles.subtitle}>Your community action is now live. Citizens in your ward can support it.</Text>
+            <TouchableOpacity style={successStyles.btnPrimary} onPress={() => { setShowSuccess(false); navigation.goBack(); }} activeOpacity={0.7}>
+              <Text style={successStyles.btnPrimaryText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+      </>
     );
   }
 
@@ -382,6 +416,7 @@ export const CreateActionScreen: React.FC = () => {
     </KeyboardAvoidingView>
 
     {/* Success Modal */}
+    {console.log('=== MODAL STATE ===', showSuccess)}
     <Modal visible={showSuccess} transparent animationType="fade">
       <Pressable style={successStyles.backdrop} onPress={() => { setShowSuccess(false); navigation.goBack(); }}>
         <View style={successStyles.card}>

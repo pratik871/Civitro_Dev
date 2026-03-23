@@ -105,7 +105,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
     throw new ApiError(
-      errorData?.message || `Request failed with status ${response.status}`,
+      errorData?.error?.message || errorData?.message || `Request failed with status ${response.status}`,
       response.status,
       errorData,
     );
