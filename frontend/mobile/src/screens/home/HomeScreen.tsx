@@ -37,6 +37,7 @@ import { useActions } from '../../hooks/useCommunityActions';
 import { useGovernanceChain } from '../../hooks/useGovernanceChain';
 import { useWeatherTip } from '../../hooks/useWeatherTip';
 import { FAB } from '../../components/ui/FAB';
+import api from '../../lib/api';
 import type { RootStackParamList } from '../../navigation/types';
 
 // Dashboard components
@@ -466,7 +467,7 @@ export const HomeScreen: React.FC = () => {
                 { icon: 'calendar', value: String(firstPattern.days_unresolved ?? 0), label: t('home.daysUnresolved') },
                 { icon: 'damage', value: firstPattern.estimated_damage ?? (firstPattern.economic_impact ? `\u20B9${Math.round(firstPattern.economic_impact / 100000)}L` : ''), label: t('home.estDamage'), valueColor: '#0F766E' },
               ]}
-              onStartAction={() => {}}
+              onStartAction={() => navigation.navigate('CreateAction' as any)}
               onViewEvidence={() => navigation.navigate('IssuesList')}
             />
           </View>
@@ -512,7 +513,11 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.sectionSpacing}>
             <CommunityActionsSection
               actions={communityActions}
-              onSeeAll={() => {}}
+              onSeeAll={() => navigation.navigate('ActionsList' as any)}
+              onSupport={(id) => {
+                // Support action via API
+                api.post(`/api/v1/actions/${id}/support`).catch(() => {});
+              }}
             />
           </View>
         )}
