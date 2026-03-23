@@ -174,7 +174,7 @@ type WardMood struct {
 	TrendDirection     string          `json:"trend_direction"`
 	TrendChangePercent int             `json:"trend_change_percent"`
 	TrendSparkline     []float64       `json:"trend_sparkline"`
-	UpdatedAt          string          `json:"updated_at"`
+	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
 // ProfileResponse is the response for user profile retrieval.
