@@ -42,6 +42,7 @@ export const LeaderProfileScreen: React.FC = () => {
 
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedStars, setSelectedStars] = useState(0);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   // Fetch user's existing rating for this leader
   const { data: myRatingData } = useQuery({
@@ -70,7 +71,7 @@ export const LeaderProfileScreen: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
       queryClient.invalidateQueries({ queryKey: ['my-rating', leaderId] });
-      setSelectedStars(0);
+      setShowThankYou(true);
     },
   });
 
@@ -151,28 +152,11 @@ export const LeaderProfileScreen: React.FC = () => {
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Rating Breakdown</Text>
         <RatingBreakdown breakdown={leader.ratingBreakdown} />
-        {ratingSubmitted && (
-          <View style={styles.yourRating}>
-            <Text style={styles.yourRatingText}>You rated {myRating} star{(myRating ?? 0) > 1 ? 's' : ''}</Text>
-            <View style={styles.yourRatingStars}>
-              {[1, 2, 3, 4, 5].map(s => (
-                <Svg key={s} viewBox="0 0 24 24" width={14} height={14}>
-                  <Path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                    fill={s <= (myRating ?? 0) ? '#FFD700' : '#E5E7EB'}
-                    stroke={s <= (myRating ?? 0) ? '#F59E0B' : '#D1D5DB'}
-                    strokeWidth={1}
-                  />
-                </Svg>
-              ))}
-            </View>
-          </View>
-        )}
         <Button
           title={ratingSubmitted ? 'Update Rating' : 'Rate This Leader'}
           onPress={() => {
-            if (!ratingSubmitted) setSelectedStars(0);
-            setRatingSubmitted(false);
+            setSelectedStars(myRating || 0);
+            setShowThankYou(false);
             setShowRatingModal(true);
           }}
           variant="outline"
@@ -247,7 +231,7 @@ export const LeaderProfileScreen: React.FC = () => {
     <Modal visible={showRatingModal} transparent animationType="fade" onRequestClose={() => setShowRatingModal(false)}>
       <Pressable style={ratingStyles.backdrop} onPress={() => !rateMutation.isPending && setShowRatingModal(false)}>
         <View style={ratingStyles.card}>
-          {!ratingSubmitted ? (
+          {!showThankYou ? (
             <>
               {/* Star selection */}
               <Text style={ratingStyles.title}>Rate {leader?.name}</Text>
@@ -569,20 +553,17 @@ const styles = StyleSheet.create({
   yourRating: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF3ED',
-    padding: 12,
-    borderRadius: 10,
+    gap: 8,
     marginBottom: 12,
-  },
-  yourRatingText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#FF6B35',
   },
   yourRatingStars: {
     flexDirection: 'row',
-    gap: 2,
+    gap: 3,
+  },
+  yourRatingLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
   },
   bottomSpacer: {
     height: 40,
