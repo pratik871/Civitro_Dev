@@ -41,8 +41,23 @@ export const LeaderProfileScreen: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [showRatingModal, setShowRatingModal] = useState(false);
-  const [selectedStars, setSelectedStars] = useState(0);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [ratingStep, setRatingStep] = useState(0); // 0-4 for 5 dimensions, 5 = done
+  const [dimensions, setDimensions] = useState({
+    responsiveness: 0,
+    transparency: 0,
+    deliveryOnPromises: 0,
+    accessibility: 0,
+    overallImpact: 0,
+  });
+
+  const RATING_QUESTIONS = [
+    { key: 'responsiveness', label: 'Responsiveness', question: 'How quickly do they respond to issues?' },
+    { key: 'transparency', label: 'Transparency', question: 'How open are they about decisions?' },
+    { key: 'deliveryOnPromises', label: 'Delivery on Promises', question: 'Do they keep their promises?' },
+    { key: 'accessibility', label: 'Accessibility', question: 'How easy is it to reach them?' },
+    { key: 'overallImpact', label: 'Overall Impact', question: 'How much positive change have they brought?' },
+  ] as const;
 
   // Fetch user's existing rating for this leader
   const { data: myRatingData } = useQuery({
@@ -63,10 +78,10 @@ export const LeaderProfileScreen: React.FC = () => {
   const ratingSubmitted = myRating > 0;
 
   const rateMutation = useMutation({
-    mutationFn: (score: number) =>
+    mutationFn: (data: { score: number; responsiveness: number; transparency: number; delivery_on_promises: number; accessibility: number; overall_impact: number }) =>
       api.post(`/api/v1/ratings/survey`, {
         representative_id: leaderId,
-        score,
+        ...data,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
@@ -155,7 +170,8 @@ export const LeaderProfileScreen: React.FC = () => {
         <Button
           title={ratingSubmitted ? 'Update Rating' : 'Rate This Leader'}
           onPress={() => {
-            setSelectedStars(myRating || 0);
+            setRatingStep(0);
+            setDimensions({ responsiveness: 0, transparency: 0, deliveryOnPromises: 0, accessibility: 0, overallImpact: 0 });
             setShowThankYou(false);
             setShowRatingModal(true);
           }}
@@ -227,60 +243,86 @@ export const LeaderProfileScreen: React.FC = () => {
       <View style={styles.bottomSpacer} />
     </ScrollView>
 
-    {/* Rating Modal */}
+    {/* Rating Modal — Step-by-step 5 dimensions */}
     <Modal visible={showRatingModal} transparent animationType="fade" onRequestClose={() => setShowRatingModal(false)}>
       <Pressable style={ratingStyles.backdrop} onPress={() => !rateMutation.isPending && setShowRatingModal(false)}>
         <View style={ratingStyles.card}>
           {!showThankYou ? (
             <>
-              {/* Star selection */}
-              <Text style={ratingStyles.title}>Rate {leader?.name}</Text>
-              <Text style={ratingStyles.subtitle}>How would you rate this leader's performance?</Text>
-
-              <View style={ratingStyles.starsRow}>
-                {[1, 2, 3, 4, 5].map(star => (
-                  <TouchableOpacity key={star} onPress={() => setSelectedStars(star)} activeOpacity={0.7}>
-                    <Svg viewBox="0 0 24 24" width={40} height={40}>
-                      <Path
-                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                        fill={star <= selectedStars ? '#FFD700' : '#E5E7EB'}
-                        stroke={star <= selectedStars ? '#F59E0B' : '#D1D5DB'}
-                        strokeWidth={1}
-                      />
-                    </Svg>
-                  </TouchableOpacity>
-                ))}
+              {/* Progress */}
+              <Text style={ratingStyles.stepCounter}>{ratingStep + 1} of 5</Text>
+              <View style={ratingStyles.progressBar}>
+                <View style={[ratingStyles.progressFill, { width: `${((ratingStep + 1) / 5) * 100}%` }]} />
               </View>
 
-              {selectedStars > 0 && (
+              {/* Question */}
+              <Text style={ratingStyles.title}>{RATING_QUESTIONS[ratingStep].label}</Text>
+              <Text style={ratingStyles.subtitle}>{RATING_QUESTIONS[ratingStep].question}</Text>
+
+              {/* Stars for current dimension */}
+              <View style={ratingStyles.starsRow}>
+                {[1, 2, 3, 4, 5].map(star => {
+                  const currentKey = RATING_QUESTIONS[ratingStep].key;
+                  const currentVal = dimensions[currentKey];
+                  return (
+                    <TouchableOpacity key={star} onPress={() => setDimensions(d => ({ ...d, [currentKey]: star }))} activeOpacity={0.7}>
+                      <Svg viewBox="0 0 24 24" width={40} height={40}>
+                        <Path
+                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                          fill={star <= currentVal ? '#FFD700' : '#E5E7EB'}
+                          stroke={star <= currentVal ? '#F59E0B' : '#D1D5DB'}
+                          strokeWidth={1}
+                        />
+                      </Svg>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {dimensions[RATING_QUESTIONS[ratingStep].key] > 0 && (
                 <Text style={ratingStyles.starLabel}>
-                  {['', 'Poor', 'Below Average', 'Average', 'Good', 'Excellent'][selectedStars]}
+                  {['', 'Poor', 'Below Average', 'Average', 'Good', 'Excellent'][dimensions[RATING_QUESTIONS[ratingStep].key]]}
                 </Text>
               )}
 
               <View style={ratingStyles.btnRow}>
                 <TouchableOpacity
                   style={ratingStyles.cancelBtn}
-                  onPress={() => setShowRatingModal(false)}
+                  onPress={() => ratingStep > 0 ? setRatingStep(s => s - 1) : setShowRatingModal(false)}
                   activeOpacity={0.7}
                 >
-                  <Text style={ratingStyles.cancelBtnText}>Cancel</Text>
+                  <Text style={ratingStyles.cancelBtnText}>{ratingStep > 0 ? 'Back' : 'Cancel'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[ratingStyles.submitBtn, selectedStars === 0 && ratingStyles.submitBtnDisabled]}
-                  onPress={() => selectedStars > 0 && rateMutation.mutate(selectedStars)}
-                  activeOpacity={selectedStars > 0 ? 0.7 : 1}
+                  style={[ratingStyles.submitBtn, dimensions[RATING_QUESTIONS[ratingStep].key] === 0 && ratingStyles.submitBtnDisabled]}
+                  onPress={() => {
+                    if (dimensions[RATING_QUESTIONS[ratingStep].key] === 0) return;
+                    if (ratingStep < 4) {
+                      setRatingStep(s => s + 1);
+                    } else {
+                      // Submit all dimensions
+                      const avg = Math.round((dimensions.responsiveness + dimensions.transparency + dimensions.deliveryOnPromises + dimensions.accessibility + dimensions.overallImpact) / 5);
+                      rateMutation.mutate({
+                        score: avg,
+                        responsiveness: dimensions.responsiveness,
+                        transparency: dimensions.transparency,
+                        delivery_on_promises: dimensions.deliveryOnPromises,
+                        accessibility: dimensions.accessibility,
+                        overall_impact: dimensions.overallImpact,
+                      });
+                    }
+                  }}
+                  activeOpacity={dimensions[RATING_QUESTIONS[ratingStep].key] > 0 ? 0.7 : 1}
                   disabled={rateMutation.isPending}
                 >
                   <Text style={ratingStyles.submitBtnText}>
-                    {rateMutation.isPending ? 'Submitting...' : 'Submit Rating'}
+                    {rateMutation.isPending ? 'Submitting...' : ratingStep < 4 ? 'Next' : 'Submit'}
                   </Text>
                 </TouchableOpacity>
               </View>
             </>
           ) : (
             <>
-              {/* Success state */}
               <View style={ratingStyles.successIcon}>
                 <Svg viewBox="0 0 24 24" width={32} height={32} fill="none">
                   <Path d="M20 6L9 17l-5-5" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
@@ -288,7 +330,7 @@ export const LeaderProfileScreen: React.FC = () => {
               </View>
               <Text style={ratingStyles.title}>Thank You!</Text>
               <Text style={ratingStyles.subtitle}>
-                Your {selectedStars}-star rating for {leader?.name} has been recorded. It helps improve civic accountability.
+                Your detailed rating for {leader?.name} has been recorded across 5 dimensions.
               </Text>
               <TouchableOpacity
                 style={ratingStyles.doneBtn}
@@ -326,6 +368,25 @@ const ratingStyles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 10,
+  },
+  stepCounter: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    marginBottom: 6,
+  },
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 2,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 4,
+    backgroundColor: '#FF6B35',
+    borderRadius: 2,
   },
   title: {
     fontSize: 20,
@@ -444,6 +505,7 @@ const styles = StyleSheet.create({
   },
   partyBadge: {
     marginTop: spacing.sm,
+    alignSelf: 'center',
   },
   ratingHeader: {
     alignItems: 'center',

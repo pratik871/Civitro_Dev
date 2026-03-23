@@ -30,22 +30,32 @@ type Rating struct {
 // SatisfactionSurvey is a citizen's individual rating of a representative's
 // performance on a specific issue.
 type SatisfactionSurvey struct {
-	ID               string    `json:"id" db:"id"`
-	UserID           string    `json:"user_id" db:"user_id"`
-	RepresentativeID string    `json:"representative_id" db:"representative_id"`
-	IssueID          *string   `json:"issue_id" db:"issue_id"`
-	Score            int       `json:"score" db:"score"` // 1-5
-	Feedback         string    `json:"feedback" db:"feedback"`
-	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+	ID                 string    `json:"id" db:"id"`
+	UserID             string    `json:"user_id" db:"user_id"`
+	RepresentativeID   string    `json:"representative_id" db:"representative_id"`
+	IssueID            *string   `json:"issue_id" db:"issue_id"`
+	Score              int       `json:"score" db:"score"` // 1-5
+	Responsiveness     int       `json:"responsiveness"`
+	Transparency       int       `json:"transparency"`
+	DeliveryOnPromises int       `json:"delivery_on_promises"`
+	Accessibility      int       `json:"accessibility"`
+	OverallImpact      int       `json:"overall_impact"`
+	Feedback           string    `json:"feedback" db:"feedback"`
+	CreatedAt          time.Time `json:"created_at" db:"created_at"`
 }
 
 // SubmitSurveyRequest is the payload for submitting a satisfaction survey.
 type SubmitSurveyRequest struct {
-	UserID           string `json:"user_id"`
-	RepresentativeID string `json:"representative_id" binding:"required"`
-	IssueID          string `json:"issue_id"`
-	Score            int    `json:"score" binding:"required,min=1,max=5"`
-	Feedback         string `json:"feedback"`
+	UserID             string `json:"user_id"`
+	RepresentativeID   string `json:"representative_id" binding:"required"`
+	IssueID            string `json:"issue_id"`
+	Score              int    `json:"score" binding:"required,min=1,max=5"`
+	Responsiveness     int    `json:"responsiveness"`
+	Transparency       int    `json:"transparency"`
+	DeliveryOnPromises int    `json:"delivery_on_promises"`
+	Accessibility      int    `json:"accessibility"`
+	OverallImpact      int    `json:"overall_impact"`
+	Feedback           string `json:"feedback"`
 }
 
 // RatingWeights defines the formula weights for composite score calculation.

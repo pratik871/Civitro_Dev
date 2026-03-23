@@ -77,13 +77,18 @@ func (s *RatingService) SubmitSurvey(ctx context.Context, req model.SubmitSurvey
 	}
 
 	survey := &model.SatisfactionSurvey{
-		ID:               generateID(),
-		UserID:           req.UserID,
-		RepresentativeID: req.RepresentativeID,
-		IssueID:          issueID,
-		Score:            req.Score,
-		Feedback:         req.Feedback,
-		CreatedAt:        time.Now().UTC(),
+		ID:                 generateID(),
+		UserID:             req.UserID,
+		RepresentativeID:   req.RepresentativeID,
+		IssueID:            issueID,
+		Score:              req.Score,
+		Responsiveness:     req.Responsiveness,
+		Transparency:       req.Transparency,
+		DeliveryOnPromises: req.DeliveryOnPromises,
+		Accessibility:      req.Accessibility,
+		OverallImpact:      req.OverallImpact,
+		Feedback:           req.Feedback,
+		CreatedAt:          time.Now().UTC(),
 	}
 
 	if err := s.repo.CreateSurvey(ctx, survey); err != nil {

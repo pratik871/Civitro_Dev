@@ -117,6 +117,13 @@ export function useLeader(leaderId: string) {
         leader.promisesTotal = stats.promises_total ?? 0;
         leader.promisesFulfilled = stats.promises_fulfilled ?? 0;
         if (stats.boundary_name) leader.constituency = stats.boundary_name;
+        leader.ratingBreakdown = {
+          responsiveness: stats.responsiveness ?? 0,
+          transparency: stats.transparency ?? 0,
+          deliveryOnPromises: stats.delivery_on_promises ?? 0,
+          accessibility: stats.accessibility ?? 0,
+          overallImpact: stats.overall_impact ?? 0,
+        };
       } catch {
         // Stats endpoint unavailable — use defaults
       }

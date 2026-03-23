@@ -81,9 +81,13 @@ func (r *RatingRepository) GetRatingHistory(ctx context.Context, repID string) (
 func (r *RatingRepository) CreateSurvey(ctx context.Context, survey *model.SatisfactionSurvey) error {
 	// Update existing rating if user already rated this representative
 	res, err := r.db.Exec(ctx, `
-		UPDATE satisfaction_surveys SET score = $1, feedback = $2, created_at = $3
-		WHERE user_id = $4 AND representative_id = $5`,
+		UPDATE satisfaction_surveys SET score = $1, feedback = $2, created_at = $3,
+			responsiveness = $4, transparency = $5, delivery_on_promises = $6,
+			accessibility = $7, overall_impact = $8
+		WHERE user_id = $9 AND representative_id = $10`,
 		survey.Score, survey.Feedback, survey.CreatedAt,
+		survey.Responsiveness, survey.Transparency, survey.DeliveryOnPromises,
+		survey.Accessibility, survey.OverallImpact,
 		survey.UserID, survey.RepresentativeID,
 	)
 	if err != nil {
@@ -95,10 +99,15 @@ func (r *RatingRepository) CreateSurvey(ctx context.Context, survey *model.Satis
 
 	// First rating — insert new
 	_, err = r.db.Exec(ctx, `
-		INSERT INTO satisfaction_surveys (id, user_id, representative_id, issue_id, score, feedback, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		INSERT INTO satisfaction_surveys (id, user_id, representative_id, issue_id, score,
+			responsiveness, transparency, delivery_on_promises, accessibility, overall_impact,
+			feedback, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
 		survey.ID, survey.UserID, survey.RepresentativeID,
-		survey.IssueID, survey.Score, survey.Feedback, survey.CreatedAt,
+		survey.IssueID, survey.Score,
+		survey.Responsiveness, survey.Transparency, survey.DeliveryOnPromises,
+		survey.Accessibility, survey.OverallImpact,
+		survey.Feedback, survey.CreatedAt,
 	)
 	return err
 }

@@ -117,10 +117,23 @@ func (r *PostgresRepository) GetRepresentativeStats(ctx context.Context, id stri
 		"boundary_name":      "",
 	}
 
-	// Total ratings
+	// Total ratings + breakdown averages
 	var totalRatings int
 	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM satisfaction_surveys WHERE representative_id = $1`, id).Scan(&totalRatings)
 	stats["total_ratings"] = totalRatings
+
+	var avgResp, avgTransp, avgDelivery, avgAccess, avgImpact float64
+	_ = r.pool.QueryRow(ctx, `
+		SELECT COALESCE(AVG(responsiveness),0), COALESCE(AVG(transparency),0),
+			   COALESCE(AVG(delivery_on_promises),0), COALESCE(AVG(accessibility),0),
+			   COALESCE(AVG(overall_impact),0)
+		FROM satisfaction_surveys WHERE representative_id = $1 AND responsiveness > 0
+	`, id).Scan(&avgResp, &avgTransp, &avgDelivery, &avgAccess, &avgImpact)
+	stats["responsiveness"] = avgResp
+	stats["transparency"] = avgTransp
+	stats["delivery_on_promises"] = avgDelivery
+	stats["accessibility"] = avgAccess
+	stats["overall_impact"] = avgImpact
 
 	// Get boundary_id and name
 	var boundaryID, boundaryName string
