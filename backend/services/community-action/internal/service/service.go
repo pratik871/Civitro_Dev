@@ -97,7 +97,7 @@ func (s *Service) CreateAction(ctx context.Context, userID string, req *model.Cr
 		PatternID:         req.PatternID,
 		CreatedAt:         now,
 	}
-	action.ID = repository.GenerateActionID()
+	action.ID = repository.GenerateID()
 
 	if err := s.repo.Create(ctx, action); err != nil {
 		return nil, fmt.Errorf("failed to create action: %w", err)
