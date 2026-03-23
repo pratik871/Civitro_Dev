@@ -349,7 +349,7 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 
 	// 3. Issues reported by this user
 	err = r.pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM issues WHERE reporter_id = $1`, userID,
+		`SELECT COUNT(*) FROM issues WHERE user_id = $1`, userID,
 	).Scan(&stats.IssuesReported)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
