@@ -54,7 +54,15 @@ func (h *Handler) CreateAction(c *gin.Context) {
 
 	resp, err := h.svc.CreateAction(c.Request.Context(), userID.(string), &req)
 	if err != nil {
-		errors.HandleError(c, err)
+		msg := err.Error()
+		// Guardrail errors should be 400, not 500
+		if msg == "Minimum civic score of 5 required to create community actions" ||
+			msg == "Actions require at least 3 linked issues or 1 detected pattern" ||
+			msg == "Maximum 2 actions per month. Please wait before creating another." {
+			errors.AbortWithError(c, errors.ErrBadRequest.WithMessage(msg))
+		} else {
+			errors.HandleError(c, err)
+		}
 		return
 	}
 

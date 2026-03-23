@@ -8,9 +8,12 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  Modal,
+  Pressable,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from '../../components/ui/Card';
@@ -47,6 +50,7 @@ export const CreateActionScreen: React.FC = () => {
   const [issueSearchQuery, setIssueSearchQuery] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [patternLoaded, setPatternLoaded] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch pattern info and auto-link issues by category when navigated from a pattern
   React.useEffect(() => {
@@ -136,11 +140,7 @@ export const CreateActionScreen: React.FC = () => {
       },
       {
         onSuccess: () => {
-          Alert.alert(
-            'Action Created',
-            'Your community action has been published. Rally your ward!',
-            [{ text: 'OK', onPress: () => navigation.goBack() }],
-          );
+          setShowSuccess(true);
         },
         onError: (err: Error) => {
           Alert.alert('Error', err.message || 'Could not create action.');
@@ -210,6 +210,7 @@ export const CreateActionScreen: React.FC = () => {
   }
 
   return (
+    <>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -379,8 +380,38 @@ export const CreateActionScreen: React.FC = () => {
         <View style={{ height: 40 }} />
       </ScrollView>
     </KeyboardAvoidingView>
+
+    {/* Success Modal */}
+    <Modal visible={showSuccess} transparent animationType="fade">
+      <Pressable style={successStyles.backdrop} onPress={() => { setShowSuccess(false); navigation.goBack(); }}>
+        <View style={successStyles.card}>
+          <View style={successStyles.iconWrap}>
+            <Svg viewBox="0 0 24 24" width={32} height={32} fill="none">
+              <Circle cx={12} cy={12} r={10} stroke="#10B981" strokeWidth={2} />
+              <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+          </View>
+          <Text style={successStyles.title}>Action Published!</Text>
+          <Text style={successStyles.subtitle}>Your community action is now live. Citizens in your ward can support it and rally for change.</Text>
+          <TouchableOpacity style={successStyles.btnPrimary} onPress={() => { setShowSuccess(false); navigation.goBack(); }} activeOpacity={0.7}>
+            <Text style={successStyles.btnPrimaryText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Modal>
+    </>
   );
 };
+
+const successStyles = StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 40 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 28, alignItems: 'center', width: '100%', maxWidth: 300, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 10 },
+  iconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  title: { fontSize: 20, fontWeight: '800', color: '#0B1426', marginBottom: 8 },
+  subtitle: { fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 19, marginBottom: 20 },
+  btnPrimary: { backgroundColor: '#FF6B35', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 12, alignItems: 'center', width: '100%', shadowColor: '#FF6B35', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 4 },
+  btnPrimaryText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+});
 
 const styles = StyleSheet.create({
   container: {
