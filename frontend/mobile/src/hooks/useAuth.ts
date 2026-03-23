@@ -57,9 +57,14 @@ async function requestAndSendLocation() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return;
 
-    const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
+    // Use last known position first (instant), fall back to fresh GPS
+    let loc = await Location.getLastKnownPositionAsync();
+    if (!loc) {
+      loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+        timeInterval: 5000,
+      });
+    }
 
     await api.put('/api/v1/auth/location', {
       lat: loc.coords.latitude,

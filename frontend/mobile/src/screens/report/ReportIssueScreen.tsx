@@ -6,10 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Alert,
   Image,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
@@ -133,6 +135,7 @@ export const ReportIssueScreen: React.FC = () => {
   };
 
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async () => {
     const selectedCategory = data.category || data.suggestedCategory || 'other';
@@ -170,24 +173,7 @@ export const ReportIssueScreen: React.FC = () => {
         {
           onSuccess: () => {
             setSubmitting(false);
-            Alert.alert(
-              'Issue Reported!',
-              'Your issue has been submitted successfully. You can track its progress in the Issues section.',
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    setStep(1);
-                    setData(prev => ({
-                      latitude: prev.latitude,
-                      longitude: prev.longitude,
-                      address: prev.address,
-                    }));
-                    setDescription('');
-                  },
-                },
-              ],
-            );
+            setShowSuccess(true);
           },
           onError: (err) => {
             setSubmitting(false);
@@ -562,9 +548,193 @@ export const ReportIssueScreen: React.FC = () => {
         {step === 3 && renderStep3()}
         {step === 4 && renderStep4()}
       </ScrollView>
+
+      {/* Success Modal */}
+      <Modal visible={showSuccess} transparent animationType="fade">
+        <Pressable
+          style={successStyles.backdrop}
+          onPress={() => {
+            setShowSuccess(false);
+            setStep(1);
+            setData(prev => ({ latitude: prev.latitude, longitude: prev.longitude, address: prev.address }));
+            setDescription('');
+          }}
+        >
+          <View style={successStyles.card}>
+            {/* Checkmark circle */}
+            <View style={successStyles.iconWrap}>
+              <Svg viewBox="0 0 24 24" width={32} height={32} fill="none">
+                <Circle cx={12} cy={12} r={10} stroke="#10B981" strokeWidth={2} />
+                <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+
+            <Text style={successStyles.title}>Issue Reported!</Text>
+            <Text style={successStyles.subtitle}>
+              Your issue has been submitted successfully. Citizens and ward officers can now see it.
+            </Text>
+
+            {/* Steps */}
+            <View style={successStyles.steps}>
+              <View style={successStyles.stepRow}>
+                <View style={[successStyles.stepDot, successStyles.stepDotDone]} />
+                <Text style={successStyles.stepText}>Reported</Text>
+              </View>
+              <View style={successStyles.stepLine} />
+              <View style={successStyles.stepRow}>
+                <View style={successStyles.stepDot} />
+                <Text style={successStyles.stepTextMuted}>Assigned</Text>
+              </View>
+              <View style={successStyles.stepLine} />
+              <View style={successStyles.stepRow}>
+                <View style={successStyles.stepDot} />
+                <Text style={successStyles.stepTextMuted}>Resolved</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={successStyles.btn}
+              onPress={() => {
+                setShowSuccess(false);
+                setStep(1);
+                setData(prev => ({ latitude: prev.latitude, longitude: prev.longitude, address: prev.address }));
+                setDescription('');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={successStyles.btnText}>Track Progress</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={successStyles.btnSecondary}
+              onPress={() => {
+                setShowSuccess(false);
+                setStep(1);
+                setData(prev => ({ latitude: prev.latitude, longitude: prev.longitude, address: prev.address }));
+                setDescription('');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={successStyles.btnSecondaryText}>Report Another</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
+
+const successStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  iconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0B1426',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 20,
+  },
+  steps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  stepRow: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  stepDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  stepDotDone: {
+    borderColor: '#10B981',
+    backgroundColor: '#10B981',
+  },
+  stepLine: {
+    width: 32,
+    height: 2,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 4,
+    marginBottom: 16,
+  },
+  stepText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  stepTextMuted: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#9CA3AF',
+  },
+  btn: {
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+    marginBottom: 10,
+  },
+  btnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  btnSecondary: {
+    paddingVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  btnSecondaryText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+});
 
 const styles = StyleSheet.create({
   container: {

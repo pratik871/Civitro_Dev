@@ -494,7 +494,7 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		WITH activity_dates AS (
 			SELECT DISTINCT created_at::date AS d FROM issues WHERE user_id = $1
 			UNION
-			SELECT DISTINCT created_at::date FROM poll_votes WHERE user_id = $1
+			SELECT DISTINCT voted_at::date FROM poll_votes WHERE user_id = $1
 			UNION
 			SELECT DISTINCT created_at::date FROM issue_confirmations WHERE user_id = $1
 			UNION
