@@ -403,8 +403,11 @@ export const HomeScreen: React.FC = () => {
                 }
               }}
               onRate={(rep) => {
-                if (leaders && leaders.length > 0) {
-                  navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
+                const match = leaders?.find(l => l.name === rep.name);
+                if (match) {
+                  navigation.navigate('LeaderProfile', { leaderId: match.id });
+                } else {
+                  setComingSoonFeature('Rating for ' + rep.name);
                 }
               }}
               onViewIssues={() => navigation.navigate('Main', { screen: 'Map' } as any)}

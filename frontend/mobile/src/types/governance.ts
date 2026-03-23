@@ -11,14 +11,14 @@ export interface GovernanceTier {
 
 export const GOVERNANCE_TIERS: GovernanceTier[] = [
   { key: 't1',  label: 'Ward',    fullLabel: 'T1 Ward Councillor',    level: 'municipal', showActions: true },
-  { key: 't2',  label: 'Mayor',   fullLabel: 'T2 Mayor',             level: 'municipal' },
-  { key: 't2b', label: 'DC',      fullLabel: 'T2b District Collector', level: 'district' },
-  { key: 't3',  label: 'MLA',     fullLabel: 'T3 MLA',               level: 'state' },
-  { key: 't4',  label: 'State',   fullLabel: 'T4 State Minister',    level: 'state' },
-  { key: 't5',  label: 'CM',      fullLabel: 'T5 Chief Minister',    level: 'state' },
-  { key: 't6',  label: 'MP',      fullLabel: 'T6 MP (Lok Sabha)',    level: 'central' },
-  { key: 't7',  label: 'Central', fullLabel: 'T7 Central Minister',  level: 'central' },
-  { key: 't8',  label: 'PM',      fullLabel: 'T8 Prime Minister',    level: 'central' },
+  { key: 't2',  label: 'Mayor',   fullLabel: 'T2 Mayor',             level: 'municipal', showActions: true },
+  { key: 't2b', label: 'DC',      fullLabel: 'T2b District Collector', level: 'district', showActions: true },
+  { key: 't3',  label: 'MLA',     fullLabel: 'T3 MLA',               level: 'state', showActions: true },
+  { key: 't4',  label: 'State',   fullLabel: 'T4 State Minister',    level: 'state', showActions: true },
+  { key: 't5',  label: 'CM',      fullLabel: 'T5 Chief Minister',    level: 'state', showActions: true },
+  { key: 't6',  label: 'MP',      fullLabel: 'T6 MP (Lok Sabha)',    level: 'central', showActions: true },
+  { key: 't7',  label: 'Central', fullLabel: 'T7 Central Minister',  level: 'central', showActions: true },
+  { key: 't8',  label: 'PM',      fullLabel: 'T8 Prime Minister',    level: 'central', showActions: true },
 ];
 
 export interface GovernanceRep {
