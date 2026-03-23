@@ -18,6 +18,6 @@ const (
 	TopicLocationResolved   = "location.resolved"
 	TopicRepClaimed         = "representative.claimed"
 	TopicVoiceCreated       = "voice.created"
-	TopicIssueCreated       = "issue.created"
+	TopicIssueCreated       = "civitro.issue.events"
 	TopicIssueStatusUpdated = "issue.status.updated"
 )
