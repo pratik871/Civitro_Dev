@@ -30,6 +30,8 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		voices.POST("/:id/like", h.ToggleLike)
 		voices.POST("/:id/share", h.ShareVoice)
 		voices.POST("/:id/bookmark", h.BookmarkVoice)
+		voices.POST("/:id/comment", h.AddComment)
+		voices.GET("/:id/comments", h.GetComments)
 	}
 
 	rg.GET("/hashtags/:tag", h.GetByHashtag)
@@ -179,6 +181,40 @@ func (h *Handler) BookmarkVoice(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"bookmarked": bookmarked})
+}
+
+// AddComment handles POST /voices/:id/comment.
+func (h *Handler) AddComment(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+	voiceID := c.Param("id")
+	var req struct {
+		Text string `json:"text" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("text is required"))
+		return
+	}
+	comment, err := h.svc.AddComment(c.Request.Context(), voiceID, userID.(string), req.Text)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, comment)
+}
+
+// GetComments handles GET /voices/:id/comments.
+func (h *Handler) GetComments(c *gin.Context) {
+	voiceID := c.Param("id")
+	comments, err := h.svc.GetComments(c.Request.Context(), voiceID)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"comments": comments})
 }
 
 // GetByHashtag handles GET /hashtags/:tag.

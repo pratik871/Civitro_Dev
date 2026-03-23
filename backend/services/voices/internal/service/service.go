@@ -67,6 +67,25 @@ func (s *Service) CreateVoice(ctx context.Context, userID string, req *model.Cre
 	return &model.VoiceResponse{Voice: *voice}, nil
 }
 
+// AddComment adds a comment to a voice.
+func (s *Service) AddComment(ctx context.Context, voiceID, userID, text string) (map[string]interface{}, error) {
+	id := generateID()
+	err := s.repo.AddComment(ctx, id, voiceID, userID, text)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add comment: %w", err)
+	}
+	// Increment replies count
+	_ = s.repo.IncrementCounter(ctx, voiceID, "replies_count", 1)
+	return map[string]interface{}{
+		"id": id, "voice_id": voiceID, "user_id": userID, "content": text,
+	}, nil
+}
+
+// GetComments returns all comments for a voice.
+func (s *Service) GetComments(ctx context.Context, voiceID string) ([]map[string]interface{}, error) {
+	return s.repo.GetComments(ctx, voiceID)
+}
+
 // HasUserLiked checks if a user has liked a voice.
 func (s *Service) HasUserLiked(ctx context.Context, voiceID, userID string) bool {
 	return s.repo.HasUserReaction(ctx, voiceID, userID, "like")

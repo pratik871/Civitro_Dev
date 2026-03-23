@@ -22,6 +22,7 @@ import { Card } from '../../components/ui/Card';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
+import { useQuery } from '@tanstack/react-query';
 import { useVoice, useLikeVoice, useShareVoice } from '../../hooks/useVoices';
 import api from '../../lib/api';
 import type { RootStackParamList } from '../../navigation/types';
@@ -41,7 +42,18 @@ export const VoiceDetailScreen: React.FC = () => {
 
   const [commentText, setCommentText] = useState('');
 
+  // Fetch comments
+  const { data: commentsData, refetch: refetchComments } = useQuery({
+    queryKey: ['voice-comments', voiceId],
+    queryFn: async () => {
+      const res = await api.get<{ comments: any[] }>(`/api/v1/voices/${voiceId}/comments`);
+      return res.comments ?? [];
+    },
+    enabled: !!voiceId,
+  });
+
   const upvoted = voice?.hasUpvoted ?? false;
+  const commentsList = commentsData ?? [];
 
   const handleUpvote = () => {
     likeMutation.mutate(voiceId, { onSuccess: () => refetch() });
@@ -49,8 +61,8 @@ export const VoiceDetailScreen: React.FC = () => {
 
   const handleComment = () => {
     if (!commentText.trim()) return;
-    api.post(`/api/v1/voices/${voiceId}/reply`, { text: commentText.trim() })
-      .then(() => { setCommentText(''); refetch(); })
+    api.post(`/api/v1/voices/${voiceId}/comment`, { text: commentText.trim() })
+      .then(() => { setCommentText(''); refetchComments(); refetch(); })
       .catch(() => Alert.alert('Error', 'Could not post comment'));
   };
 
@@ -176,7 +188,7 @@ export const VoiceDetailScreen: React.FC = () => {
 
       {/* Comments Section */}
       <View style={styles.commentsSection}>
-        <Text style={styles.commentsTitle}>Comments</Text>
+        <Text style={styles.commentsTitle}>Comments ({commentsList.length})</Text>
 
         {/* Comment Input */}
         <View style={styles.commentInputRow}>
@@ -199,9 +211,24 @@ export const VoiceDetailScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Comments list placeholder */}
-        {(voice?.repliesCount ?? 0) === 0 && !commentText && (
+        {/* Comments list */}
+        {commentsList.length === 0 ? (
           <Text style={styles.noComments}>No comments yet. Be the first!</Text>
+        ) : (
+          commentsList.map((c: any) => (
+            <View key={c.id} style={styles.commentItem}>
+              <View style={styles.commentAvatar}>
+                <Text style={styles.commentAvatarText}>{(c.user_name || 'C').charAt(0).toUpperCase()}</Text>
+              </View>
+              <View style={styles.commentBody}>
+                <View style={styles.commentHeader}>
+                  <Text style={styles.commentUserName}>{c.user_name || 'Citizen'}</Text>
+                  <Text style={styles.commentTime}>{formatRelativeTime(c.created_at)}</Text>
+                </View>
+                <Text style={styles.commentContent}>{c.content}</Text>
+              </View>
+            </View>
+          ))
         )}
       </View>
 
@@ -427,5 +454,48 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FF6B35' + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentAvatarText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FF6B35',
+  },
+  commentBody: {
+    flex: 1,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  commentUserName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  commentTime: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  commentContent: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
 });

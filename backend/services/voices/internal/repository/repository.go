@@ -24,6 +24,8 @@ type Repository interface {
 	GetReaction(ctx context.Context, voiceID, userID string, reactionType model.ReactionType) (*model.VoiceReaction, error)
 	GetByHashtag(ctx context.Context, hashtag string, limit int) ([]model.Voice, error)
 	HasUserReaction(ctx context.Context, voiceID, userID string, reactionType string) bool
+	AddComment(ctx context.Context, id, voiceID, userID, text string) error
+	GetComments(ctx context.Context, voiceID string) ([]map[string]interface{}, error)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -226,6 +228,46 @@ func (r *PostgresRepository) HasUserReaction(ctx context.Context, voiceID, userI
 		voiceID, userID, reactionType,
 	).Scan(&count)
 	return err == nil && count > 0
+}
+
+// AddComment inserts a comment on a voice.
+func (r *PostgresRepository) AddComment(ctx context.Context, id, voiceID, userID, text string) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO voice_comments (id, voice_id, user_id, content, created_at) VALUES ($1, $2, $3, $4, NOW())`,
+		id, voiceID, userID, text,
+	)
+	return err
+}
+
+// GetComments returns all comments for a voice.
+func (r *PostgresRepository) GetComments(ctx context.Context, voiceID string) ([]map[string]interface{}, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT vc.id, vc.content, vc.created_at, COALESCE(u.name, 'Citizen') as user_name
+		FROM voice_comments vc
+		LEFT JOIN users u ON u.id = vc.user_id
+		WHERE vc.voice_id = $1
+		ORDER BY vc.created_at DESC
+	`, voiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []map[string]interface{}
+	for rows.Next() {
+		var id, content, userName string
+		var createdAt interface{}
+		if err := rows.Scan(&id, &content, &createdAt, &userName); err != nil {
+			continue
+		}
+		comments = append(comments, map[string]interface{}{
+			"id": id, "content": content, "user_name": userName, "created_at": createdAt,
+		})
+	}
+	if comments == nil {
+		comments = []map[string]interface{}{}
+	}
+	return comments, nil
 }
 
 // GetByHashtag retrieves voices containing a specific hashtag.
