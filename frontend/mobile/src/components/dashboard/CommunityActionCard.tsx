@@ -24,6 +24,7 @@ export interface CommunityAction {
   creatorInitial: string;
   creatorName: string;
   createdAgo: string;
+  hasSupported?: boolean;
 }
 
 interface CommunityActionCardProps {
@@ -50,6 +51,7 @@ const ActionCard: React.FC<{
   onSupport?: () => void;
   onShare?: () => void;
 }> = ({ action, onSupport, onShare }) => {
+  const [supported, setSupported] = React.useState(action.hasSupported ?? false);
   const badgeStyle = BADGE_STYLES[action.badgeType] ?? BADGE_STYLES.new;
 
   return (
@@ -112,11 +114,21 @@ const ActionCard: React.FC<{
 
       {/* CTAs */}
       <View style={styles.ctaRow}>
-        <TouchableOpacity style={styles.supportBtn} onPress={onSupport} activeOpacity={0.7}>
-          <Svg viewBox="0 0 14 14" width={14} height={14} fill="none">
-            <Path d="M7 1v12M1 7h12" stroke="white" strokeWidth={2} strokeLinecap="round" />
-          </Svg>
-          <Text style={styles.supportBtnText}>Support</Text>
+        <TouchableOpacity
+          style={[styles.supportBtn, supported && styles.supportedBtn]}
+          onPress={() => { setSupported(!supported); onSupport?.(); }}
+          activeOpacity={0.7}
+        >
+          {supported ? (
+            <Svg viewBox="0 0 14 14" width={14} height={14} fill="none">
+              <Path d="M3 7l3 3 5-5" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+          ) : (
+            <Svg viewBox="0 0 14 14" width={14} height={14} fill="none">
+              <Path d="M7 1v12M1 7h12" stroke="white" strokeWidth={2} strokeLinecap="round" />
+            </Svg>
+          )}
+          <Text style={styles.supportBtnText}>{supported ? 'Supported' : 'Support'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7}>
           <Svg viewBox="0 0 14 14" width={14} height={14} fill="none">
@@ -296,6 +308,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     gap: 4,
+  },
+  supportedBtn: {
+    backgroundColor: '#10B981',
   },
   supportBtnText: {
     fontSize: 12,

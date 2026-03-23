@@ -277,5 +277,16 @@ func (h *Handler) ListTrending(c *gin.Context) {
 		return
 	}
 
+	// Populate has_supported for current user
+	if uid, ok := c.Get("user_id"); ok {
+		userID, _ := uid.(string)
+		if userID != "" && resp != nil {
+			for i := range resp.Actions {
+				supported, _ := h.svc.HasSupported(c.Request.Context(), resp.Actions[i].ID, userID)
+				resp.Actions[i].HasSupported = supported
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, resp)
 }

@@ -181,6 +181,7 @@ export const HomeScreen: React.FC = () => {
       creatorInitial: (a.creatorName || 'C').charAt(0),
       creatorName: a.creatorName || 'Citizen',
       createdAgo: formatTimeAgo(a.createdAt),
+      hasSupported: a.hasSupported ?? false,
     }));
   }, [actionsData]);
 
@@ -601,9 +602,12 @@ export const HomeScreen: React.FC = () => {
             <CommunityActionsSection
               actions={communityActions}
               onSeeAll={() => navigation.navigate('ActionsList' as any)}
-              onSupport={(id) => {
-                // Support action via API
-                api.post(`/api/v1/actions/${id}/support`).catch(() => {});
+              onSupport={async (id) => {
+                try {
+                  const res = await api.post<{ supported: boolean; support_count: number }>(`/api/v1/actions/${id}/support`);
+                  // Refetch actions to update the card
+                  refetchStats();
+                } catch {}
               }}
             />
           </View>

@@ -187,6 +187,10 @@ func (s *Service) ListByWard(ctx context.Context, wardID string, limit, offset i
 }
 
 // AddSupport adds a supporter to an action. Returns supported state and new count.
+func (s *Service) HasSupported(ctx context.Context, actionID, userID string) (bool, error) {
+	return s.repo.HasSupported(ctx, actionID, userID)
+}
+
 func (s *Service) AddSupport(ctx context.Context, actionID, userID string) (bool, int, error) {
 	// Verify action exists
 	action, err := s.repo.GetByID(ctx, actionID)

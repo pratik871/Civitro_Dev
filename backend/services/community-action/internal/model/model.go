@@ -199,16 +199,17 @@ type TimelineResponse struct {
 
 // TrendingAction represents a trending community action across wards.
 type TrendingAction struct {
-	ID              string       `json:"id"`
-	Title           string       `json:"title"`
-	WardID          string       `json:"ward_id"`
-	Status          ActionStatus `json:"status"`
-	SupportCount    int          `json:"support_count"`
-	SupportGoal     int          `json:"support_goal"`
-	EvidenceCount   int          `json:"evidence_count"`
+	ID              string          `json:"id"`
+	Title           string          `json:"title"`
+	WardID          string          `json:"ward_id"`
+	Status          ActionStatus    `json:"status"`
+	SupportCount    int             `json:"support_count"`
+	SupportGoal     int             `json:"support_goal"`
+	EvidenceCount   int             `json:"evidence_count"`
 	EscalationLevel EscalationLevel `json:"escalation_level"`
-	CreatedAt       time.Time    `json:"created_at"`
-	MomentumScore   float64      `json:"momentum_score"`
+	CreatedAt       time.Time       `json:"created_at"`
+	MomentumScore   float64         `json:"momentum_score"`
+	HasSupported    bool            `json:"has_supported"`
 }
 
 // TrendingListResponse is the response for trending actions.
