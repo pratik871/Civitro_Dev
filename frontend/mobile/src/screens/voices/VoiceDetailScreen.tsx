@@ -215,18 +215,54 @@ export const VoiceDetailScreen: React.FC = () => {
         {commentsList.length === 0 ? (
           <Text style={styles.noComments}>No comments yet. Be the first!</Text>
         ) : (
-          commentsList.map((c: any) => (
-            <View key={c.id} style={styles.commentItem}>
-              <View style={styles.commentAvatar}>
-                <Text style={styles.commentAvatarText}>{(c.user_name || 'C').charAt(0).toUpperCase()}</Text>
-              </View>
-              <View style={styles.commentBody}>
-                <View style={styles.commentHeader}>
-                  <Text style={styles.commentUserName}>{c.user_name || 'Citizen'}</Text>
-                  <Text style={styles.commentTime}>{formatRelativeTime(c.created_at)}</Text>
+          commentsList.filter((c: any) => !c.parent_id).map((c: any) => (
+            <View key={c.id}>
+              <View style={styles.commentItem}>
+                <View style={styles.commentAvatar}>
+                  <Text style={styles.commentAvatarText}>{(c.user_name || 'C').charAt(0).toUpperCase()}</Text>
                 </View>
-                <Text style={styles.commentContent}>{c.content}</Text>
+                <View style={styles.commentBody}>
+                  <View style={styles.commentHeader}>
+                    <Text style={styles.commentUserName}>{c.user_name || 'Citizen'}</Text>
+                    <Text style={styles.commentTime}>{formatRelativeTime(c.created_at)}</Text>
+                  </View>
+                  <Text style={styles.commentContent}>{c.content}</Text>
+                  <View style={styles.commentActions}>
+                    <TouchableOpacity
+                      style={styles.commentActionBtn}
+                      onPress={() => {
+                        api.post(`/api/v1/voices/${voiceId}/comments/${c.id}/upvote`).then(() => refetchComments());
+                      }}
+                    >
+                      <Svg viewBox="0 0 12 12" width={12} height={12} fill="none">
+                        <Path d="M6 2v8M4 4l2-2 2 2" stroke={(c.upvotes_count || 0) > 0 ? '#FF6B35' : '#9CA3AF'} strokeWidth={1.5} strokeLinecap="round" />
+                      </Svg>
+                      <Text style={[styles.commentActionText, (c.upvotes_count || 0) > 0 && { color: '#FF6B35' }]}>{c.upvotes_count || 0}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.commentActionBtn}
+                      onPress={() => setCommentText(`@${c.user_name || 'Citizen'} `)}
+                    >
+                      <Text style={styles.commentActionText}>Reply</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
+              {/* Replies */}
+              {commentsList.filter((r: any) => r.parent_id === c.id).map((reply: any) => (
+                <View key={reply.id} style={[styles.commentItem, { marginLeft: 42 }]}>
+                  <View style={[styles.commentAvatar, { width: 26, height: 26, borderRadius: 13 }]}>
+                    <Text style={[styles.commentAvatarText, { fontSize: 11 }]}>{(reply.user_name || 'C').charAt(0).toUpperCase()}</Text>
+                  </View>
+                  <View style={styles.commentBody}>
+                    <View style={styles.commentHeader}>
+                      <Text style={styles.commentUserName}>{reply.user_name || 'Citizen'}</Text>
+                      <Text style={styles.commentTime}>{formatRelativeTime(reply.created_at)}</Text>
+                    </View>
+                    <Text style={styles.commentContent}>{reply.content}</Text>
+                  </View>
+                </View>
+              ))}
             </View>
           ))
         )}
@@ -497,5 +533,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  commentActions: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 6,
+  },
+  commentActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  commentActionText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textMuted,
   },
 });

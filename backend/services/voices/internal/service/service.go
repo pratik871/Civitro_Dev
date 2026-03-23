@@ -86,6 +86,23 @@ func (s *Service) GetComments(ctx context.Context, voiceID string) ([]map[string
 	return s.repo.GetComments(ctx, voiceID)
 }
 
+// UpvoteComment toggles upvote on a comment.
+func (s *Service) UpvoteComment(ctx context.Context, commentID, userID string) (bool, error) {
+	return s.repo.ToggleCommentUpvote(ctx, commentID, userID)
+}
+
+// ReplyToComment adds a reply to a comment.
+func (s *Service) ReplyToComment(ctx context.Context, voiceID, parentID, userID, text string) (map[string]interface{}, error) {
+	id := generateID()
+	err := s.repo.AddReply(ctx, id, voiceID, parentID, userID, text)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add reply: %w", err)
+	}
+	return map[string]interface{}{
+		"id": id, "voice_id": voiceID, "parent_id": parentID, "user_id": userID, "content": text,
+	}, nil
+}
+
 // HasUserLiked checks if a user has liked a voice.
 func (s *Service) HasUserLiked(ctx context.Context, voiceID, userID string) bool {
 	return s.repo.HasUserReaction(ctx, voiceID, userID, "like")

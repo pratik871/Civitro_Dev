@@ -26,6 +26,8 @@ type Repository interface {
 	HasUserReaction(ctx context.Context, voiceID, userID string, reactionType string) bool
 	AddComment(ctx context.Context, id, voiceID, userID, text string) error
 	GetComments(ctx context.Context, voiceID string) ([]map[string]interface{}, error)
+	ToggleCommentUpvote(ctx context.Context, commentID, userID string) (bool, error)
+	AddReply(ctx context.Context, id, voiceID, parentID, userID, text string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -239,14 +241,15 @@ func (r *PostgresRepository) AddComment(ctx context.Context, id, voiceID, userID
 	return err
 }
 
-// GetComments returns all comments for a voice.
+// GetComments returns all comments for a voice with upvote counts and replies.
 func (r *PostgresRepository) GetComments(ctx context.Context, voiceID string) ([]map[string]interface{}, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT vc.id, vc.content, vc.created_at, COALESCE(u.name, 'Citizen') as user_name
+		SELECT vc.id, vc.content, vc.created_at, vc.upvotes_count, vc.parent_id,
+		       COALESCE(u.name, 'Citizen') as user_name
 		FROM voice_comments vc
 		LEFT JOIN users u ON u.id = vc.user_id
 		WHERE vc.voice_id = $1
-		ORDER BY vc.created_at DESC
+		ORDER BY vc.created_at ASC
 	`, voiceID)
 	if err != nil {
 		return nil, err
@@ -256,18 +259,53 @@ func (r *PostgresRepository) GetComments(ctx context.Context, voiceID string) ([
 	var comments []map[string]interface{}
 	for rows.Next() {
 		var id, content, userName string
+		var upvotesCount int
+		var parentID *string
 		var createdAt interface{}
-		if err := rows.Scan(&id, &content, &createdAt, &userName); err != nil {
+		if err := rows.Scan(&id, &content, &createdAt, &upvotesCount, &parentID, &userName); err != nil {
 			continue
 		}
-		comments = append(comments, map[string]interface{}{
-			"id": id, "content": content, "user_name": userName, "created_at": createdAt,
-		})
+		c := map[string]interface{}{
+			"id": id, "content": content, "user_name": userName,
+			"created_at": createdAt, "upvotes_count": upvotesCount,
+		}
+		if parentID != nil {
+			c["parent_id"] = *parentID
+		}
+		comments = append(comments, c)
 	}
 	if comments == nil {
 		comments = []map[string]interface{}{}
 	}
 	return comments, nil
+}
+
+// ToggleCommentUpvote toggles an upvote on a comment.
+func (r *PostgresRepository) ToggleCommentUpvote(ctx context.Context, commentID, userID string) (bool, error) {
+	// Check if already upvoted
+	var count int
+	r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM voice_comment_upvotes WHERE comment_id = $1 AND user_id = $2`, commentID, userID).Scan(&count)
+
+	if count > 0 {
+		// Remove upvote
+		r.pool.Exec(ctx, `DELETE FROM voice_comment_upvotes WHERE comment_id = $1 AND user_id = $2`, commentID, userID)
+		r.pool.Exec(ctx, `UPDATE voice_comments SET upvotes_count = GREATEST(upvotes_count - 1, 0) WHERE id = $1`, commentID)
+		return false, nil
+	}
+
+	// Add upvote
+	r.pool.Exec(ctx, `INSERT INTO voice_comment_upvotes (comment_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, commentID, userID)
+	r.pool.Exec(ctx, `UPDATE voice_comments SET upvotes_count = upvotes_count + 1 WHERE id = $1`, commentID)
+	return true, nil
+}
+
+// AddReply inserts a reply to a comment.
+func (r *PostgresRepository) AddReply(ctx context.Context, id, voiceID, parentID, userID, text string) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO voice_comments (id, voice_id, user_id, content, parent_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW())`,
+		id, voiceID, userID, text, parentID,
+	)
+	return err
 }
 
 // GetByHashtag retrieves voices containing a specific hashtag.
