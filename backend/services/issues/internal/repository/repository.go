@@ -29,6 +29,7 @@ type Repository interface {
 	ToggleCommentLike(ctx context.Context, commentID, userID string) (bool, error)
 	HasLikedComment(ctx context.Context, commentID, userID string) (bool, error)
 	GetTrending(ctx context.Context) ([]model.TrendingTopic, error)
+	GetUserWard(ctx context.Context, userID string, wardID *string) error
 	ListPromises(ctx context.Context) ([]model.PromiseResponse, error)
 	GetCHI(ctx context.Context) (*model.CHIResponse, error)
 	UpdateClassification(ctx context.Context, id string, category string, severity string, confidence float64) error
@@ -390,6 +391,12 @@ func (r *PostgresRepository) HasLikedComment(ctx context.Context, commentID, use
 
 // GetTrending computes trending topics from issue data.
 // Groups by category, computes mention counts, severity-based sentiment, and 7-day trend.
+func (r *PostgresRepository) GetUserWard(ctx context.Context, userID string, wardID *string) error {
+	return r.pool.QueryRow(ctx,
+		`SELECT COALESCE(primary_boundary_id::text, '') FROM users WHERE id = $1`, userID,
+	).Scan(wardID)
+}
+
 func (r *PostgresRepository) GetTrending(ctx context.Context) ([]model.TrendingTopic, error) {
 	query := `
 		SELECT

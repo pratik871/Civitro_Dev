@@ -65,14 +65,19 @@ func (s *Service) CreateIssue(ctx context.Context, userID string, req *model.Cre
 		return nil, fmt.Errorf("failed to create issue: %w", err)
 	}
 
+	// Look up user's ward for pattern detection
+	wardID := ""
+	_ = s.repo.GetUserWard(ctx, userID, &wardID)
+
 	// Publish issue created event
 	payload, _ := json.Marshal(map[string]interface{}{
-		"issue_id": issue.ID,
-		"user_id":  userID,
-		"category": issue.Category,
-		"severity": issue.Severity,
-		"gps_lat":  issue.GPSLat,
-		"gps_lng":  issue.GPSLng,
+		"issue_id":  issue.ID,
+		"user_id":   userID,
+		"ward_id":   wardID,
+		"category":  issue.Category,
+		"severity":  issue.Severity,
+		"latitude":  issue.GPSLat,
+		"longitude": issue.GPSLng,
 	})
 	_ = s.producer.Publish(ctx, events.TopicIssueCreated, issue.ID, payload)
 

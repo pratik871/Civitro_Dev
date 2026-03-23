@@ -6,7 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { IssueCard } from '../../components/issues/IssueCard';
 import { colors } from '../../theme/colors';
@@ -18,7 +18,13 @@ type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const IssuesListScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
+  const route = useRoute();
+  const categoryFilter = (route.params as any)?.category as string | undefined;
   const { data: issues, isLoading, refetch } = useIssues();
+
+  const filteredIssues = categoryFilter
+    ? (issues ?? []).filter(i => i.category === categoryFilter)
+    : (issues ?? []);
 
   if (isLoading) {
     return (
@@ -30,7 +36,7 @@ export const IssuesListScreen: React.FC = () => {
 
   return (
     <FlatList
-      data={issues ?? []}
+      data={filteredIssues}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
         <IssueCard
