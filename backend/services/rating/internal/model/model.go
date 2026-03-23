@@ -33,7 +33,7 @@ type SatisfactionSurvey struct {
 	ID               string    `json:"id" db:"id"`
 	UserID           string    `json:"user_id" db:"user_id"`
 	RepresentativeID string    `json:"representative_id" db:"representative_id"`
-	IssueID          string    `json:"issue_id" db:"issue_id"`
+	IssueID          *string   `json:"issue_id" db:"issue_id"`
 	Score            int       `json:"score" db:"score"` // 1-5
 	Feedback         string    `json:"feedback" db:"feedback"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`

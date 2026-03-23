@@ -61,11 +61,16 @@ func (s *RatingService) SubmitSurvey(ctx context.Context, req model.SubmitSurvey
 		return nil, fmt.Errorf("score must be between 1 and 5")
 	}
 
+	var issueID *string
+	if req.IssueID != "" {
+		issueID = &req.IssueID
+	}
+
 	survey := &model.SatisfactionSurvey{
 		ID:               generateID(),
 		UserID:           req.UserID,
 		RepresentativeID: req.RepresentativeID,
-		IssueID:          req.IssueID,
+		IssueID:          issueID,
 		Score:            req.Score,
 		Feedback:         req.Feedback,
 		CreatedAt:        time.Now().UTC(),

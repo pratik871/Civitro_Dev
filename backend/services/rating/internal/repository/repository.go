@@ -79,21 +79,10 @@ func (r *RatingRepository) GetRatingHistory(ctx context.Context, repID string) (
 
 // CreateSurvey inserts a new satisfaction survey response.
 func (r *RatingRepository) CreateSurvey(ctx context.Context, survey *model.SatisfactionSurvey) error {
-	// If issue_id is empty, insert NULL
-	if survey.IssueID == "" {
-		query := `
-			INSERT INTO satisfaction_surveys (id, user_id, representative_id, issue_id, score, feedback, created_at)
-			VALUES ($1, $2, $3, NULL, $4, $5, $6)`
-		_, err := r.db.Exec(ctx, query,
-			survey.ID, survey.UserID, survey.RepresentativeID,
-			survey.Score, survey.Feedback, survey.CreatedAt,
-		)
-		return err
-	}
-
 	query := `
 		INSERT INTO satisfaction_surveys (id, user_id, representative_id, issue_id, score, feedback, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+
 	_, err := r.db.Exec(ctx, query,
 		survey.ID, survey.UserID, survey.RepresentativeID,
 		survey.IssueID, survey.Score, survey.Feedback, survey.CreatedAt,
