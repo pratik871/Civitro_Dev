@@ -210,6 +210,7 @@ export function useActions(wardId?: string) {
         ? `/api/v1/actions/ward/${wardId}`
         : '/api/v1/actions/trending';
       const res = await api.get<{ actions: RawAction[]; count: number }>(endpoint);
+      console.log('=== RAW ACTIONS ===', JSON.stringify((res.actions ?? []).slice(0, 2).map(a => ({ title: a.title?.substring(0, 20), has_supported: a.has_supported }))));
       return (res.actions ?? []).map(mapAction);
     },
     staleTime: 30_000,
