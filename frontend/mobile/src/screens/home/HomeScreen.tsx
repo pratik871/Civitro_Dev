@@ -136,47 +136,32 @@ export const HomeScreen: React.FC = () => {
 
   const unreadCount = dashboardStats?.unread_messages ?? unreadData?.count ?? 0;
 
-  // Map community actions from API to the card component shape — fallback to mock
+  // Map community actions from API to the card component shape
   const communityActions: CommunityAction[] = useMemo(() => {
-    if (actionsData && actionsData.length > 0) {
-      return actionsData.slice(0, 4).map((a) => ({
-        id: a.id,
-        title: a.title,
-        badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
-        badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
-        ward: a.wardName,
-        supporters: a.supportCount,
-        goalPercent: a.supportGoal > 0 ? Math.round((a.supportCount / a.supportGoal) * 100) : 0,
-        incidents: a.evidenceCount,
-        locations: 0,
-        impactLabel: a.economicImpact ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
-        impactColor: '#0F766E',
-        creatorInitial: a.creatorName.charAt(0),
-        creatorName: a.creatorName,
-        createdAgo: formatTimeAgo(a.createdAt),
-      }));
-    }
-    // Mock fallback
-    return [
-      { id: 'mock-1', title: "Fix Andheri East's chronic water supply failures", badge: 'Trending', badgeType: 'trending' as const, ward: 'Ward 45', supporters: 312, goalPercent: 78, incidents: 47, locations: 8, impactLabel: '\u20B923L', impactColor: '#0F766E', creatorInitial: 'M', creatorName: 'Meena R.', createdAgo: '5 days ago' },
-      { id: 'mock-2', title: 'Install proper streetlighting on SV Road stretch', badge: 'Acknowledged', badgeType: 'acknowledged' as const, ward: 'Ward 45', supporters: 89, goalPercent: 45, incidents: 19, locations: 5, impactLabel: 'Responded', impactColor: '#059669', creatorInitial: 'R', creatorName: 'Rajesh K.', createdAgo: '12 days ago' },
-    ];
+    if (!actionsData || actionsData.length === 0) return [];
+    return actionsData.slice(0, 4).map((a) => ({
+      id: a.id,
+      title: a.title,
+      badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
+      badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
+      ward: a.wardName,
+      supporters: a.supportCount,
+      goalPercent: a.supportGoal > 0 ? Math.round((a.supportCount / a.supportGoal) * 100) : 0,
+      incidents: a.evidenceCount,
+      locations: 0,
+      impactLabel: a.economicImpact ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
+      impactColor: '#0F766E',
+      creatorInitial: a.creatorName.charAt(0),
+      creatorName: a.creatorName,
+      createdAgo: formatTimeAgo(a.createdAt),
+    }));
   }, [actionsData]);
 
-  // First pattern for the banner — fallback to mock
-  const firstPattern = patternsData?.patterns?.[0] || {
-    description: '12 water leak reports in your ward this month — 0 resolved',
-    locations: 8,
-    days_unresolved: 23,
-    estimated_damage: '\u20B918.2L',
-  };
+  // First pattern for the banner
+  const firstPattern = patternsData?.patterns?.[0];
 
-  // Recently resolved for celebration banner — fallback to mock
-  const recentResolution = dashboardStats?.recently_resolved?.[0] || {
-    title: 'Water leak on MG Road',
-    citizen_reports: 12,
-    resolved_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  };
+  // Recently resolved for celebration banner
+  const recentResolution = dashboardStats?.recently_resolved?.[0];
 
   // Quick action handler
   const handleQuickAction = useCallback(
@@ -422,29 +407,6 @@ export const HomeScreen: React.FC = () => {
             <WardMood data={wardMoodData} />
           </View>
         )}
-        {/* Fallback mock if API data not available */}
-        {!wardMoodData && (
-          <View style={styles.sectionSpacing}>
-            <WardMood
-              data={{
-                ward_id: user?.ward || 'ward-45',
-                mood: 'frustrated',
-                score: 0.35,
-                topics: [
-                  { name: 'Water supply', sentiment: -0.6, percentage: 43 },
-                  { name: 'Potholes', sentiment: -0.3, percentage: 22 },
-                  { name: 'Streetlights fixed', sentiment: 0.4, percentage: 18 },
-                  { name: 'New park', sentiment: 0.5, percentage: 17 },
-                ],
-                trend: {
-                  direction: 'declining',
-                  change_percent: 12,
-                  sparkline: [0.45, 0.42, 0.38, 0.35, 0.32, 0.36, 0.33],
-                },
-              }}
-            />
-          </View>
-        )}
 
         {/* ============================================================ */}
         {/* 8. COMMUNITY PULSE                                            */}
@@ -459,18 +421,20 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         {/* 9. PATTERN DETECTION BANNER                                   */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
+        {firstPattern && (
+          <View style={styles.sectionSpacing}>
             <PatternBanner
               description={firstPattern.description}
               stats={[
-                { icon: 'location', value: String(firstPattern.locations ?? 0), label: t('home.locations') },
+                { icon: 'location', value: String(firstPattern.locations ?? firstPattern.unique_locations ?? 0), label: t('home.locations') },
                 { icon: 'calendar', value: String(firstPattern.days_unresolved ?? 0), label: t('home.daysUnresolved') },
-                { icon: 'damage', value: firstPattern.estimated_damage ?? '', label: t('home.estDamage'), valueColor: '#0F766E' },
+                { icon: 'damage', value: firstPattern.estimated_damage ?? (firstPattern.economic_impact ? `\u20B9${Math.round(firstPattern.economic_impact / 100000)}L` : ''), label: t('home.estDamage'), valueColor: '#0F766E' },
               ]}
               onStartAction={() => {}}
               onViewEvidence={() => navigation.navigate('IssuesList')}
             />
-        </View>
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 10. WARD COMPARISON NUDGE                                     */}
@@ -499,24 +463,28 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         {/* 12. COMMUNITY ACTIONS SECTION                                 */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
-          <CommunityActionsSection
-            actions={communityActions}
-            onSeeAll={() => {}}
-          />
-        </View>
+        {communityActions.length > 0 && (
+          <View style={styles.sectionSpacing}>
+            <CommunityActionsSection
+              actions={communityActions}
+              onSeeAll={() => {}}
+            />
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 13. CELEBRATION BANNER                                        */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
-          <CelebrationBanner
-            issueTitle={recentResolution.title}
-            reportCount={recentResolution.citizen_reports}
-            timeAgo={formatTimeAgo(recentResolution.resolved_at)}
-            onPress={() => {}}
-          />
-        </View>
+        {recentResolution && (
+          <View style={styles.sectionSpacing}>
+            <CelebrationBanner
+              issueTitle={recentResolution.title}
+              reportCount={recentResolution.citizen_reports}
+              timeAgo={formatTimeAgo(recentResolution.resolved_at)}
+              onPress={() => {}}
+            />
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 14. ISSUE FEED                                                */}
