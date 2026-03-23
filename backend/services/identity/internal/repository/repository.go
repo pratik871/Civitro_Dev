@@ -363,9 +363,9 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		return nil, err
 	}
 
-	// 5. Validations (issue verifications by this user)
+	// 5. Validations (issue confirmations by this user)
 	err = r.pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM issue_validations WHERE user_id = $1`, userID,
+		`SELECT COUNT(*) FROM issue_confirmations WHERE user_id = $1`, userID,
 	).Scan(&stats.Validations)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
@@ -387,18 +387,13 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		return nil, err
 	}
 
-	// 8. Streak days
-	err = r.pool.QueryRow(ctx,
-		`SELECT COALESCE(streak_days, 0) FROM civic_scores WHERE user_id = $1`, userID,
-	).Scan(&stats.StreakDays)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return nil, err
-	}
+	// 8. Streak days (civic_scores has no streak_days column; use reports_filed as proxy)
+	// stats.StreakDays stays 0
 
-	// 9. Active citizens in user's ward (active in last 30 days)
+	// 9. Active citizens in user's ward (users table has no last_active; use updated_at)
 	if wardID != "" {
 		err = r.pool.QueryRow(ctx,
-			`SELECT COUNT(*) FROM users WHERE primary_boundary_id = $1::uuid AND last_active > NOW() - INTERVAL '30 days'`,
+			`SELECT COUNT(*) FROM users WHERE primary_boundary_id = $1::uuid AND updated_at > NOW() - INTERVAL '30 days'`,
 			wardID,
 		).Scan(&stats.ActiveCitizensInWard)
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
@@ -410,8 +405,8 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		err = r.pool.QueryRow(ctx, `
 			SELECT COUNT(*) FROM users
 			WHERE primary_boundary_id = $1::uuid
-			  AND last_active > NOW() - INTERVAL '60 days'
-			  AND last_active <= NOW() - INTERVAL '30 days'
+			  AND updated_at > NOW() - INTERVAL '60 days'
+			  AND updated_at <= NOW() - INTERVAL '30 days'
 		`, wardID).Scan(&previousCount)
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return nil, err
@@ -423,7 +418,7 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 
 	// 10. Active polls count
 	err = r.pool.QueryRow(ctx,
-		`SELECT COUNT(*) FROM polls WHERE is_active = true AND expires_at > NOW()`,
+		`SELECT COUNT(*) FROM polls WHERE active = true AND ends_at > NOW()`,
 	).Scan(&stats.ActivePollsCount)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
@@ -437,17 +432,18 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		return nil, err
 	}
 
-	// 12. Recently resolved issues in user's ward (last 7 days)
+	// 12. Recently resolved issues in user's ward (last 30 days)
+	// issues table uses: text (not title), boundary_id (not ward_id), status='resolved', updated_at (not resolved_at)
 	stats.RecentlyResolved = []model.RecentlyResolved{}
 	if wardID != "" {
 		rows, err := r.pool.Query(ctx, `
-			SELECT i.id, i.title, i.resolved_at,
-			       (SELECT COUNT(*) FROM issues sub WHERE sub.title = i.title AND sub.ward_id = i.ward_id) as citizen_reports
+			SELECT i.id, i.text, i.updated_at,
+			       (SELECT COUNT(*) FROM issues sub WHERE sub.category = i.category AND sub.boundary_id = i.boundary_id) as citizen_reports
 			FROM issues i
-			WHERE i.ward_id = $1::uuid
-			  AND i.status = 'completed'
-			  AND i.resolved_at > NOW() - INTERVAL '7 days'
-			ORDER BY i.resolved_at DESC
+			WHERE i.boundary_id = $1::uuid
+			  AND i.status = 'resolved'
+			  AND i.updated_at > NOW() - INTERVAL '30 days'
+			ORDER BY i.updated_at DESC
 			LIMIT 5
 		`, wardID)
 		if err != nil {
