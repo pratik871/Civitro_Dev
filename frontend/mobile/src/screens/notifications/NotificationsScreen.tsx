@@ -8,8 +8,13 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNotifications, useMarkAllRead } from '../../hooks/useNotifications';
+import { useAuthStore } from '../../stores/authStore';
+import api from '../../lib/api';
 import { colors } from '../../theme/colors';
+import type { RootStackParamList } from '../../navigation/types';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime } from '../../lib/utils';
 
@@ -18,37 +23,84 @@ interface NotificationItem {
   type: string;
   title: string;
   body: string;
+  data: string | Record<string, any> | null;
   read: boolean;
   created_at: string;
 }
 
-const NOTIFICATION_ICONS: Record<string, string> = {
-  issue_update: '\u{1F6E0}',
-  poll: '\u{1F5F3}',
-  achievement: '\u{1F3C6}',
-  system: '\u{1F514}',
-  leader: '\u{1F464}',
+const NOTIFICATION_ICONS: Record<string, { emoji: string; bg: string }> = {
+  issue_update:   { emoji: '\u{1F6E0}', bg: '#FFF3ED' },
+  resolution:     { emoji: '\u2705',     bg: '#ECFDF5' },
+  trending:       { emoji: '\u{1F525}', bg: '#FEF3C7' },
+  rating_prompt:  { emoji: '\u2B50',     bg: '#FFFBEB' },
+  achievement:    { emoji: '\u{1F3C6}', bg: '#F5F3FF' },
+  promise_update: { emoji: '\u{1F4CB}', bg: '#EFF6FF' },
+  system:         { emoji: '\u{1F514}', bg: '#F3F4F6' },
 };
 
+type NotifNavProp = NativeStackNavigationProp<RootStackParamList>;
+
 export const NotificationsScreen: React.FC = () => {
-  const { data: notifications, isLoading } = useNotifications();
+  const navigation = useNavigation<NotifNavProp>();
+  const userId = useAuthStore(s => s.user?.id);
+  const { data: notifications, isLoading, refetch } = useNotifications();
   const markAllRead = useMarkAllRead();
 
   const unreadCount = (notifications ?? []).filter(n => !n.read).length;
+
+  const handleNotificationPress = (item: NotificationItem) => {
+    // Mark as read
+    if (!item.read) {
+      api.put(`/api/v1/notifications/${item.id}/read`).catch(() => {});
+      refetch();
+    }
+
+    // Navigate based on type and data
+    try {
+      const data = typeof item.data === 'string' ? JSON.parse(item.data) : (item.data || {});
+      switch (item.type) {
+        case 'issue_update':
+        case 'resolution':
+          if (data.issue_id) navigation.navigate('IssueDetail', { issueId: data.issue_id });
+          else navigation.navigate('IssuesList' as any);
+          break;
+        case 'trending':
+          if (data.action_id) navigation.navigate('ActionDetail' as any, { actionId: data.action_id });
+          else navigation.navigate('ActionsList' as any);
+          break;
+        case 'rating_prompt':
+          // Navigate to leaders
+          navigation.navigate('Main' as any, { screen: 'Leaders' });
+          break;
+        case 'promise_update':
+          navigation.navigate('Promises' as any);
+          break;
+        case 'achievement':
+          // Navigate to profile to see badges
+          navigation.navigate('Profile' as any);
+          break;
+        default:
+          break;
+      }
+    } catch {
+      // Data parse failed — no navigation
+    }
+  };
 
   const renderNotification = ({ item }: { item: NotificationItem }) => (
     <TouchableOpacity
       style={[styles.notifRow, !item.read && styles.notifUnread]}
       activeOpacity={0.7}
+      onPress={() => handleNotificationPress(item)}
     >
       <View
         style={[
           styles.iconContainer,
-          !item.read && styles.iconContainerUnread,
+          { backgroundColor: (NOTIFICATION_ICONS[item.type]?.bg || '#F3F4F6') },
         ]}
       >
         <Text style={styles.icon}>
-          {NOTIFICATION_ICONS[item.type] || '\u{1F514}'}
+          {NOTIFICATION_ICONS[item.type]?.emoji || '\u{1F514}'}
         </Text>
       </View>
       <View style={styles.notifContent}>
@@ -79,14 +131,23 @@ export const NotificationsScreen: React.FC = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      {unreadCount > 0 && (
+      {(notifications ?? []).length > 0 && (
         <View style={styles.unreadBar}>
           <Text style={styles.unreadBarText}>
-            {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
+            {unreadCount > 0 ? `${unreadCount} unread` : `${(notifications ?? []).length} notifications`}
           </Text>
-          <TouchableOpacity onPress={() => markAllRead.mutate()}>
-            <Text style={styles.markAllRead}>Mark all read</Text>
-          </TouchableOpacity>
+          <View style={styles.unreadActions}>
+            {unreadCount > 0 && (
+              <TouchableOpacity onPress={() => markAllRead.mutate()}>
+                <Text style={styles.markAllRead}>Mark all read</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => {
+              api.delete(`/api/v1/notifications/users/${userId}/clear`).then(() => refetch()).catch(() => {});
+            }}>
+              <Text style={[styles.markAllRead, { color: '#EF4444' }]}>Clear all</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -134,6 +195,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.primary,
   },
+  unreadActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
   markAllRead: {
     fontSize: 14,
     fontWeight: '600',
@@ -158,9 +223,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  iconContainerUnread: {
-    backgroundColor: colors.primary + '12',
   },
   icon: {
     fontSize: 18,

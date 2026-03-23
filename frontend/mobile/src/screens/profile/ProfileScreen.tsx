@@ -178,19 +178,6 @@ export const ProfileScreen: React.FC = () => {
             <Text style={styles.settingArrow}>{'\u203A'}</Text>
           </TouchableOpacity>
         ))}
-        {/* Dark Mode Toggle */}
-        <View style={[styles.settingRow, { justifyContent: 'space-between' }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Text style={styles.settingIcon}>{'\u{1F319}'}</Text>
-            <Text style={styles.settingLabel}>Dark Mode</Text>
-          </View>
-          <Switch
-            value={darkMode}
-            onValueChange={setDarkMode}
-            trackColor={{ false: '#E5E7EB', true: '#FF6B35' }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
       </Card>
 
       {/* Logout */}

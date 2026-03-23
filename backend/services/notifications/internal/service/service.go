@@ -50,6 +50,12 @@ func (s *Service) MarkAllRead(ctx context.Context, userID string) error {
 	return s.repo.MarkAllRead(ctx, userID)
 }
 
+// ClearAll deletes all notifications for a user.
+func (s *Service) ClearAll(ctx context.Context, userID string) error {
+	logger.Info().Str("user_id", userID).Msg("clearing all notifications")
+	return s.repo.ClearAll(ctx, userID)
+}
+
 // GetPrefs retrieves notification preferences for a user.
 func (s *Service) GetPrefs(ctx context.Context, userID string) (*model.NotificationPrefs, error) {
 	logger.Info().Str("user_id", userID).Msg("fetching notification prefs")

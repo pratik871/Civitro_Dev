@@ -30,6 +30,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	users.PUT("/prefs", h.UpdatePrefs)
 	users.GET("/unread-count", h.GetUnreadCount)
 	users.PUT("/read-all", h.MarkAllRead)
+	users.DELETE("/clear", h.ClearAll)
 
 	// Notification-scoped routes under /notifications/:id
 	r.PUT("/notifications/:id/read", h.MarkRead)
@@ -76,6 +77,16 @@ func (h *Handler) MarkAllRead(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// ClearAll handles DELETE /notifications/users/:user_id/clear
+func (h *Handler) ClearAll(c *gin.Context) {
+	userID := c.Param("user_id")
+	if err := h.svc.ClearAll(c.Request.Context(), userID); err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 

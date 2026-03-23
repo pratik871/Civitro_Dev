@@ -85,6 +85,12 @@ func (r *Repository) MarkAllRead(ctx context.Context, userID string) error {
 	return err
 }
 
+// ClearAll deletes all notifications for a user.
+func (r *Repository) ClearAll(ctx context.Context, userID string) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM notifications WHERE user_id = $1`, userID)
+	return err
+}
+
 // GetPrefs retrieves notification preferences for a user.
 func (r *Repository) GetPrefs(ctx context.Context, userID string) (*model.NotificationPrefs, error) {
 	prefs := &model.NotificationPrefs{}

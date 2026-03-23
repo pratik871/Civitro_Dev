@@ -37,6 +37,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isInitialized, initialize } = useAuthStore();
+  const darkMode = useSettingsStore(state => state.darkMode);
 
   useEffect(() => {
     initialize();
@@ -45,8 +46,6 @@ export const RootNavigator: React.FC = () => {
   if (!isInitialized) {
     return null;
   }
-
-  const darkMode = useSettingsStore(state => state.darkMode);
 
   const CivitroLightTheme = {
     ...DefaultTheme,
