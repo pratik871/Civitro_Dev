@@ -24,6 +24,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A365D"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "civitro.com", "pathPrefix": "/share" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "softwareKeyboardLayoutMode": "adjustResize",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -33,8 +43,9 @@
     },
     "ios": {
       "bundleIdentifier": "in.civitro.app",
-      "buildNumber": "17",
+      "buildNumber": "18",
       "supportsTablet": true,
+      "associatedDomains": ["applinks:civitro.com"],
       "infoPlist": {
         "NSCameraUsageDescription": "Civitro needs camera access to capture issue photos",
         "NSPhotoLibraryUsageDescription": "Civitro needs photo library access to attach images to issues",

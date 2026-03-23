@@ -57,8 +57,19 @@ export const RootNavigator: React.FC = () => {
     colors: { ...DarkTheme.colors, background: '#0F1419', card: '#1A2332', text: '#F1F5F9', border: '#2D3B4E', primary: '#FF6B35' },
   };
 
+  const linking = {
+    prefixes: ['civitro://', 'https://civitro.com'],
+    config: {
+      screens: {
+        IssueDetail: 'share/issue/:issueId',
+        VoiceDetail: 'share/voice/:voiceId',
+        ActionDetail: 'share/action/:actionId',
+      },
+    },
+  };
+
   return (
-    <NavigationContainer theme={darkMode ? CivitroDarkTheme : CivitroLightTheme}>
+    <NavigationContainer theme={darkMode ? CivitroDarkTheme : CivitroLightTheme} linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

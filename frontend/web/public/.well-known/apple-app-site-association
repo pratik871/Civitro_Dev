@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.in.civitro.app",
+        "paths": [
+          "/share/*"
+        ]
+      }
+    ]
+  }
+}
