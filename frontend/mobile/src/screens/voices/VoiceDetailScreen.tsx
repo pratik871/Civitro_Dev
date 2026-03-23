@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -132,14 +133,18 @@ export const VoiceDetailScreen: React.FC = () => {
       {/* Action Bar */}
       <View style={styles.actionsRow}>
         <TouchableOpacity
-          style={[styles.actionButton, upvoted && styles.actionButtonActive]}
+          style={[styles.actionButton, upvoted && styles.actionButtonUpvoted]}
           onPress={handleUpvote}
           disabled={likeMutation.isPending}
         >
-          <Text style={[styles.actionIcon, upvoted && styles.actionIconActive]}>
-            {upvoted ? '\u2B06' : '\u2B06'}
-          </Text>
-          <Text style={[styles.actionText, upvoted && styles.actionTextActive]}>
+          <Svg viewBox="0 0 16 16" width={18} height={18} fill="none">
+            {upvoted ? (
+              <Path d="M8 2l5 6H9v6H7V8H3l5-6z" fill="#FF6B35" />
+            ) : (
+              <Path d="M8 3v10M5 6l3-3 3 3" stroke="#9CA3AF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            )}
+          </Svg>
+          <Text style={[styles.actionText, upvoted && styles.actionTextUpvoted]}>
             {upvoted ? 'Upvoted' : 'Upvote'}
           </Text>
         </TouchableOpacity>
@@ -326,6 +331,15 @@ const styles = StyleSheet.create({
   },
   actionButtonActive: {
     backgroundColor: colors.primary + '12',
+  },
+  actionButtonUpvoted: {
+    backgroundColor: '#FFF3ED',
+    borderColor: '#FF6B35',
+    borderWidth: 1,
+  },
+  actionTextUpvoted: {
+    color: '#FF6B35',
+    fontWeight: '700',
   },
   actionIcon: {
     fontSize: 14,

@@ -102,6 +102,14 @@ func (h *Handler) GetVoice(c *gin.Context) {
 		return
 	}
 
+	// Populate has_liked for the current user
+	if uid, ok := c.Get("user_id"); ok {
+		userID, _ := uid.(string)
+		if userID != "" && resp != nil {
+			resp.Voice.HasLiked = h.svc.HasUserLiked(c.Request.Context(), resp.Voice.ID, userID)
+		}
+	}
+
 	c.JSON(http.StatusOK, resp)
 }
 
