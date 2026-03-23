@@ -109,6 +109,7 @@ func (s *MessagingService) GetConversations(ctx context.Context, userID string) 
 }
 
 // CreateConversation creates a new DM or group conversation.
+// For DM conversations, it returns an existing conversation if one already exists.
 func (s *MessagingService) CreateConversation(ctx context.Context, req model.CreateConversationRequest) (*model.Conversation, error) {
 	if len(req.Participants) < 2 {
 		return nil, fmt.Errorf("conversation must have at least 2 participants")
@@ -116,6 +117,17 @@ func (s *MessagingService) CreateConversation(ctx context.Context, req model.Cre
 
 	if req.Type == model.ConversationDM && len(req.Participants) != 2 {
 		return nil, fmt.Errorf("DM conversations must have exactly 2 participants")
+	}
+
+	// For DM conversations, check if one already exists between these two users
+	if req.Type == model.ConversationDM {
+		existing, err := s.repo.FindDMConversation(ctx, req.Participants[0], req.Participants[1])
+		if err == nil && existing != nil {
+			logger.Info().
+				Str("conv_id", existing.ID).
+				Msg("returning existing DM conversation")
+			return existing, nil
+		}
 	}
 
 	conv := &model.Conversation{

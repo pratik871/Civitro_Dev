@@ -156,6 +156,32 @@ func (r *MessageRepository) CreateConversation(ctx context.Context, conv *model.
 	return tx.Commit(ctx)
 }
 
+// FindDMConversation finds an existing DM conversation between two users.
+// Returns nil if no conversation exists.
+func (r *MessageRepository) FindDMConversation(ctx context.Context, userA, userB string) (*model.Conversation, error) {
+	query := `
+		SELECT c.id, c.type, c.created_at
+		FROM conversations c
+		WHERE c.type = 'dm'
+		  AND c.id IN (
+			SELECT cp1.conversation_id
+			FROM conversation_participants cp1
+			JOIN conversation_participants cp2 ON cp1.conversation_id = cp2.conversation_id
+			WHERE cp1.user_id = $1 AND cp2.user_id = $2
+		  )
+		LIMIT 1`
+
+	var conv model.Conversation
+	err := r.db.QueryRow(ctx, query, userA, userB).Scan(
+		&conv.ID, &conv.Type, &conv.CreatedAt,
+	)
+	if err != nil {
+		return nil, err // pgx.ErrNoRows if not found
+	}
+	conv.Participants = []string{userA, userB}
+	return &conv, nil
+}
+
 // GetConversationByID returns a conversation by its ID, including its participants.
 func (r *MessageRepository) GetConversationByID(ctx context.Context, id string) (*model.Conversation, error) {
 	convQuery := `
