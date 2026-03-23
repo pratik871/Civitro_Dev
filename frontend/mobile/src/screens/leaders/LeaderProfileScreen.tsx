@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/Badge';
 import { RatingBreakdown } from '../../components/leaders/RatingBreakdown';
 import { Button } from '../../components/ui/Button';
 import { useLeader } from '../../hooks/useLeaders';
+import { useAuthStore } from '../../stores/authStore';
 import api from '../../lib/api';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -35,11 +36,17 @@ export const LeaderProfileScreen: React.FC = () => {
   const navigation = useNavigation<LeaderProfileNavProp>();
   const { leaderId } = route.params;
   const { data: leader, isLoading } = useLeader(leaderId);
+  const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
 
   const rateMutation = useMutation({
-    mutationFn: (rating: Record<string, unknown>) =>
-      api.post(`/api/v1/ratings/survey`, { ...rating, representative_id: leaderId }),
+    mutationFn: (score: number) =>
+      api.post(`/api/v1/ratings/survey`, {
+        user_id: user?.id || '',
+        representative_id: leaderId,
+        issue_id: 'general',
+        score,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
       Alert.alert('Thank You', 'Your rating has been submitted.');
@@ -129,7 +136,7 @@ export const LeaderProfileScreen: React.FC = () => {
         <Button
           title="Rate This Leader"
           onPress={() =>
-            rateMutation.mutate({ overall: 4, responsiveness: 4, transparency: 4, delivery_on_promises: 4, accessibility: 4, overall_impact: 4 })
+            rateMutation.mutate(4)
           }
           variant="outline"
           size="md"

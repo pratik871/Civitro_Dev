@@ -41,9 +41,9 @@ type SatisfactionSurvey struct {
 
 // SubmitSurveyRequest is the payload for submitting a satisfaction survey.
 type SubmitSurveyRequest struct {
-	UserID           string `json:"user_id" binding:"required"`
+	UserID           string `json:"user_id"`
 	RepresentativeID string `json:"representative_id" binding:"required"`
-	IssueID          string `json:"issue_id" binding:"required"`
+	IssueID          string `json:"issue_id"`
 	Score            int    `json:"score" binding:"required,min=1,max=5"`
 	Feedback         string `json:"feedback"`
 }

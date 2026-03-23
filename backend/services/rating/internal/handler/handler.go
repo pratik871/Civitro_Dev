@@ -76,6 +76,13 @@ func (h *RatingHandler) SubmitSurvey(c *gin.Context) {
 		return
 	}
 
+	// Use user_id from JWT if not provided in body
+	if req.UserID == "" {
+		if uid, exists := c.Get("user_id"); exists {
+			req.UserID = uid.(string)
+		}
+	}
+
 	survey, err := h.svc.SubmitSurvey(c.Request.Context(), req)
 	if err != nil {
 		apperrors.HandleError(c, err)
