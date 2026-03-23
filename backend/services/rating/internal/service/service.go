@@ -81,6 +81,11 @@ func (s *RatingService) SubmitSurvey(ctx context.Context, req model.SubmitSurvey
 		return nil, err
 	}
 
+	// Update the representative's average rating
+	if err := s.repo.UpdateRepresentativeRating(ctx, req.RepresentativeID); err != nil {
+		logger.Warn().Err(err).Str("rep_id", req.RepresentativeID).Msg("failed to update representative rating (non-critical)")
+	}
+
 	logger.Info().Str("survey_id", survey.ID).Str("rep_id", req.RepresentativeID).Int("score", req.Score).Msg("survey submitted")
 	return survey, nil
 }

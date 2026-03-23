@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator, TouchableOpacity, Modal, Pressable } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -39,20 +40,19 @@ export const LeaderProfileScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
 
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedStars, setSelectedStars] = useState(0);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+
   const rateMutation = useMutation({
     mutationFn: (score: number) =>
       api.post(`/api/v1/ratings/survey`, {
-        user_id: user?.id || '',
         representative_id: leaderId,
-        issue_id: 'general',
         score,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
-      Alert.alert('Thank You', 'Your rating has been submitted.');
-    },
-    onError: (err: Error) => {
-      Alert.alert('Error', err.message || 'Could not submit rating.');
+      setRatingSubmitted(true);
     },
   });
 
@@ -73,8 +73,8 @@ export const LeaderProfileScreen: React.FC = () => {
   }
 
   return (
+    <View style={styles.container}>
     <ScrollView
-      style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
@@ -133,11 +133,30 @@ export const LeaderProfileScreen: React.FC = () => {
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Rating Breakdown</Text>
         <RatingBreakdown breakdown={leader.ratingBreakdown} />
+        {ratingSubmitted && selectedStars > 0 && (
+          <View style={styles.yourRating}>
+            <Text style={styles.yourRatingText}>You rated {selectedStars} star{selectedStars > 1 ? 's' : ''}</Text>
+            <View style={styles.yourRatingStars}>
+              {[1, 2, 3, 4, 5].map(s => (
+                <Svg key={s} viewBox="0 0 24 24" width={14} height={14}>
+                  <Path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    fill={s <= selectedStars ? '#FFD700' : '#E5E7EB'}
+                    stroke={s <= selectedStars ? '#F59E0B' : '#D1D5DB'}
+                    strokeWidth={1}
+                  />
+                </Svg>
+              ))}
+            </View>
+          </View>
+        )}
         <Button
-          title="Rate This Leader"
-          onPress={() =>
-            rateMutation.mutate(4)
-          }
+          title={ratingSubmitted ? 'Update Rating' : 'Rate This Leader'}
+          onPress={() => {
+            if (!ratingSubmitted) setSelectedStars(0);
+            setRatingSubmitted(false);
+            setShowRatingModal(true);
+          }}
           variant="outline"
           size="md"
           fullWidth
@@ -205,8 +224,192 @@ export const LeaderProfileScreen: React.FC = () => {
 
       <View style={styles.bottomSpacer} />
     </ScrollView>
+
+    {/* Rating Modal */}
+    <Modal visible={showRatingModal} transparent animationType="fade" onRequestClose={() => setShowRatingModal(false)}>
+      <Pressable style={ratingStyles.backdrop} onPress={() => !rateMutation.isPending && setShowRatingModal(false)}>
+        <View style={ratingStyles.card}>
+          {!ratingSubmitted ? (
+            <>
+              {/* Star selection */}
+              <Text style={ratingStyles.title}>Rate {leader?.name}</Text>
+              <Text style={ratingStyles.subtitle}>How would you rate this leader's performance?</Text>
+
+              <View style={ratingStyles.starsRow}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <TouchableOpacity key={star} onPress={() => setSelectedStars(star)} activeOpacity={0.7}>
+                    <Svg viewBox="0 0 24 24" width={40} height={40}>
+                      <Path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                        fill={star <= selectedStars ? '#FFD700' : '#E5E7EB'}
+                        stroke={star <= selectedStars ? '#F59E0B' : '#D1D5DB'}
+                        strokeWidth={1}
+                      />
+                    </Svg>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {selectedStars > 0 && (
+                <Text style={ratingStyles.starLabel}>
+                  {['', 'Poor', 'Below Average', 'Average', 'Good', 'Excellent'][selectedStars]}
+                </Text>
+              )}
+
+              <View style={ratingStyles.btnRow}>
+                <TouchableOpacity
+                  style={ratingStyles.cancelBtn}
+                  onPress={() => setShowRatingModal(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={ratingStyles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[ratingStyles.submitBtn, selectedStars === 0 && ratingStyles.submitBtnDisabled]}
+                  onPress={() => selectedStars > 0 && rateMutation.mutate(selectedStars)}
+                  activeOpacity={selectedStars > 0 ? 0.7 : 1}
+                  disabled={rateMutation.isPending}
+                >
+                  <Text style={ratingStyles.submitBtnText}>
+                    {rateMutation.isPending ? 'Submitting...' : 'Submit Rating'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <>
+              {/* Success state */}
+              <View style={ratingStyles.successIcon}>
+                <Svg viewBox="0 0 24 24" width={32} height={32} fill="none">
+                  <Path d="M20 6L9 17l-5-5" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              </View>
+              <Text style={ratingStyles.title}>Thank You!</Text>
+              <Text style={ratingStyles.subtitle}>
+                Your {selectedStars}-star rating for {leader?.name} has been recorded. It helps improve civic accountability.
+              </Text>
+              <TouchableOpacity
+                style={ratingStyles.doneBtn}
+                onPress={() => setShowRatingModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={ratingStyles.submitBtnText}>Done</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </Pressable>
+    </Modal>
+    </View>
   );
 };
+
+const ratingStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0B1426',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 20,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  starLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#F59E0B',
+    marginBottom: 20,
+  },
+  btnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  submitBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#FF6B35',
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#D1D5DB',
+    shadowOpacity: 0,
+  },
+  submitBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  doneBtn: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#FF6B35',
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  successIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -344,6 +547,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     marginTop: spacing.xs,
+  },
+  yourRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF3ED',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  yourRatingText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FF6B35',
+  },
+  yourRatingStars: {
+    flexDirection: 'row',
+    gap: 2,
   },
   bottomSpacer: {
     height: 40,

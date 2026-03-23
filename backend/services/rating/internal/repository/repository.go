@@ -90,6 +90,20 @@ func (r *RatingRepository) CreateSurvey(ctx context.Context, survey *model.Satis
 	return err
 }
 
+// UpdateRepresentativeRating recalculates the average rating for a representative
+// from all surveys and updates the representatives table.
+func (r *RatingRepository) UpdateRepresentativeRating(ctx context.Context, repID string) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE representatives SET rating = (
+			SELECT COALESCE(AVG(score), 0)
+			FROM satisfaction_surveys
+			WHERE representative_id = $1
+		), updated_at = NOW()
+		WHERE id = $1
+	`, repID)
+	return err
+}
+
 // GetSurveysByRepID returns all surveys for a representative within the rolling window.
 func (r *RatingRepository) GetSurveysByRepID(ctx context.Context, repID string) ([]model.SatisfactionSurvey, error) {
 	query := `
