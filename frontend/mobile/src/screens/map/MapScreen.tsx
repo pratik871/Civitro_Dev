@@ -22,7 +22,7 @@ import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { ISSUE_CATEGORY_LABELS } from '../../types/issue';
 import type { Issue, IssueCategory } from '../../types/issue';
-import type { RootStackParamList } from '../../types/navigation';
+import type { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 

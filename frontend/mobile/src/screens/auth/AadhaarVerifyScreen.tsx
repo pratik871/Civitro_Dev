@@ -10,6 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -21,6 +22,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
   const route = useRoute<AadhaarRouteProp>();
   const navigation = useNavigation();
   const { userId } = route.params;
+  const insets = useSafeAreaInsets();
 
   const [shareCode, setShareCode] = useState('');
   const [fileName, setFileName] = useState('');
@@ -103,7 +105,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView
         style={styles.scroll}
@@ -205,7 +207,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing['3xl'],
+    paddingTop: 0,
     paddingBottom: spacing['3xl'],
   },
   title: {

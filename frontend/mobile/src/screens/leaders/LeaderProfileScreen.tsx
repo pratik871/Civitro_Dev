@@ -243,84 +243,62 @@ export const LeaderProfileScreen: React.FC = () => {
       <View style={styles.bottomSpacer} />
     </ScrollView>
 
-    {/* Rating Modal — Step-by-step 5 dimensions */}
+    {/* Rating Modal — All 5 dimensions in one view */}
     <Modal visible={showRatingModal} transparent animationType="fade" onRequestClose={() => setShowRatingModal(false)}>
       <Pressable style={ratingStyles.backdrop} onPress={() => !rateMutation.isPending && setShowRatingModal(false)}>
         <View style={ratingStyles.card}>
           {!showThankYou ? (
-            <>
-              {/* Progress */}
-              <Text style={ratingStyles.stepCounter}>{ratingStep + 1} of 5</Text>
-              <View style={ratingStyles.progressBar}>
-                <View style={[ratingStyles.progressFill, { width: `${((ratingStep + 1) / 5) * 100}%` }]} />
-              </View>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }}>
+              <Text style={ratingStyles.title}>Rate {leader?.name}</Text>
+              <Text style={ratingStyles.subtitle}>Tap stars for each dimension</Text>
 
-              {/* Question */}
-              <Text style={ratingStyles.title}>{RATING_QUESTIONS[ratingStep].label}</Text>
-              <Text style={ratingStyles.subtitle}>{RATING_QUESTIONS[ratingStep].question}</Text>
-
-              {/* Stars for current dimension */}
-              <View style={ratingStyles.starsRow}>
-                {[1, 2, 3, 4, 5].map(star => {
-                  const currentKey = RATING_QUESTIONS[ratingStep].key;
-                  const currentVal = dimensions[currentKey];
-                  return (
-                    <TouchableOpacity key={star} onPress={() => setDimensions(d => ({ ...d, [currentKey]: star }))} activeOpacity={0.7}>
-                      <Svg viewBox="0 0 24 24" width={40} height={40}>
-                        <Path
-                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                          fill={star <= currentVal ? '#FFD700' : '#E5E7EB'}
-                          stroke={star <= currentVal ? '#F59E0B' : '#D1D5DB'}
-                          strokeWidth={1}
-                        />
-                      </Svg>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {dimensions[RATING_QUESTIONS[ratingStep].key] > 0 && (
-                <Text style={ratingStyles.starLabel}>
-                  {['', 'Poor', 'Below Average', 'Average', 'Good', 'Excellent'][dimensions[RATING_QUESTIONS[ratingStep].key]]}
-                </Text>
-              )}
+              {RATING_QUESTIONS.map(q => (
+                <View key={q.key} style={ratingStyles.dimensionRow}>
+                  <Text style={ratingStyles.dimensionLabel}>{q.label}</Text>
+                  <View style={ratingStyles.miniStarsRow}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <TouchableOpacity key={star} onPress={() => setDimensions(d => ({ ...d, [q.key]: star }))} activeOpacity={0.7} hitSlop={{ top: 4, bottom: 4, left: 2, right: 2 }}>
+                        <Svg viewBox="0 0 24 24" width={28} height={28}>
+                          <Path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            fill={star <= dimensions[q.key] ? '#FFD700' : '#F3F4F6'}
+                            stroke={star <= dimensions[q.key] ? '#F59E0B' : '#E5E7EB'}
+                            strokeWidth={0.8}
+                          />
+                        </Svg>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ))}
 
               <View style={ratingStyles.btnRow}>
-                <TouchableOpacity
-                  style={ratingStyles.cancelBtn}
-                  onPress={() => ratingStep > 0 ? setRatingStep(s => s - 1) : setShowRatingModal(false)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={ratingStyles.cancelBtnText}>{ratingStep > 0 ? 'Back' : 'Cancel'}</Text>
+                <TouchableOpacity style={ratingStyles.cancelBtn} onPress={() => setShowRatingModal(false)} activeOpacity={0.7}>
+                  <Text style={ratingStyles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[ratingStyles.submitBtn, dimensions[RATING_QUESTIONS[ratingStep].key] === 0 && ratingStyles.submitBtnDisabled]}
+                  style={[ratingStyles.submitBtn, Object.values(dimensions).some(v => v === 0) && ratingStyles.submitBtnDisabled]}
                   onPress={() => {
-                    if (dimensions[RATING_QUESTIONS[ratingStep].key] === 0) return;
-                    if (ratingStep < 4) {
-                      setRatingStep(s => s + 1);
-                    } else {
-                      // Submit all dimensions
-                      const avg = Math.round((dimensions.responsiveness + dimensions.transparency + dimensions.deliveryOnPromises + dimensions.accessibility + dimensions.overallImpact) / 5);
-                      rateMutation.mutate({
-                        score: avg,
-                        responsiveness: dimensions.responsiveness,
-                        transparency: dimensions.transparency,
-                        delivery_on_promises: dimensions.deliveryOnPromises,
-                        accessibility: dimensions.accessibility,
-                        overall_impact: dimensions.overallImpact,
-                      });
-                    }
+                    if (Object.values(dimensions).some(v => v === 0)) return;
+                    const avg = Math.round((dimensions.responsiveness + dimensions.transparency + dimensions.deliveryOnPromises + dimensions.accessibility + dimensions.overallImpact) / 5);
+                    rateMutation.mutate({
+                      score: avg,
+                      responsiveness: dimensions.responsiveness,
+                      transparency: dimensions.transparency,
+                      delivery_on_promises: dimensions.deliveryOnPromises,
+                      accessibility: dimensions.accessibility,
+                      overall_impact: dimensions.overallImpact,
+                    });
                   }}
-                  activeOpacity={dimensions[RATING_QUESTIONS[ratingStep].key] > 0 ? 0.7 : 1}
+                  activeOpacity={0.7}
                   disabled={rateMutation.isPending}
                 >
                   <Text style={ratingStyles.submitBtnText}>
-                    {rateMutation.isPending ? 'Submitting...' : ratingStep < 4 ? 'Next' : 'Submit'}
+                    {rateMutation.isPending ? 'Submitting...' : 'Submit'}
                   </Text>
                 </TouchableOpacity>
               </View>
-            </>
+            </ScrollView>
           ) : (
             <>
               <View style={ratingStyles.successIcon}>
@@ -330,13 +308,9 @@ export const LeaderProfileScreen: React.FC = () => {
               </View>
               <Text style={ratingStyles.title}>Thank You!</Text>
               <Text style={ratingStyles.subtitle}>
-                Your detailed rating for {leader?.name} has been recorded across 5 dimensions.
+                Your rating for {leader?.name} has been recorded.
               </Text>
-              <TouchableOpacity
-                style={ratingStyles.doneBtn}
-                onPress={() => setShowRatingModal(false)}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity style={ratingStyles.doneBtn} onPress={() => setShowRatingModal(false)} activeOpacity={0.7}>
                 <Text style={ratingStyles.submitBtnText}>Done</Text>
               </TouchableOpacity>
             </>
@@ -401,6 +375,24 @@ const ratingStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 20,
+  },
+  dimensionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dimensionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    flex: 1,
+  },
+  miniStarsRow: {
+    flexDirection: 'row',
+    gap: 4,
   },
   starsRow: {
     flexDirection: 'row',

@@ -9,6 +9,7 @@ import {
   Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -59,6 +60,7 @@ const FAQ_ITEMS: FAQItem[] = [
 export const HelpSupportScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
@@ -78,7 +80,7 @@ export const HelpSupportScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -171,7 +173,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['3xl'],
     paddingBottom: spacing.md,
     backgroundColor: colors.background,
     borderBottomWidth: 1,

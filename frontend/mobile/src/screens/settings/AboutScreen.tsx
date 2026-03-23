@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
 import { colors } from '../../theme/colors';
@@ -48,6 +49,7 @@ const LINK_ITEMS: LinkItem[] = [
 export const AboutScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<AboutNavProp>();
+  const insets = useSafeAreaInsets();
 
   const handleLinkPress = (item: LinkItem) => {
     if (item.action === 'url') {
@@ -62,7 +64,7 @@ export const AboutScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -153,7 +155,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['3xl'],
     paddingBottom: spacing.md,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
