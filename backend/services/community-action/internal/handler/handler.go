@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/civitro/pkg/errors"
+	"github.com/civitro/pkg/logger"
 	"github.com/civitro/services/community-action/internal/model"
 	"github.com/civitro/services/community-action/internal/service"
 	"github.com/gin-gonic/gin"
@@ -278,12 +279,15 @@ func (h *Handler) ListTrending(c *gin.Context) {
 	}
 
 	// Populate has_supported for current user
-	if uid, ok := c.Get("user_id"); ok {
+	uid, ok := c.Get("user_id")
+	logger.Info().Bool("has_user_id", ok).Interface("user_id", uid).Msg("trending: checking has_supported")
+	if ok {
 		userID, _ := uid.(string)
 		if userID != "" && resp != nil {
 			for i := range resp.Actions {
 				supported, _ := h.svc.HasSupported(c.Request.Context(), resp.Actions[i].ID, userID)
 				resp.Actions[i].HasSupported = supported
+				logger.Info().Str("action_id", resp.Actions[i].ID).Bool("supported", supported).Msg("trending: has_supported check")
 			}
 		}
 	}

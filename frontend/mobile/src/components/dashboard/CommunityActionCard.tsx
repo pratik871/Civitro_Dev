@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -29,6 +29,7 @@ export interface CommunityAction {
 
 interface CommunityActionCardProps {
   actions: CommunityAction[];
+  onPress?: (id: string) => void;
   onSupport?: (id: string) => void;
   onShare?: (id: string) => void;
   onSeeAll?: () => void;
@@ -48,14 +49,15 @@ const BADGE_STYLES: Record<string, { bg: string; text: string }> = {
 // ---------------------------------------------------------------------------
 const ActionCard: React.FC<{
   action: CommunityAction;
+  onPress?: () => void;
   onSupport?: () => void;
   onShare?: () => void;
-}> = ({ action, onSupport, onShare }) => {
+}> = ({ action, onPress, onSupport, onShare }) => {
   const [supported, setSupported] = React.useState(action.hasSupported ?? false);
   const badgeStyle = BADGE_STYLES[action.badgeType] ?? BADGE_STYLES.new;
 
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPress}>
       {/* Header */}
       <View style={styles.cardHeader}>
         <View style={[styles.badgePill, { backgroundColor: badgeStyle.bg }]}>
@@ -116,7 +118,7 @@ const ActionCard: React.FC<{
       <View style={styles.ctaRow}>
         <TouchableOpacity
           style={[styles.supportBtn, supported && styles.supportedBtn]}
-          onPress={() => { setSupported(!supported); onSupport?.(); }}
+          onPress={(e) => { e.stopPropagation(); setSupported(!supported); onSupport?.(); }}
           activeOpacity={0.7}
         >
           {supported ? (
@@ -130,7 +132,7 @@ const ActionCard: React.FC<{
           )}
           <Text style={styles.supportBtnText}>{supported ? 'Supported' : 'Support'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shareBtn} onPress={onShare} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.shareBtn} onPress={(e) => { e.stopPropagation(); onShare?.(); }} activeOpacity={0.7}>
           <Svg viewBox="0 0 14 14" width={14} height={14} fill="none">
             <Circle cx={4} cy={7} r={2} stroke={colors.textSecondary} strokeWidth={1.5} />
             <Circle cx={11} cy={3} r={2} stroke={colors.textSecondary} strokeWidth={1.5} />
@@ -150,7 +152,7 @@ const ActionCard: React.FC<{
           Started by {action.creatorName} · {action.createdAgo}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
@@ -159,6 +161,7 @@ const ActionCard: React.FC<{
 // ---------------------------------------------------------------------------
 export const CommunityActionsSection: React.FC<CommunityActionCardProps> = ({
   actions,
+  onPress,
   onSupport,
   onShare,
   onSeeAll,
@@ -180,6 +183,7 @@ export const CommunityActionsSection: React.FC<CommunityActionCardProps> = ({
           <ActionCard
             key={action.id}
             action={action}
+            onPress={() => onPress?.(action.id)}
             onSupport={() => onSupport?.(action.id)}
             onShare={() => onShare?.(action.id)}
           />

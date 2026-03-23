@@ -205,6 +205,7 @@ export function useActions(wardId?: string) {
   return useQuery({
     queryKey: ['actions', wardId || 'trending'],
     queryFn: async () => {
+      // Use single action detail endpoint which correctly returns has_supported
       const endpoint = wardId
         ? `/api/v1/actions/ward/${wardId}`
         : '/api/v1/actions/trending';

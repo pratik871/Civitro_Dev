@@ -163,6 +163,11 @@ export const HomeScreen: React.FC = () => {
 
   const unreadCount = dashboardStats?.unread_messages ?? unreadData?.count ?? 0;
 
+  // Debug: log raw action data
+  if (actionsData && actionsData.length > 0) {
+    console.log('=== ACTIONS DATA ===', actionsData.slice(0, 2).map(a => ({ title: a.title?.substring(0, 20), hasSupported: a.hasSupported })));
+  }
+
   // Map community actions from API to the card component shape
   const communityActions: CommunityAction[] = useMemo(() => {
     if (!actionsData || actionsData.length === 0) return [];
@@ -601,6 +606,7 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.sectionSpacing}>
             <CommunityActionsSection
               actions={communityActions}
+              onPress={(id) => navigation.navigate('ActionDetail' as any, { actionId: id })}
               onSeeAll={() => navigation.navigate('ActionsList' as any)}
               onSupport={async (id) => {
                 try {
