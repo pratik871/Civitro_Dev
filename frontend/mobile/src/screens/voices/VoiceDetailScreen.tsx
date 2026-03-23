@@ -41,6 +41,7 @@ export const VoiceDetailScreen: React.FC = () => {
   const shareMutation = useShareVoice();
 
   const [commentText, setCommentText] = useState('');
+  const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
 
   // Fetch comments
   const { data: commentsData, refetch: refetchComments } = useQuery({
@@ -61,8 +62,11 @@ export const VoiceDetailScreen: React.FC = () => {
 
   const handleComment = () => {
     if (!commentText.trim()) return;
-    api.post(`/api/v1/voices/${voiceId}/comment`, { text: commentText.trim() })
-      .then(() => { setCommentText(''); refetchComments(); refetch(); })
+    const endpoint = replyTo
+      ? `/api/v1/voices/${voiceId}/comments/${replyTo.id}/reply`
+      : `/api/v1/voices/${voiceId}/comment`;
+    api.post(endpoint, { text: commentText.trim() })
+      .then(() => { setCommentText(''); setReplyTo(null); refetchComments(); refetch(); })
       .catch(() => Alert.alert('Error', 'Could not post comment'));
   };
 
@@ -71,7 +75,7 @@ export const VoiceDetailScreen: React.FC = () => {
       await Share.share({
         title: 'Community Voice',
         message: voice
-          ? `"${voice.text}" \u2014 shared from Civitro`
+          ? `"${voice.text}"\n\nhttps://civitro.com/share/voice/${voiceId}`
           : 'Check out this community voice on Civitro!',
       });
       shareMutation.mutate(voiceId);
@@ -190,6 +194,18 @@ export const VoiceDetailScreen: React.FC = () => {
       <View style={styles.commentsSection}>
         <Text style={styles.commentsTitle}>Comments ({commentsList.length})</Text>
 
+        {/* Reply indicator */}
+        {replyTo && (
+          <View style={styles.replyIndicator}>
+            <Text style={styles.replyIndicatorText}>
+              Replying to <Text style={styles.replyName}>{replyTo.name}</Text>
+            </Text>
+            <TouchableOpacity onPress={() => setReplyTo(null)}>
+              <Text style={styles.replyCancelText}>{'\u2715'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Comment Input */}
         <View style={styles.commentInputRow}>
           <TextInput
@@ -241,7 +257,7 @@ export const VoiceDetailScreen: React.FC = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.commentActionBtn}
-                      onPress={() => setCommentText(`@${c.user_name || 'Citizen'} `)}
+                      onPress={() => setReplyTo({ id: c.id, name: c.user_name || 'Citizen' })}
                     >
                       <Text style={styles.commentActionText}>Reply</Text>
                     </TouchableOpacity>
@@ -260,6 +276,25 @@ export const VoiceDetailScreen: React.FC = () => {
                       <Text style={styles.commentTime}>{formatRelativeTime(reply.created_at)}</Text>
                     </View>
                     <Text style={styles.commentContent}>{reply.content}</Text>
+                    <View style={styles.commentActions}>
+                      <TouchableOpacity
+                        style={styles.commentActionBtn}
+                        onPress={() => {
+                          api.post(`/api/v1/voices/${voiceId}/comments/${reply.id}/upvote`).then(() => refetchComments());
+                        }}
+                      >
+                        <Svg viewBox="0 0 12 12" width={12} height={12} fill="none">
+                          <Path d="M6 2v8M4 4l2-2 2 2" stroke={(reply.upvotes_count || 0) > 0 ? '#FF6B35' : '#9CA3AF'} strokeWidth={1.5} strokeLinecap="round" />
+                        </Svg>
+                        <Text style={[styles.commentActionText, (reply.upvotes_count || 0) > 0 && { color: '#FF6B35' }]}>{reply.upvotes_count || 0}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.commentActionBtn}
+                        onPress={() => setReplyTo({ id: c.id, name: reply.user_name || 'Citizen' })}
+                      >
+                        <Text style={styles.commentActionText}>Reply</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -548,5 +583,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: colors.textMuted,
+  },
+  replyIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF3ED',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  replyIndicatorText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  replyName: {
+    fontWeight: '700',
+    color: '#FF6B35',
+  },
+  replyCancelText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    padding: 4,
   },
 });

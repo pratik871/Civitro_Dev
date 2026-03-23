@@ -8,6 +8,7 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
 } from 'react-native';

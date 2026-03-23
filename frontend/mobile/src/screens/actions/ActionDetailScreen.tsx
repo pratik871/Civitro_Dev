@@ -86,7 +86,7 @@ export const ActionDetailScreen: React.FC = () => {
     try {
       await Share.share({
         title: `Community Action: ${action.title}`,
-        message: `Support this community action: "${action.title}" -- ${action.supportCount} supporters and counting. Join us on Civitro!`,
+        message: `Support this community action: "${action.title}" — ${action.supportCount} supporters.\n\nhttps://civitro.com/share/action/${action.id}`,
       });
     } catch {
       // user cancelled

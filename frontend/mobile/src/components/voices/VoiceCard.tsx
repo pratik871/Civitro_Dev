@@ -27,7 +27,7 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
 
   const handleShare = () => {
     Share.share({
-      message: `${text}${tags.length > 0 ? '\n\n' + tags.map(t => '#' + t).join(' ') : ''}\n\n— via Civitro`,
+      message: `${text}${tags.length > 0 ? '\n\n' + tags.map(t => '#' + t).join(' ') : ''}\n\nhttps://civitro.com/share/voice/${voice.id}`,
     });
   };
 

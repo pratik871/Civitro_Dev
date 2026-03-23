@@ -7,6 +7,15 @@ import { saveTokens } from '../lib/auth';
 import api from '../lib/api';
 import type { User, AuthTokens } from '../types/user';
 
+/** Normalize Indian phone numbers to E.164 format (+91XXXXXXXXXX). */
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 10) return '+91' + digits;
+  if (digits.length === 12 && digits.startsWith('91')) return '+' + digits;
+  if (phone.startsWith('+')) return phone;
+  return '+' + digits;
+}
+
 interface AuthResponse {
   access_token: string;
   refresh_token: string;
@@ -90,11 +99,12 @@ export function useAuth() {
 
   const handleSendOTP = useCallback(
     async (phone: string, name?: string) => {
+      const normalized = normalizePhone(phone);
       setLoading(true);
       try {
         const response = await api.post<RegisterResponse>(
           '/api/v1/auth/register',
-          { phone, name: name || phone },
+          { phone: normalized, name: name || normalized },
           { authenticated: false },
         );
         return { success: true, userId: response.user_id };
@@ -112,12 +122,13 @@ export function useAuth() {
 
   const handleLogin = useCallback(
     async (phone: string, otp: string) => {
+      const normalized = normalizePhone(phone);
       setLoading(true);
       try {
         // Verify OTP and get tokens
         const authResponse = await api.post<AuthResponse>(
           '/api/v1/auth/verify-otp',
-          { phone, otp },
+          { phone: normalized, otp },
           { authenticated: false },
         );
 
