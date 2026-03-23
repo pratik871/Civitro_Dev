@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNotifications, useMarkAllRead } from '../../hooks/useNotifications';
@@ -87,36 +89,48 @@ export const NotificationsScreen: React.FC = () => {
     }
   };
 
+  const deleteNotification = (id: string) => {
+    api.delete(`/api/v1/notifications/${id}`).then(() => refetch()).catch(() => {});
+  };
+
+  const renderRightActions = (id: string) => (
+    <TouchableOpacity style={styles.swipeDelete} onPress={() => deleteNotification(id)} activeOpacity={0.7}>
+      <Text style={styles.swipeDeleteText}>Delete</Text>
+    </TouchableOpacity>
+  );
+
   const renderNotification = ({ item }: { item: NotificationItem }) => (
-    <TouchableOpacity
-      style={[styles.notifRow, !item.read && styles.notifUnread]}
-      activeOpacity={0.7}
-      onPress={() => handleNotificationPress(item)}
-    >
-      <View
-        style={[
-          styles.iconContainer,
-          { backgroundColor: (NOTIFICATION_ICONS[item.type]?.bg || '#F3F4F6') },
-        ]}
+    <Swipeable renderRightActions={() => renderRightActions(item.id)} overshootRight={false}>
+      <TouchableOpacity
+        style={[styles.notifRow, !item.read && styles.notifUnread]}
+        activeOpacity={0.7}
+        onPress={() => handleNotificationPress(item)}
       >
-        <Text style={styles.icon}>
-          {NOTIFICATION_ICONS[item.type]?.emoji || '\u{1F514}'}
-        </Text>
-      </View>
-      <View style={styles.notifContent}>
-        <View style={styles.notifHeader}>
-          <Text style={[styles.notifTitle, !item.read && styles.unreadText]}>
-            {item.title}
-          </Text>
-          <Text style={styles.notifTime}>
-            {formatRelativeTime(item.created_at)}
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: (NOTIFICATION_ICONS[item.type]?.bg || '#F3F4F6') },
+          ]}
+        >
+          <Text style={styles.icon}>
+            {NOTIFICATION_ICONS[item.type]?.emoji || '\u{1F514}'}
           </Text>
         </View>
-        <Text style={styles.notifBody} numberOfLines={2}>
-          {item.body}
-        </Text>
-      </View>
-    </TouchableOpacity>
+        <View style={styles.notifContent}>
+          <View style={styles.notifHeader}>
+            <Text style={[styles.notifTitle, !item.read && styles.unreadText]}>
+              {item.title}
+            </Text>
+            <Text style={styles.notifTime}>
+              {formatRelativeTime(item.created_at)}
+            </Text>
+          </View>
+          <Text style={styles.notifBody} numberOfLines={2}>
+            {item.body}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
   );
 
   if (isLoading) {
@@ -272,5 +286,16 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: colors.textMuted,
+  },
+  swipeDelete: {
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+  },
+  swipeDeleteText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

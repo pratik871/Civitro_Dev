@@ -34,6 +34,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 	// Notification-scoped routes under /notifications/:id
 	r.PUT("/notifications/:id/read", h.MarkRead)
+	r.DELETE("/notifications/:id", h.DeleteNotification)
 }
 
 // RegisterInternalRoutes registers internal service-to-service endpoints (no auth).
@@ -77,6 +78,16 @@ func (h *Handler) MarkAllRead(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// DeleteNotification handles DELETE /notifications/:id
+func (h *Handler) DeleteNotification(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.svc.DeleteNotification(c.Request.Context(), id); err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 

@@ -85,6 +85,12 @@ func (r *Repository) MarkAllRead(ctx context.Context, userID string) error {
 	return err
 }
 
+// DeleteNotification deletes a single notification by ID.
+func (r *Repository) DeleteNotification(ctx context.Context, id string) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM notifications WHERE id = $1`, id)
+	return err
+}
+
 // ClearAll deletes all notifications for a user.
 func (r *Repository) ClearAll(ctx context.Context, userID string) error {
 	_, err := r.db.Exec(ctx, `DELETE FROM notifications WHERE user_id = $1`, userID)

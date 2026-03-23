@@ -50,6 +50,11 @@ func (s *Service) MarkAllRead(ctx context.Context, userID string) error {
 	return s.repo.MarkAllRead(ctx, userID)
 }
 
+// DeleteNotification deletes a single notification.
+func (s *Service) DeleteNotification(ctx context.Context, id string) error {
+	return s.repo.DeleteNotification(ctx, id)
+}
+
 // ClearAll deletes all notifications for a user.
 func (s *Service) ClearAll(ctx context.Context, userID string) error {
 	logger.Info().Str("user_id", userID).Msg("clearing all notifications")
