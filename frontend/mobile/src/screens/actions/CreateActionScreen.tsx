@@ -48,22 +48,29 @@ export const CreateActionScreen: React.FC = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [patternLoaded, setPatternLoaded] = useState(false);
 
-  // Fetch pattern's linked issues when navigated from a pattern
+  // Fetch pattern info and auto-link issues by category when navigated from a pattern
   React.useEffect(() => {
     if (patternId && !patternLoaded) {
       api
-        .get(`/api/v1/patterns/${patternId}`)
-        .then((res: any) => {
-          const issueIds: string[] =
-            res.data?.pattern?.issue_ids ||
-            res.data?.pattern?.linked_issue_ids ||
-            res.data?.issue_ids ||
-            [];
-          if (issueIds.length > 0) {
-            setLinkedIssueIds(prev => {
-              const combined = new Set([...prev, ...issueIds]);
-              return Array.from(combined);
-            });
+        .get<any>(`/api/v1/patterns/${patternId}`)
+        .then((res) => {
+          const pattern = res.pattern ?? res;
+          // Pre-fill title from pattern data
+          if (pattern.category && !title) {
+            const cat = (pattern.category as string).replace('_', ' ');
+            setTitle(`Fix ${cat} issues in our ward`);
+            setDescription(`${pattern.report_count ?? 0} reports of ${cat} issues across ${pattern.unique_locations ?? 0} locations over ${pattern.days_unresolved ?? 0} days. Zero resolved.`);
+            setDesiredOutcome(`Resolve all ${cat} complaints and prevent recurrence.`);
+          }
+          // Auto-link issues matching pattern category from loaded issues
+          if (pattern.category && issues) {
+            const matching = issues
+              .filter(i => i.category === pattern.category)
+              .map(i => i.id)
+              .slice(0, 10);
+            if (matching.length > 0) {
+              setLinkedIssueIds(matching);
+            }
           }
           setPatternLoaded(true);
         })
@@ -71,7 +78,7 @@ export const CreateActionScreen: React.FC = () => {
           setPatternLoaded(true);
         });
     }
-  }, [patternId, patternLoaded]);
+  }, [patternId, patternLoaded, issues]);
 
   const searchResults = useMemo(() => {
     if (!issueSearchQuery.trim() || !issues) return [];
@@ -80,9 +87,9 @@ export const CreateActionScreen: React.FC = () => {
       .filter(
         i =>
           !linkedIssueIds.includes(i.id) &&
-          (i.title.toLowerCase().includes(q) ||
-            i.category.toLowerCase().includes(q) ||
-            i.address.toLowerCase().includes(q)),
+          ((i.title || i.text || '').toLowerCase().includes(q) ||
+            (i.category || '').toLowerCase().includes(q) ||
+            (i.address || '').toLowerCase().includes(q)),
       )
       .slice(0, 10);
   }, [issues, issueSearchQuery, linkedIssueIds]);
@@ -105,7 +112,7 @@ export const CreateActionScreen: React.FC = () => {
     title.trim().length > 0 &&
     description.trim().length > 0 &&
     desiredOutcome.trim().length > 0 &&
-    linkedIssueIds.length >= MIN_LINKED_ISSUES;
+    (linkedIssueIds.length >= MIN_LINKED_ISSUES || !!patternId);
 
   const handleLinkIssue = (issueId: string) => {
     setLinkedIssueIds(prev => [...prev, issueId]);

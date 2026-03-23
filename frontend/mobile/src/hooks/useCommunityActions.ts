@@ -291,6 +291,7 @@ export function useCreateAction() {
       desiredOutcome: string;
       targetAuthorityId: string;
       linkedIssueIds: string[];
+      patternId?: string;
     }) =>
       api.post<{ action: RawAction }>('/api/v1/actions', {
         title: data.title,
@@ -298,6 +299,7 @@ export function useCreateAction() {
         desired_outcome: data.desiredOutcome,
         target_authority_id: data.targetAuthorityId,
         linked_issue_ids: data.linkedIssueIds,
+        pattern_id: data.patternId || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['actions'] });
