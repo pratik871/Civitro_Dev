@@ -55,6 +55,16 @@ func (s *RatingService) GetRatingHistory(ctx context.Context, repID string) ([]m
 	return ratings, nil
 }
 
+// GetMyRating returns the user's most recent rating and total rating count for a representative.
+func (s *RatingService) GetMyRating(ctx context.Context, userID, repID string) (int, int, error) {
+	score, err := s.repo.GetUserRating(ctx, userID, repID)
+	if err != nil {
+		return 0, 0, err
+	}
+	total, _ := s.repo.GetTotalRatingsCount(ctx, repID)
+	return score, total, nil
+}
+
 // SubmitSurvey records a citizen's satisfaction survey for a representative.
 func (s *RatingService) SubmitSurvey(ctx context.Context, req model.SubmitSurveyRequest) (*model.SatisfactionSurvey, error) {
 	if req.Score < 1 || req.Score > 5 {

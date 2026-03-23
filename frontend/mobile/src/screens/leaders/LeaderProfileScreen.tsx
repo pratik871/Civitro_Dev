@@ -4,7 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '../../components/ui/Avatar';
 import { StarRating } from '../../components/ui/StarRating';
 import { ScoreRing } from '../../components/ui/ScoreRing';
@@ -42,7 +42,24 @@ export const LeaderProfileScreen: React.FC = () => {
 
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedStars, setSelectedStars] = useState(0);
-  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+
+  // Fetch user's existing rating for this leader
+  const { data: myRatingData } = useQuery({
+    queryKey: ['my-rating', leaderId],
+    queryFn: async () => {
+      try {
+        const res = await api.get<{ score: number; total_ratings: number }>(`/api/v1/ratings/my-rating/${leaderId}`);
+        return { score: res.score || 0, totalRatings: res.total_ratings || 0 };
+      } catch {
+        return { score: 0, totalRatings: 0 };
+      }
+    },
+    enabled: !!leaderId,
+  });
+
+  const myRating = myRatingData?.score ?? 0;
+  const totalRatings = myRatingData?.totalRatings ?? 0;
+  const ratingSubmitted = myRating > 0;
 
   const rateMutation = useMutation({
     mutationFn: (score: number) =>
@@ -52,7 +69,8 @@ export const LeaderProfileScreen: React.FC = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaders', leaderId] });
-      setRatingSubmitted(true);
+      queryClient.invalidateQueries({ queryKey: ['my-rating', leaderId] });
+      setSelectedStars(0);
     },
   });
 
@@ -100,7 +118,7 @@ export const LeaderProfileScreen: React.FC = () => {
         <View style={styles.ratingHeader}>
           <StarRating rating={leader.overallRating} size={20} />
           <Text style={styles.ratingCount}>
-            {leader.totalRatings.toLocaleString()} ratings
+            {(totalRatings || leader.totalRatings).toLocaleString()} rating{(totalRatings || leader.totalRatings) !== 1 ? 's' : ''}
           </Text>
         </View>
       </View>
@@ -133,16 +151,16 @@ export const LeaderProfileScreen: React.FC = () => {
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Rating Breakdown</Text>
         <RatingBreakdown breakdown={leader.ratingBreakdown} />
-        {ratingSubmitted && selectedStars > 0 && (
+        {ratingSubmitted && (
           <View style={styles.yourRating}>
-            <Text style={styles.yourRatingText}>You rated {selectedStars} star{selectedStars > 1 ? 's' : ''}</Text>
+            <Text style={styles.yourRatingText}>You rated {myRating} star{(myRating ?? 0) > 1 ? 's' : ''}</Text>
             <View style={styles.yourRatingStars}>
               {[1, 2, 3, 4, 5].map(s => (
                 <Svg key={s} viewBox="0 0 24 24" width={14} height={14}>
                   <Path
                     d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                    fill={s <= selectedStars ? '#FFD700' : '#E5E7EB'}
-                    stroke={s <= selectedStars ? '#F59E0B' : '#D1D5DB'}
+                    fill={s <= (myRating ?? 0) ? '#FFD700' : '#E5E7EB'}
+                    stroke={s <= (myRating ?? 0) ? '#F59E0B' : '#D1D5DB'}
                     strokeWidth={1}
                   />
                 </Svg>

@@ -94,14 +94,30 @@ func (r *RatingRepository) CreateSurvey(ctx context.Context, survey *model.Satis
 // from all surveys and updates the representatives table.
 func (r *RatingRepository) UpdateRepresentativeRating(ctx context.Context, repID string) error {
 	_, err := r.db.Exec(ctx, `
-		UPDATE representatives SET rating = (
-			SELECT COALESCE(AVG(score), 0)
-			FROM satisfaction_surveys
-			WHERE representative_id = $1
-		), updated_at = NOW()
+		UPDATE representatives SET
+			rating = COALESCE((SELECT AVG(score) FROM satisfaction_surveys WHERE representative_id = $1), 0),
+			updated_at = NOW()
 		WHERE id = $1
 	`, repID)
 	return err
+}
+
+// GetUserRating returns the most recent rating score a user gave to a representative.
+func (r *RatingRepository) GetUserRating(ctx context.Context, userID, repID string) (int, error) {
+	var score int
+	err := r.db.QueryRow(ctx, `
+		SELECT score FROM satisfaction_surveys
+		WHERE user_id = $1 AND representative_id = $2
+		ORDER BY created_at DESC LIMIT 1
+	`, userID, repID).Scan(&score)
+	return score, err
+}
+
+// GetTotalRatingsCount returns the total number of surveys for a representative.
+func (r *RatingRepository) GetTotalRatingsCount(ctx context.Context, repID string) (int, error) {
+	var count int
+	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM satisfaction_surveys WHERE representative_id = $1`, repID).Scan(&count)
+	return count, err
 }
 
 // GetSurveysByRepID returns all surveys for a representative within the rolling window.

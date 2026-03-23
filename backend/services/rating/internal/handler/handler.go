@@ -92,6 +92,21 @@ func (h *RatingHandler) SubmitSurvey(c *gin.Context) {
 	c.JSON(http.StatusCreated, survey)
 }
 
+// GetMyRating returns the current user's rating for a representative.
+// GET /ratings/my-rating/:rep_id
+func (h *RatingHandler) GetMyRating(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid, _ := userID.(string)
+	repID := c.Param("rep_id")
+
+	score, totalCount, err := h.svc.GetMyRating(c.Request.Context(), uid, repID)
+	if err != nil {
+		c.JSON(200, gin.H{"score": 0, "total_ratings": 0})
+		return
+	}
+	c.JSON(200, gin.H{"score": score, "total_ratings": totalCount})
+}
+
 // GetRankings returns representatives ranked by composite score within a boundary.
 // GET /ratings/boundary/:boundary_id/rankings
 func (h *RatingHandler) GetRankings(c *gin.Context) {

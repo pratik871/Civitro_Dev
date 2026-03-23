@@ -69,6 +69,7 @@ func main() {
 	authed := router.Group("/api/v1")
 	authed.Use(middleware.JWTAuth())
 	authed.POST("/ratings/survey", h.SubmitSurvey)
+	authed.GET("/ratings/my-rating/:rep_id", h.GetMyRating)
 
 	// Start HTTP server.
 	srv := &http.Server{
