@@ -453,6 +453,16 @@ func (s *Service) VerifyAadhaar(ctx context.Context, userID string, zipData []by
 	}, nil
 }
 
+// GetGovernanceChain retrieves the governance escalation chain for a ward.
+func (s *Service) GetGovernanceChain(ctx context.Context, wardID string) ([]model.GovernanceChainEntry, error) {
+	return s.repo.GetGovernanceChain(ctx, wardID)
+}
+
+// GetWardMood retrieves the precomputed ward mood/sentiment data.
+func (s *Service) GetWardMood(ctx context.Context, wardID string) (*model.WardMood, error) {
+	return s.repo.GetWardMood(ctx, wardID)
+}
+
 // GetDashboardStats returns aggregated dashboard stats for the authenticated user.
 func (s *Service) GetDashboardStats(ctx context.Context, userID string) (*model.DashboardStats, error) {
 	// Verify user exists.

@@ -33,6 +33,10 @@ func (h *Handler) RegisterPublicRoutes(rg *gin.RouterGroup) {
 		auth.POST("/verify-otp", h.VerifyOTP)
 		auth.POST("/refresh", h.RefreshToken)
 	}
+
+	// Public governance chain (no auth required for viewing)
+	rg.GET("/governance/ward/:ward_id/chain", h.GetGovernanceChain)
+	rg.GET("/ward-mood/:ward_id", h.GetWardMood)
 }
 
 // RegisterProtectedRoutes registers routes that require JWT authentication.
@@ -178,6 +182,28 @@ func (h *Handler) UpdateLocation(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// GetGovernanceChain handles GET /governance/ward/:ward_id/chain
+func (h *Handler) GetGovernanceChain(c *gin.Context) {
+	wardID := c.Param("ward_id")
+	chain, err := h.svc.GetGovernanceChain(c.Request.Context(), wardID)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"chain": chain})
+}
+
+// GetWardMood handles GET /ward-mood/:ward_id
+func (h *Handler) GetWardMood(c *gin.Context) {
+	wardID := c.Param("ward_id")
+	mood, err := h.svc.GetWardMood(c.Request.Context(), wardID)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, mood)
 }
 
 // VerifyAadhaar handles POST /auth/verify-aadhaar (multipart form).

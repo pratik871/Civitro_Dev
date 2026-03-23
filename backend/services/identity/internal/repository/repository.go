@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/civitro/services/identity/internal/model"
@@ -38,6 +39,12 @@ type Repository interface {
 
 	// Dashboard
 	GetDashboardStats(ctx context.Context, userID string) (*model.DashboardStats, error)
+
+	// Governance chain
+	GetGovernanceChain(ctx context.Context, wardID string) ([]model.GovernanceChainEntry, error)
+
+	// Ward mood
+	GetWardMood(ctx context.Context, wardID string) (*model.WardMood, error)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -310,6 +317,87 @@ func (r *PostgresRepository) GetAadhaarVerificationByUIDHash(ctx context.Context
 		return nil, err
 	}
 	return v, nil
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard Stats
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Governance Chain
+// ---------------------------------------------------------------------------
+
+// GetGovernanceChain retrieves the governance escalation chain for a ward.
+func (r *PostgresRepository) GetGovernanceChain(ctx context.Context, wardID string) ([]model.GovernanceChainEntry, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, ward_id, tier, level, is_department_routed, department_category,
+		       name, title, initials, party, is_elected,
+		       response_time_days, rating, issues_label
+		FROM governance_chain
+		WHERE ward_id = $1::uuid
+		ORDER BY tier, level
+	`, wardID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var chain []model.GovernanceChainEntry
+	for rows.Next() {
+		var e model.GovernanceChainEntry
+		var respDays, rating *float64
+		var deptCat, party, issuesLabel *string
+		if err := rows.Scan(
+			&e.ID, &e.WardID, &e.Tier, &e.Level, &e.IsDepartmentRouted, &deptCat,
+			&e.Name, &e.Title, &e.Initials, &party, &e.IsElected,
+			&respDays, &rating, &issuesLabel,
+		); err != nil {
+			return nil, err
+		}
+		if deptCat != nil {
+			e.DepartmentCategory = *deptCat
+		}
+		if party != nil {
+			e.Party = *party
+		}
+		if respDays != nil {
+			e.ResponseTimeDays = respDays
+		}
+		if rating != nil {
+			e.Rating = rating
+		}
+		if issuesLabel != nil {
+			e.IssuesLabel = *issuesLabel
+		}
+		chain = append(chain, e)
+	}
+	if chain == nil {
+		chain = []model.GovernanceChainEntry{}
+	}
+	return chain, nil
+}
+
+// ---------------------------------------------------------------------------
+// Ward Mood
+// ---------------------------------------------------------------------------
+
+// GetWardMood retrieves the precomputed ward mood/sentiment data.
+func (r *PostgresRepository) GetWardMood(ctx context.Context, wardID string) (*model.WardMood, error) {
+	var mood model.WardMood
+	var topicsJSON, sparklineJSON []byte
+	err := r.pool.QueryRow(ctx, `
+		SELECT ward_id, mood, score, topics, trend_direction, trend_change_percent, trend_sparkline, updated_at
+		FROM ward_mood WHERE ward_id = $1::uuid
+	`, wardID).Scan(
+		&mood.WardID, &mood.Mood, &mood.Score, &topicsJSON,
+		&mood.TrendDirection, &mood.TrendChangePercent, &sparklineJSON, &mood.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal(topicsJSON, &mood.Topics)
+	json.Unmarshal(sparklineJSON, &mood.TrendSparkline)
+	return &mood, nil
 }
 
 // ---------------------------------------------------------------------------

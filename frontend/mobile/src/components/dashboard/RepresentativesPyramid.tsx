@@ -18,7 +18,6 @@ import {
   getResponsePillVariant,
 } from '../../types/governance';
 import type { GovernanceRep } from '../../types/governance';
-import { MOCK_GOVERNANCE_CHAIN } from '../../data/mockRepresentatives';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -31,6 +30,7 @@ const SAFFRON = '#FF6B35';
 // Props
 // ---------------------------------------------------------------------------
 interface RepresentativesPyramidProps {
+  reps: GovernanceRep[];
   onMessage?: (rep: GovernanceRep) => void;
   onRate?: (rep: GovernanceRep) => void;
   onViewIssues?: () => void;
@@ -40,11 +40,11 @@ interface RepresentativesPyramidProps {
 // Main Component
 // ---------------------------------------------------------------------------
 export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
+  reps,
   onMessage,
   onRate,
   onViewIssues,
 }) => {
-  const reps = MOCK_GOVERNANCE_CHAIN;
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 

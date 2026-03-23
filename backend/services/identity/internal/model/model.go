@@ -140,6 +140,43 @@ type DashboardStats struct {
 	RecentlyResolved    []RecentlyResolved `json:"recently_resolved"`
 }
 
+// GovernanceChainEntry represents a single tier in the governance escalation chain.
+type GovernanceChainEntry struct {
+	ID                 string   `json:"id"`
+	WardID             string   `json:"ward_id"`
+	Tier               int      `json:"tier"`
+	Level              string   `json:"level"`
+	IsDepartmentRouted bool     `json:"is_department_routed"`
+	DepartmentCategory string   `json:"department_category,omitempty"`
+	Name               string   `json:"name"`
+	Title              string   `json:"title"`
+	Initials           string   `json:"initials"`
+	Party              string   `json:"party,omitempty"`
+	IsElected          bool     `json:"is_elected"`
+	ResponseTimeDays   *float64 `json:"response_time_days"`
+	Rating             *float64 `json:"rating"`
+	IssuesLabel        string   `json:"issues_label,omitempty"`
+}
+
+// WardMoodTopic represents a single topic within a ward's mood breakdown.
+type WardMoodTopic struct {
+	Name       string  `json:"name"`
+	Sentiment  float64 `json:"sentiment"`
+	Percentage int     `json:"percentage"`
+}
+
+// WardMood represents precomputed sentiment data for a ward.
+type WardMood struct {
+	WardID             string          `json:"ward_id"`
+	Mood               string          `json:"mood"`
+	Score              float64         `json:"score"`
+	Topics             []WardMoodTopic `json:"topics"`
+	TrendDirection     string          `json:"trend_direction"`
+	TrendChangePercent int             `json:"trend_change_percent"`
+	TrendSparkline     []float64       `json:"trend_sparkline"`
+	UpdatedAt          string          `json:"updated_at"`
+}
+
 // ProfileResponse is the response for user profile retrieval.
 type ProfileResponse struct {
 	ID                string            `json:"id"`

@@ -32,6 +32,7 @@ import { useUnreadCount } from '../../hooks/useNotifications';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { usePatterns } from '../../hooks/usePatterns';
 import { useActions } from '../../hooks/useCommunityActions';
+import { useGovernanceChain } from '../../hooks/useGovernanceChain';
 import { FAB } from '../../components/ui/FAB';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -88,6 +89,7 @@ export const HomeScreen: React.FC = () => {
   const { data: wardMoodData } = useWardMood(wardId);
   const { data: patternsData } = usePatterns(wardId);
   const { data: actionsData } = useActions(wardId);
+  const { data: governanceChain } = useGovernanceChain(wardId);
   const [refreshing, setRefreshing] = useState(false);
 
   // Refresh on focus
@@ -368,20 +370,23 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         {/* 5. YOUR REPRESENTATIVES — Governance Pyramid Strip            */}
         {/* ============================================================ */}
-        <View style={styles.sectionSpacing}>
-          <RepresentativesPyramid
-            onMessage={(rep) => navigation.navigate('Chat', {
-              recipientId: rep.id,
-              recipientName: rep.name,
-            })}
-            onRate={(rep) => {
-              if (leaders && leaders.length > 0) {
-                navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
-              }
-            }}
-            onViewIssues={() => navigation.navigate('Main', { screen: 'Map' } as any)}
-          />
-        </View>
+        {governanceChain && governanceChain.length > 0 && (
+          <View style={styles.sectionSpacing}>
+            <RepresentativesPyramid
+              reps={governanceChain}
+              onMessage={(rep) => navigation.navigate('Chat', {
+                recipientId: rep.id,
+                recipientName: rep.name,
+              })}
+              onRate={(rep) => {
+                if (leaders && leaders.length > 0) {
+                  navigation.navigate('LeaderProfile', { leaderId: leaders[0].id });
+                }
+              }}
+              onViewIssues={() => navigation.navigate('Main', { screen: 'Map' } as any)}
+            />
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 6. WARD DASHBOARD                                             */}
