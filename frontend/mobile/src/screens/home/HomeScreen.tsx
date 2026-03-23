@@ -467,7 +467,7 @@ export const HomeScreen: React.FC = () => {
                 { icon: 'calendar', value: String(firstPattern.days_unresolved ?? 0), label: t('home.daysUnresolved') },
                 { icon: 'damage', value: firstPattern.estimated_damage ?? (firstPattern.economic_impact ? `\u20B9${Math.round(firstPattern.economic_impact / 100000)}L` : ''), label: t('home.estDamage'), valueColor: '#0F766E' },
               ]}
-              onStartAction={() => navigation.navigate('CreateAction' as any)}
+              onStartAction={() => navigation.navigate('CreateAction' as any, { patternId: firstPattern.id })}
               onViewEvidence={() => navigation.navigate('IssuesList')}
             />
           </View>

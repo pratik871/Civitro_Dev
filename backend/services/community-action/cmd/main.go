@@ -51,6 +51,11 @@ func main() {
 	svc := service.New(repo, producer)
 	h := handler.New(svc)
 
+	// Start the escalation checker background job
+	escalationCtx, escalationCancel := context.WithCancel(ctx)
+	defer escalationCancel()
+	go svc.RunEscalationChecker(escalationCtx)
+
 	// Set up Gin router
 	if !cfg.App.Debug {
 		gin.SetMode(gin.ReleaseMode)

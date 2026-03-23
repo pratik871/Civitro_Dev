@@ -20,11 +20,12 @@ const (
 type EscalationLevel string
 
 const (
-	EscalationWard  EscalationLevel = "ward"
-	EscalationMLA   EscalationLevel = "mla"
-	EscalationMP    EscalationLevel = "mp"
-	EscalationCity  EscalationLevel = "city"
-	EscalationState EscalationLevel = "state"
+	EscalationWard   EscalationLevel = "ward"
+	EscalationMLA    EscalationLevel = "mla"
+	EscalationMP     EscalationLevel = "mp"
+	EscalationCity   EscalationLevel = "city"
+	EscalationState  EscalationLevel = "state"
+	EscalationPublic EscalationLevel = "public"
 )
 
 // ResponseType represents the type of stakeholder response.
@@ -148,6 +149,7 @@ type CreateActionRequest struct {
 	TargetAuthorityID string          `json:"target_authority_id,omitempty"`
 	EscalationLevel   EscalationLevel `json:"escalation_level"`
 	PatternID         string          `json:"pattern_id,omitempty"`
+	LinkedIssueIDs    []string        `json:"linked_issue_ids"`
 }
 
 // AddEvidenceRequest is the payload for linking an issue to an action.

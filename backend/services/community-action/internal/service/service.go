@@ -31,6 +31,29 @@ func New(repo repository.Repository, producer *events.Producer) *Service {
 
 // CreateAction creates a new community action.
 func (s *Service) CreateAction(ctx context.Context, userID string, req *model.CreateActionRequest) (*model.ActionDetailResponse, error) {
+	// --- Guardrail: Civic score check ---
+	civicScore, err := s.repo.GetUserCivicScore(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check civic score: %w", err)
+	}
+	if civicScore < 5 {
+		return nil, errors.New("Minimum civic score of 5 required to create community actions")
+	}
+
+	// --- Guardrail: Evidence minimum ---
+	if len(req.LinkedIssueIDs) < 3 && req.PatternID == "" {
+		return nil, errors.New("Actions require at least 3 linked issues or 1 detected pattern")
+	}
+
+	// --- Guardrail: Cooling period ---
+	recentCount, err := s.repo.CountUserActionsInPeriod(ctx, userID, time.Now().AddDate(0, -1, 0))
+	if err != nil {
+		return nil, fmt.Errorf("failed to check action rate limit: %w", err)
+	}
+	if recentCount >= 2 {
+		return nil, errors.New("Maximum 2 actions per month. Please wait before creating another.")
+	}
+
 	if req.Title == "" {
 		return nil, errors.New("action title is required")
 	}
@@ -70,6 +93,29 @@ func (s *Service) CreateAction(ctx context.Context, userID string, req *model.Cr
 
 	if err := s.repo.Create(ctx, action); err != nil {
 		return nil, fmt.Errorf("failed to create action: %w", err)
+	}
+
+	// --- Process linked issue IDs: create evidence records ---
+	for _, issueID := range req.LinkedIssueIDs {
+		evidence := &model.ActionEvidence{
+			ID:         repository.GenerateID(),
+			ActionID:   action.ID,
+			IssueID:    issueID,
+			LinkedBy:   userID,
+			AutoLinked: req.PatternID != "",
+			CreatedAt:  now,
+		}
+		if err := s.repo.AddEvidence(ctx, evidence); err != nil {
+			logger.Error().Err(err).
+				Str("action_id", action.ID).
+				Str("issue_id", issueID).
+				Msg("failed to link issue as evidence during action creation")
+		}
+	}
+
+	// Regenerate evidence package if issues were linked
+	if len(req.LinkedIssueIDs) > 0 {
+		go s.regenerateEvidencePackage(action.ID)
 	}
 
 	// Publish action created event
@@ -377,6 +423,9 @@ func (s *Service) ListTrending(ctx context.Context, limit int) (*model.TrendingL
 	}, nil
 }
 
+// supportGoalLadder defines the dynamic escalation ladder for support goals.
+var supportGoalLadder = []int{50, 100, 250, 500}
+
 // checkMilestone checks if a support count has hit a dynamic milestone and publishes an event.
 func (s *Service) checkMilestone(actionID string, count, goal int) {
 	milestones := []int{10, 25, 50, 100, 250, 500, 1000}
@@ -396,14 +445,36 @@ func (s *Service) checkMilestone(actionID string, count, goal int) {
 				Str("action_id", actionID).
 				Int("milestone", m).
 				Msg("community action hit support milestone")
-
-			// If we hit the support goal, dynamically increase it
-			if m >= goal {
-				nextGoal := m * 2
-				_ = s.repo.UpdateSupportCount(ctx, actionID, count)
-			_ = nextGoal // TODO: update support_goal in DB
-			}
 			break
+		}
+	}
+
+	// Dynamic support goal escalation: when count crosses the current goal,
+	// advance to the next tier in the ladder.
+	if count >= goal {
+		nextGoal := 0
+		for _, tier := range supportGoalLadder {
+			if tier > goal {
+				nextGoal = tier
+				break
+			}
+		}
+		if nextGoal > 0 {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			if err := s.repo.UpdateSupportGoal(ctx, actionID, nextGoal); err != nil {
+				logger.Error().Err(err).
+					Str("action_id", actionID).
+					Int("new_goal", nextGoal).
+					Msg("failed to update support goal")
+			} else {
+				logger.Info().
+					Str("action_id", actionID).
+					Int("old_goal", goal).
+					Int("new_goal", nextGoal).
+					Msg("dynamic support goal escalated")
+			}
 		}
 	}
 }
@@ -463,6 +534,105 @@ func (s *Service) regenerateEvidencePackage(actionID string) {
 	pkgJSON, _ := json.Marshal(pkg)
 	if err := s.repo.UpdateEvidencePackage(ctx, actionID, pkgJSON); err != nil {
 		logger.Error().Err(err).Str("action_id", actionID).Msg("failed to update evidence package")
+	}
+}
+
+// nextEscalationLevel returns the next escalation level in the ladder.
+// Ladder: ward → mla → mp → state → public
+func nextEscalationLevel(current model.EscalationLevel) model.EscalationLevel {
+	switch current {
+	case model.EscalationWard:
+		return model.EscalationMLA
+	case model.EscalationMLA:
+		return model.EscalationMP
+	case model.EscalationMP:
+		return model.EscalationState
+	case model.EscalationState:
+		return model.EscalationPublic
+	default:
+		return "" // already at highest level
+	}
+}
+
+// RunEscalationChecker runs a background job that periodically checks for stale
+// actions and escalates them according to the escalation ladder.
+func (s *Service) RunEscalationChecker(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	logger.Info().Msg("escalation checker background job started")
+
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info().Msg("escalation checker stopped")
+			return
+		case <-ticker.C:
+			s.runEscalationCycle(ctx)
+		}
+	}
+}
+
+// runEscalationCycle performs a single escalation check cycle.
+func (s *Service) runEscalationCycle(ctx context.Context) {
+	checkCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Find actions open > 7 days with no response → escalate
+	stale7, err := s.repo.ListStaleActions(checkCtx, 7)
+	if err != nil {
+		logger.Error().Err(err).Msg("escalation checker: failed to list stale actions (7d)")
+		return
+	}
+
+	for _, action := range stale7 {
+		next := nextEscalationLevel(action.EscalationLevel)
+		if next == "" {
+			continue // already at highest level
+		}
+
+		reason := string(model.ReasonNoResponse7D)
+
+		if err := s.repo.CreateEscalation(checkCtx, action.ID, string(action.EscalationLevel), string(next), reason); err != nil {
+			logger.Error().Err(err).Str("action_id", action.ID).Msg("escalation checker: failed to create escalation record")
+			continue
+		}
+
+		if err := s.repo.UpdateEscalationLevel(checkCtx, action.ID, string(next)); err != nil {
+			logger.Error().Err(err).Str("action_id", action.ID).Msg("escalation checker: failed to update escalation level")
+			continue
+		}
+
+		// Publish escalation event
+		payload, _ := json.Marshal(map[string]interface{}{
+			"action_id":  action.ID,
+			"from_level": string(action.EscalationLevel),
+			"to_level":   string(next),
+			"reason":     reason,
+		})
+		_ = s.producer.Publish(checkCtx, "action.escalated", action.ID, payload)
+
+		logger.Info().
+			Str("action_id", action.ID).
+			Str("from", string(action.EscalationLevel)).
+			Str("to", string(next)).
+			Msg("escalation checker: action escalated due to no response")
+	}
+
+	// Find actions open > 14 days → flag for future CHI integration
+	stale14, err := s.repo.ListStaleActions(checkCtx, 14)
+	if err != nil {
+		logger.Error().Err(err).Msg("escalation checker: failed to list stale actions (14d)")
+		return
+	}
+
+	for _, action := range stale14 {
+		logger.Warn().
+			Str("action_id", action.ID).
+			Str("ward_id", action.WardID).
+			Str("escalation_level", string(action.EscalationLevel)).
+			Int("support_count", action.SupportCount).
+			Msg("escalation checker: action flagged — no response after 14 days (pending CHI integration)")
 	}
 }
 

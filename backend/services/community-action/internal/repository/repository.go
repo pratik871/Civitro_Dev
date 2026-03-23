@@ -29,8 +29,14 @@ type Repository interface {
 	CountVerifications(ctx context.Context, actionID string) (int, error)
 	UpdateStatus(ctx context.Context, id string, status model.ActionStatus) error
 	UpdateSupportCount(ctx context.Context, id string, count int) error
+	UpdateSupportGoal(ctx context.Context, actionID string, newGoal int) error
 	ListTrending(ctx context.Context, limit int) ([]model.TrendingAction, error)
 	UpdateEvidencePackage(ctx context.Context, id string, evidenceJSON interface{}) error
+	GetUserCivicScore(ctx context.Context, userID string) (int, error)
+	CountUserActionsInPeriod(ctx context.Context, userID string, since time.Time) (int, error)
+	ListStaleActions(ctx context.Context, noResponseDays int) ([]model.CommunityAction, error)
+	CreateEscalation(ctx context.Context, actionID, fromLevel, toLevel, reason string) error
+	UpdateEscalationLevel(ctx context.Context, actionID, newLevel string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -544,6 +550,100 @@ func (r *PostgresRepository) UpdateEvidencePackage(ctx context.Context, id strin
 	_, err := r.pool.Exec(ctx,
 		`UPDATE community_actions SET evidence_package_json = $1 WHERE id = $2`,
 		evidenceJSON, id,
+	)
+	return err
+}
+
+// UpdateSupportGoal updates the support goal on a community action.
+func (r *PostgresRepository) UpdateSupportGoal(ctx context.Context, actionID string, newGoal int) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE community_actions SET support_goal = $1 WHERE id = $2`,
+		newGoal, actionID,
+	)
+	return err
+}
+
+// GetUserCivicScore retrieves the credibility score for a user from the civic_scores table.
+func (r *PostgresRepository) GetUserCivicScore(ctx context.Context, userID string) (int, error) {
+	var score int
+	err := r.pool.QueryRow(ctx,
+		`SELECT COALESCE(credibility_score, 0) FROM civic_scores WHERE user_id = $1`,
+		userID,
+	).Scan(&score)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return score, nil
+}
+
+// CountUserActionsInPeriod returns the number of actions created by a user since a given time.
+func (r *PostgresRepository) CountUserActionsInPeriod(ctx context.Context, userID string, since time.Time) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM community_actions WHERE creator_id = $1 AND created_at >= $2`,
+		userID, since,
+	).Scan(&count)
+	return count, err
+}
+
+// ListStaleActions returns open actions with no responses that were created more than noResponseDays ago.
+func (r *PostgresRepository) ListStaleActions(ctx context.Context, noResponseDays int) ([]model.CommunityAction, error) {
+	query := `
+		SELECT a.id, a.creator_id, a.ward_id, a.title, a.description, a.desired_outcome,
+		       COALESCE(a.target_authority_id::text, ''), a.escalation_level,
+		       a.status, a.support_count, a.support_goal,
+		       COALESCE(a.economic_impact_estimate, 0),
+		       COALESCE(a.pattern_id::text, ''),
+		       a.created_at, a.acknowledged_at, a.resolved_at, a.verified_at
+		FROM community_actions a
+		WHERE a.status = 'open'
+		  AND a.created_at < NOW() - make_interval(days => $1)
+		  AND NOT EXISTS (SELECT 1 FROM action_responses r WHERE r.action_id = a.id)
+	`
+	rows, err := r.pool.Query(ctx, query, noResponseDays)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actions []model.CommunityAction
+	for rows.Next() {
+		var a model.CommunityAction
+		if err := rows.Scan(
+			&a.ID, &a.CreatorID, &a.WardID, &a.Title, &a.Description, &a.DesiredOutcome,
+			&a.TargetAuthorityID, &a.EscalationLevel,
+			&a.Status, &a.SupportCount, &a.SupportGoal,
+			&a.EconomicImpactEstimate,
+			&a.PatternID,
+			&a.CreatedAt, &a.AcknowledgedAt, &a.ResolvedAt, &a.VerifiedAt,
+		); err != nil {
+			return nil, err
+		}
+		actions = append(actions, a)
+	}
+	return actions, rows.Err()
+}
+
+// CreateEscalation inserts an escalation record for a community action.
+func (r *PostgresRepository) CreateEscalation(ctx context.Context, actionID, fromLevel, toLevel, reason string) error {
+	query := `
+		INSERT INTO action_escalations (id, action_id, from_level, to_level, reason, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	_, err := r.pool.Exec(ctx, query,
+		GenerateID(), actionID, fromLevel, toLevel, reason, time.Now().UTC(),
+	)
+	return err
+}
+
+// UpdateEscalationLevel updates the escalation level on a community action.
+func (r *PostgresRepository) UpdateEscalationLevel(ctx context.Context, actionID, newLevel string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE community_actions SET escalation_level = $1 WHERE id = $2`,
+		newLevel, actionID,
 	)
 	return err
 }

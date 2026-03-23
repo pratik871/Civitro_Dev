@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -21,6 +21,7 @@ import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useCreateAction } from '../../hooks/useCommunityActions';
 import { useIssues } from '../../hooks/useIssues';
+import api from '../../lib/api';
 import type { Issue } from '../../types/issue';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -31,8 +32,12 @@ const MIN_LINKED_ISSUES = 3;
 
 export const CreateActionScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
+  const route = useRoute<any>();
   const createMutation = useCreateAction();
   const { data: issues } = useIssues();
+
+  // If navigated from a pattern, pre-populate linked issues
+  const patternId = route.params?.patternId as string | undefined;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -41,6 +46,32 @@ export const CreateActionScreen: React.FC = () => {
   const [linkedIssueIds, setLinkedIssueIds] = useState<string[]>([]);
   const [issueSearchQuery, setIssueSearchQuery] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [patternLoaded, setPatternLoaded] = useState(false);
+
+  // Fetch pattern's linked issues when navigated from a pattern
+  React.useEffect(() => {
+    if (patternId && !patternLoaded) {
+      api
+        .get(`/api/v1/patterns/${patternId}`)
+        .then((res: any) => {
+          const issueIds: string[] =
+            res.data?.pattern?.issue_ids ||
+            res.data?.pattern?.linked_issue_ids ||
+            res.data?.issue_ids ||
+            [];
+          if (issueIds.length > 0) {
+            setLinkedIssueIds(prev => {
+              const combined = new Set([...prev, ...issueIds]);
+              return Array.from(combined);
+            });
+          }
+          setPatternLoaded(true);
+        })
+        .catch(() => {
+          setPatternLoaded(true);
+        });
+    }
+  }, [patternId, patternLoaded]);
 
   const searchResults = useMemo(() => {
     if (!issueSearchQuery.trim() || !issues) return [];
@@ -94,6 +125,7 @@ export const CreateActionScreen: React.FC = () => {
         desiredOutcome: desiredOutcome.trim(),
         targetAuthorityId,
         linkedIssueIds,
+        ...(patternId ? { patternId } : {}),
       },
       {
         onSuccess: () => {
