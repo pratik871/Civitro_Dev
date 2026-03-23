@@ -133,10 +133,23 @@ type DashboardStats struct {
 	StreakDays          int                `json:"streak_days"`
 	WardID              string             `json:"ward_id"`
 	WardName            string             `json:"ward_name"`
+	WardArea            string             `json:"ward_area"`
 	ActiveCitizensInWard int               `json:"active_citizens_in_ward"`
 	ActiveCitizensTrend  int               `json:"active_citizens_trend"`
 	ActivePollsCount    int                `json:"active_polls_count"`
+	ActiveActionsCount  int                `json:"active_actions_count"`
+	PromisesTracked     int                `json:"promises_tracked"`
+	ChiScore            int                `json:"chi_score"`
 	UnreadMessages      int                `json:"unread_messages"`
+	WardRank            int                `json:"ward_rank"`
+	TotalWards          int                `json:"total_wards"`
+	ResolutionTrend     string             `json:"resolution_trend"`
+	SparklineData       []int              `json:"sparkline_data"`
+	SparklineTrend      string             `json:"sparkline_trend"`
+	ComparisonWard      string             `json:"comparison_ward"`
+	ComparisonCount     int                `json:"comparison_count"`
+	YourResolvedCount   int                `json:"your_resolved_count"`
+	CitizenInitials     []string           `json:"citizen_initials"`
 	RecentlyResolved    []RecentlyResolved `json:"recently_resolved"`
 }
 

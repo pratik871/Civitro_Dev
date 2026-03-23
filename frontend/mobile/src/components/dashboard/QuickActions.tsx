@@ -29,11 +29,11 @@ interface QuickActionsProps {
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({
-  pollCount = 2,
-  promiseCount = 5,
-  chiScore = 67,
-  messageCount = 1,
-  actionCount = 2,
+  pollCount = 0,
+  promiseCount = 0,
+  chiScore = 0,
+  messageCount = 0,
+  actionCount = 0,
   onPress,
 }) => {
   const { t } = useTranslation();
@@ -154,7 +154,9 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             key={action.key}
             style={[
               styles.card,
-              action.isHero && styles.heroCard,
+              action.isHero
+                ? styles.heroCard
+                : { backgroundColor: CARD_BG[action.key] || colors.borderLight },
             ]}
             onPress={() => onPress?.(action.key)}
             activeOpacity={0.7}
@@ -162,9 +164,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             <View
               style={[
                 styles.iconWrap,
-                action.isHero
-                  ? styles.heroIconWrap
-                  : { backgroundColor: action.iconColor + '12' },
+                action.isHero && styles.heroIconWrap,
               ]}
             >
               {action.renderIcon()}
@@ -188,62 +188,72 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   );
 };
 
+// Background colors for each action card (matching HTML gradients)
+const CARD_BG: Record<string, string> = {
+  polls: '#EFF6FF',
+  promises: '#FFFBEB',
+  chi: '#ECFDF5',
+  messages: '#F5F3FF',
+  actions: '#FFF7ED',
+};
+
 const styles = StyleSheet.create({
   section: {},
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: spacing.md,
+    marginBottom: 12,
   },
   scroll: {
-    paddingRight: spacing.lg,
-    gap: spacing.sm,
+    paddingRight: 20,
+    gap: 12,
   },
   card: {
-    width: 100,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.card,
-    padding: spacing.md,
+    width: 120,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    gap: 10,
   },
   heroCard: {
-    width: 110,
+    width: 140,
     backgroundColor: SAFFRON,
+    shadowColor: SAFFRON,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 4,
   },
   iconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.7)',
   },
   heroIconWrap: {
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.textPrimary,
-    marginBottom: 2,
+    textAlign: 'center',
   },
   heroLabel: {
     color: '#FFFFFF',
   },
   badge: {
     fontSize: 10,
-    fontWeight: '500',
-    color: colors.textMuted,
-    backgroundColor: colors.backgroundGray,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   heroBadge: {

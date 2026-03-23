@@ -4,11 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/civitro/services/identity/internal/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// splitWardName splits "Ward 45 - Andheri East" into ["Ward 45", "Andheri East"]
+func splitWardName(name string) [2]string {
+	if idx := strings.Index(name, " - "); idx > 0 {
+		return [2]string{name[:idx], name[idx+3:]}
+	}
+	return [2]string{name, ""}
+}
+
+func itoa(n int) string {
+	return strconv.Itoa(n)
+}
 
 // Repository defines the data access interface for the identity service.
 type Repository interface {
@@ -549,6 +563,164 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 				r.ResolvedAt = t.Format("2006-01-02T15:04:05Z")
 			}
 			stats.RecentlyResolved = append(stats.RecentlyResolved, r)
+		}
+	}
+
+	// 13. Ward area (extract from ward name e.g. "Ward 45 - Andheri East" → "Andheri East")
+	if wardName != "" {
+		parts := splitWardName(wardName)
+		stats.WardName = parts[0]
+		stats.WardArea = parts[1]
+	}
+
+	// 14. Active community actions count
+	if wardID != "" {
+		err = r.pool.QueryRow(ctx,
+			`SELECT COUNT(*) FROM community_actions WHERE ward_id = $1::uuid AND status IN ('open','acknowledged','committed','in_progress')`,
+			wardID,
+		).Scan(&stats.ActiveActionsCount)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+	}
+
+	// 15. Promises tracked
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM promises WHERE status IN ('detected','on_track')`,
+	).Scan(&stats.PromisesTracked)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 16. CHI score for user's ward
+	if wardID != "" {
+		err = r.pool.QueryRow(ctx,
+			`SELECT COALESCE(overall_score, 0) FROM chi_scores WHERE boundary_id = $1::uuid ORDER BY computed_at DESC LIMIT 1`,
+			wardID,
+		).Scan(&stats.ChiScore)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+	}
+
+	// 17. Ward rank + total wards (rank by resolved issue count descending)
+	if wardID != "" {
+		err = r.pool.QueryRow(ctx, `
+			WITH ward_resolved AS (
+				SELECT boundary_id, COUNT(*) as resolved_count
+				FROM issues WHERE status = 'resolved' AND boundary_id IS NOT NULL
+				GROUP BY boundary_id
+			),
+			ranked AS (
+				SELECT boundary_id, resolved_count,
+				       RANK() OVER (ORDER BY resolved_count DESC) as rank
+				FROM ward_resolved
+			)
+			SELECT COALESCE(rank, 0), (SELECT COUNT(DISTINCT boundary_id) FROM issues WHERE boundary_id IS NOT NULL)
+			FROM ranked WHERE boundary_id = $1::uuid
+		`, wardID).Scan(&stats.WardRank, &stats.TotalWards)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		if stats.WardRank == 0 {
+			stats.WardRank = 1
+		}
+		if stats.TotalWards == 0 {
+			stats.TotalWards = 1
+		}
+	}
+
+	// 18. Resolution trend + sparkline (7-day daily resolved counts)
+	if wardID != "" {
+		var yourResolved int
+		err = r.pool.QueryRow(ctx,
+			`SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved' AND updated_at > NOW() - INTERVAL '7 days'`,
+			wardID,
+		).Scan(&yourResolved)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		stats.YourResolvedCount = yourResolved
+
+		var prevResolved int
+		err = r.pool.QueryRow(ctx,
+			`SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved' AND updated_at > NOW() - INTERVAL '14 days' AND updated_at <= NOW() - INTERVAL '7 days'`,
+			wardID,
+		).Scan(&prevResolved)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+
+		if prevResolved > 0 {
+			pct := ((yourResolved - prevResolved) * 100) / prevResolved
+			if pct >= 0 {
+				stats.ResolutionTrend = "up " + itoa(pct) + "%"
+				stats.SparklineTrend = "+" + itoa(pct) + "%"
+			} else {
+				stats.ResolutionTrend = "down " + itoa(-pct) + "%"
+				stats.SparklineTrend = itoa(pct) + "%"
+			}
+		} else if yourResolved > 0 {
+			stats.ResolutionTrend = "up 100%"
+			stats.SparklineTrend = "+100%"
+		} else {
+			stats.ResolutionTrend = "stable"
+			stats.SparklineTrend = "0%"
+		}
+
+		// 7-day sparkline
+		stats.SparklineData = make([]int, 7)
+		sparkRows, err := r.pool.Query(ctx, `
+			SELECT (NOW()::date - updated_at::date) as days_ago, COUNT(*)
+			FROM issues
+			WHERE boundary_id = $1::uuid AND status = 'resolved' AND updated_at > NOW() - INTERVAL '7 days'
+			GROUP BY days_ago ORDER BY days_ago
+		`, wardID)
+		if err == nil {
+			defer sparkRows.Close()
+			for sparkRows.Next() {
+				var daysAgo, count int
+				if err := sparkRows.Scan(&daysAgo, &count); err == nil && daysAgo >= 0 && daysAgo < 7 {
+					stats.SparklineData[6-daysAgo] = count
+				}
+			}
+		}
+	}
+
+	// 19. Ward comparison (find a neighbor ward with more resolved issues)
+	if wardID != "" {
+		err = r.pool.QueryRow(ctx, `
+			SELECT b.name, COUNT(*) as resolved
+			FROM issues i JOIN boundaries b ON b.id = i.boundary_id
+			WHERE i.status = 'resolved' AND i.boundary_id != $1::uuid
+			  AND i.updated_at > NOW() - INTERVAL '7 days'
+			GROUP BY b.name
+			ORDER BY resolved DESC LIMIT 1
+		`, wardID).Scan(&stats.ComparisonWard, &stats.ComparisonCount)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+	}
+
+	// 20. Citizen initials (top 5 recently active citizens in ward)
+	stats.CitizenInitials = []string{}
+	if wardID != "" {
+		initRows, err := r.pool.Query(ctx, `
+			SELECT COALESCE(UPPER(LEFT(name, 1)), '?') FROM users
+			WHERE primary_boundary_id = $1::uuid AND name IS NOT NULL AND name != ''
+			ORDER BY updated_at DESC LIMIT 5
+		`, wardID)
+		if err == nil {
+			defer initRows.Close()
+			for initRows.Next() {
+				var initial string
+				if err := initRows.Scan(&initial); err == nil {
+					stats.CitizenInitials = append(stats.CitizenInitials, initial)
+				}
+			}
+		}
+		if len(stats.CitizenInitials) < 5 {
+			stats.CitizenInitials = append(stats.CitizenInitials, "+")
 		}
 	}
 

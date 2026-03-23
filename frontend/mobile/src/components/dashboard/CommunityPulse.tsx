@@ -15,9 +15,9 @@ interface CommunityPulseProps {
 }
 
 export const CommunityPulse: React.FC<CommunityPulseProps> = ({
-  activeCitizens = 423,
-  weeklyTrendPercent = 18,
-  initials = ['A', 'R', 'P', 'S', '+'],
+  activeCitizens = 0,
+  weeklyTrendPercent = 0,
+  initials = [],
 }) => {
   const { t } = useTranslation();
   return (

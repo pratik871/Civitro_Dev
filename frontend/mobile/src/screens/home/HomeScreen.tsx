@@ -8,6 +8,8 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
 import Svg, {
   Path,
@@ -33,6 +35,7 @@ import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { usePatterns } from '../../hooks/usePatterns';
 import { useActions } from '../../hooks/useCommunityActions';
 import { useGovernanceChain } from '../../hooks/useGovernanceChain';
+import { useWeatherTip } from '../../hooks/useWeatherTip';
 import { FAB } from '../../components/ui/FAB';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -90,7 +93,10 @@ export const HomeScreen: React.FC = () => {
   const { data: patternsData } = usePatterns(wardId);
   const { data: actionsData } = useActions(wardId);
   const { data: governanceChain } = useGovernanceChain(wardId);
+  // Weather tip — use Andheri East coordinates (Ward 45 default)
+  const { data: weatherTip } = useWeatherTip(19.12, 72.85);
   const [refreshing, setRefreshing] = useState(false);
+  const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
 
   // Refresh on focus
   useFocusEffect(useCallback(() => { refreshProfile(); }, [refreshProfile]));
@@ -146,15 +152,15 @@ export const HomeScreen: React.FC = () => {
       title: a.title,
       badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
       badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
-      ward: a.wardName,
-      supporters: a.supportCount,
-      goalPercent: a.supportGoal > 0 ? Math.round((a.supportCount / a.supportGoal) * 100) : 0,
-      incidents: a.evidenceCount,
+      ward: a.wardName || '',
+      supporters: a.supportCount || 0,
+      goalPercent: a.supportGoal > 0 ? Math.round(((a.supportCount || 0) / a.supportGoal) * 100) : 0,
+      incidents: a.evidenceCount || 0,
       locations: 0,
-      impactLabel: a.economicImpact ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
+      impactLabel: a.economicImpact?.costOfInaction ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
       impactColor: '#0F766E',
-      creatorInitial: a.creatorName.charAt(0),
-      creatorName: a.creatorName,
+      creatorInitial: (a.creatorName || 'C').charAt(0),
+      creatorName: a.creatorName || 'Citizen',
       createdAgo: formatTimeAgo(a.createdAt),
     }));
   }, [actionsData]);
@@ -335,22 +341,24 @@ export const HomeScreen: React.FC = () => {
         </View>
 
         {/* ============================================================ */}
-        {/* 3. WEATHER TIP                                                */}
+        {/* 3. WEATHER TIP (dynamic from weather API)                     */}
         {/* ============================================================ */}
-        <View style={styles.weatherTip}>
-          <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
-            <Path
-              d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"
-              stroke={SAFFRON}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-            <Path d="M8 15v2M12 15v2M16 15v2" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" opacity={0.5} />
-          </Svg>
-          <Text style={styles.weatherText}>
-            {t('home.weatherMonsoon')}
-          </Text>
-        </View>
+        {weatherTip?.show && (
+          <View style={[styles.weatherTip, { backgroundColor: weatherTip.bgColor }]}>
+            <Svg viewBox="0 0 24 24" width={20} height={20} fill="none">
+              <Path
+                d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"
+                stroke={weatherTip.textColor}
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+              <Path d="M8 15v2M12 15v2M16 15v2" stroke={weatherTip.textColor} strokeWidth={2} strokeLinecap="round" opacity={0.5} />
+            </Svg>
+            <Text style={[styles.weatherText, { color: weatherTip.textColor }]}>
+              {weatherTip.message}
+            </Text>
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 4. CIVIC SCORE RING                                           */}
@@ -393,14 +401,17 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
           <WardDashboardChart
-            open={openCount || 3}
-            inProgress={inProgressCount || 2}
-            resolved={resolvedCount || 2}
-            verified={verifiedCount || 1}
-            wardName={dashboardStats?.ward_name || user?.ward || 'Ward 45'}
-            wardArea="Andheri East"
-            rank={12}
-            totalWards={236}
+            open={openCount || 0}
+            inProgress={inProgressCount || 0}
+            resolved={resolvedCount || 0}
+            verified={verifiedCount || 0}
+            wardName={dashboardStats?.ward_name || ''}
+            wardArea={dashboardStats?.ward_area || ''}
+            rank={dashboardStats?.ward_rank || 0}
+            totalWards={dashboardStats?.total_wards || 0}
+            resolutionTrend={dashboardStats?.resolution_trend || ''}
+            sparklineData={dashboardStats?.sparkline_data || []}
+            sparklineTrend={dashboardStats?.sparkline_trend || ''}
           />
         </View>
 
@@ -418,8 +429,9 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
           <CommunityPulse
-            activeCitizens={dashboardStats?.active_citizens_in_ward}
-            weeklyTrendPercent={dashboardStats?.active_citizens_trend}
+            activeCitizens={dashboardStats?.active_citizens_in_ward || 0}
+            weeklyTrendPercent={dashboardStats?.active_citizens_trend || 0}
+            initials={dashboardStats?.citizen_initials || []}
           />
         </View>
 
@@ -444,23 +456,32 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         {/* 10. WARD COMPARISON NUDGE                                     */}
         {/* ============================================================ */}
-        <View style={styles.comparisonCard}>
-          <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
-            <Path d="M8 1v14M1 8h14" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" />
-            <Path d="M4 4l4 4-4 4" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" opacity={0.5} />
-          </Svg>
-          <Text style={styles.comparisonText}>
-            {t('home.wardComparison', { ward: 'Ward 44 (Jogeshwari)', count: 31, yourCount: 23 })}
-          </Text>
-        </View>
+        {dashboardStats?.comparison_ward && dashboardStats.comparison_count > 0 && (
+          <View style={styles.comparisonCard}>
+            <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
+              <Path d="M8 1v14M1 8h14" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" />
+              <Path d="M4 4l4 4-4 4" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" opacity={0.5} />
+            </Svg>
+            <Text style={styles.comparisonText}>
+              {t('home.wardComparison', {
+                ward: dashboardStats.comparison_ward,
+                count: dashboardStats.comparison_count,
+                yourCount: dashboardStats.your_resolved_count,
+              })}
+            </Text>
+          </View>
+        )}
 
         {/* ============================================================ */}
         {/* 11. QUICK ACTIONS CAROUSEL                                    */}
         {/* ============================================================ */}
         <View style={styles.sectionSpacing}>
           <QuickActions
-            pollCount={dashboardStats?.active_polls_count}
-            messageCount={dashboardStats?.unread_messages}
+            pollCount={dashboardStats?.active_polls_count || 0}
+            promiseCount={dashboardStats?.promises_tracked || 0}
+            chiScore={dashboardStats?.chi_score || 0}
+            messageCount={dashboardStats?.unread_messages || 0}
+            actionCount={dashboardStats?.active_actions_count || 0}
             onPress={handleQuickAction}
           />
         </View>
@@ -611,10 +632,43 @@ export const HomeScreen: React.FC = () => {
 
       {/* FAB */}
       <FAB
-        onPress={() => navigation.navigate('Main', { screen: 'Report' } as any)}
-        icon={'\u{1F4F7}'}
-        label={t('home.fabReport')}
+        onPress={(key) => {
+          if (key === 'photo') {
+            navigation.navigate('Main', { screen: 'Report' } as any);
+          } else {
+            const labels: Record<string, string> = {
+              voice: 'Voice Report',
+              text: 'Text Report',
+              pin: 'Pin Location',
+              community_action: 'Community Action',
+            };
+            setComingSoonFeature(labels[key] || key);
+          }
+        }}
       />
+
+      {/* Coming Soon Modal */}
+      <Modal visible={!!comingSoonFeature} transparent animationType="fade" onRequestClose={() => setComingSoonFeature(null)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setComingSoonFeature(null)}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Svg viewBox="0 0 24 24" width={28} height={28} fill="none">
+                <Path d="M12 2L2 7l10 5 10-5-10-5z" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M2 17l10 5 10-5" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M2 12l10 5 10-5" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+            <Text style={styles.modalTitle}>Coming Soon</Text>
+            <Text style={styles.modalSubtitle}>
+              <Text style={styles.modalFeatureName}>{comingSoonFeature}</Text>
+              {' '}is being built. We will notify you when it is ready.
+            </Text>
+            <TouchableOpacity style={styles.modalBtn} onPress={() => setComingSoonFeature(null)} activeOpacity={0.7}>
+              <Text style={styles.modalBtnText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -841,5 +895,69 @@ const styles = StyleSheet.create({
   // ---- BOTTOM SPACER ----
   bottomSpacer: {
     height: 100,
+  },
+
+  // ---- COMING SOON MODAL ----
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  modalIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#FFF3ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0B1426',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  modalFeatureName: {
+    fontWeight: '700',
+    color: '#FF6B35',
+  },
+  modalBtn: {
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  modalBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

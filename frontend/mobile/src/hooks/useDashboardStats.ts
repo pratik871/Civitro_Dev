@@ -21,10 +21,23 @@ export interface DashboardStats {
   streak_days: number;
   ward_id: string;
   ward_name: string;
+  ward_area: string;
   active_citizens_in_ward: number;
   active_citizens_trend: number;
   active_polls_count: number;
+  active_actions_count: number;
+  promises_tracked: number;
+  chi_score: number;
   unread_messages: number;
+  ward_rank: number;
+  total_wards: number;
+  resolution_trend: string;
+  sparkline_data: number[];
+  sparkline_trend: string;
+  comparison_ward: string;
+  comparison_count: number;
+  your_resolved_count: number;
+  citizen_initials: string[];
   recently_resolved: RecentlyResolved[];
 }
 
