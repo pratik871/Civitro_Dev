@@ -662,14 +662,7 @@ func (r *PostgresRepository) UpdateEconomicImpact(ctx context.Context, actionID 
 	return err
 }
 
-// GenerateActionID creates a ACT-YYYY-XXXXX format ID.
-func GenerateActionID() string {
-	year := time.Now().Year()
-	seq := rand.Intn(99999) + 1
-	return fmt.Sprintf("ACT-%d-%05d", year, seq)
-}
-
-// GenerateID creates a simple random ID for sub-entities.
+// GenerateID creates a UUID v4 for all entities.
 func GenerateID() string {
 	b := make([]byte, 16)
 	_, _ = cryptorand.Read(b)
