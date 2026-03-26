@@ -40,13 +40,25 @@ export const CelebrationBanner: React.FC<CelebrationBannerProps> = ({
 
       {/* Text */}
       <View style={styles.textWrap}>
-        <Text style={styles.text}>
+        <Text
+          style={styles.text}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {t('home.celebrationResolved', { title: issueTitle, count: reportCount })}
         </Text>
       </View>
 
       {/* Time */}
-      <Text style={styles.time}>{timeAgo}</Text>
+      <Text
+        style={styles.time}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {timeAgo}
+      </Text>
     </TouchableOpacity>
   );
 };

@@ -67,7 +67,12 @@ const ActionCard: React.FC<{
       </View>
 
       {/* Title */}
-      <Text style={styles.title} numberOfLines={2}>
+      <Text
+        style={styles.title}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {action.title}
       </Text>
 
@@ -76,8 +81,22 @@ const ActionCard: React.FC<{
         <View style={[styles.progressFill, { width: `${action.goalPercent}%` }]} />
       </View>
       <View style={styles.progressRow}>
-        <Text style={styles.supporters}>{action.supporters} supporters</Text>
-        <Text style={styles.goal}>{action.goalPercent}% of goal</Text>
+        <Text
+          style={styles.supporters}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {action.supporters} supporters
+        </Text>
+        <Text
+          style={styles.goal}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {action.goalPercent}% of goal
+        </Text>
       </View>
 
       {/* Evidence */}
@@ -107,7 +126,12 @@ const ActionCard: React.FC<{
           <Svg viewBox="0 0 12 12" width={12} height={12} fill="none">
             <Path d="M6 1v6l3 3" stroke={action.impactColor ?? '#0F766E'} strokeWidth={1.5} strokeLinecap="round" />
           </Svg>
-          <Text style={[styles.evCount, action.impactColor ? { color: action.impactColor } : null]}>
+          <Text
+            style={[styles.evCount, action.impactColor ? { color: action.impactColor } : null]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {action.impactLabel}
           </Text>
           <Text style={styles.evLabel}>impact</Text>

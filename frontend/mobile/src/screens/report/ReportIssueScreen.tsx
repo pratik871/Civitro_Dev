@@ -31,20 +31,21 @@ import apiClient from '../../lib/api';
 const CATEGORY_CONFIG: Array<{
   key: IssueCategory;
   icon: string;
+  label: string;
   color: string;
 }> = [
-  { key: 'pothole', icon: '\u{1F6A7}', color: colors.issueCategories.pothole },
-  { key: 'garbage', icon: '\u{1F5D1}', color: colors.issueCategories.garbage },
-  { key: 'streetlight', icon: '\u{1F4A1}', color: colors.issueCategories.streetlight },
-  { key: 'water_supply', icon: '\u{1F4A7}', color: colors.issueCategories.water_supply },
-  { key: 'road_damage', icon: '\u26A0\uFE0F', color: colors.issueCategories.road_damage },
-  { key: 'construction', icon: '\u{1F3D7}', color: colors.issueCategories.construction },
-  { key: 'drainage', icon: '\u{1F327}', color: colors.issueCategories.drainage },
-  { key: 'traffic', icon: '\u{1F6A6}', color: colors.issueCategories.traffic },
-  { key: 'healthcare', icon: '\u{1F3E5}', color: colors.issueCategories.healthcare },
-  { key: 'education', icon: '\u{1F4DA}', color: colors.issueCategories.education },
-  { key: 'public_safety', icon: '\u{1F6E1}', color: colors.issueCategories.public_safety },
-  { key: 'other', icon: '\u2699\uFE0F', color: colors.issueCategories.other },
+  { key: 'pothole', icon: '\u{1F6A7}', label: 'Pothole', color: colors.issueCategories.pothole },
+  { key: 'garbage', icon: '\u{1F5D1}', label: 'Garbage', color: colors.issueCategories.garbage },
+  { key: 'streetlight', icon: '\u{1F4A1}', label: 'Streetlight', color: colors.issueCategories.streetlight },
+  { key: 'water_supply', icon: '\u{1F4A7}', label: 'Water Supply', color: colors.issueCategories.water_supply },
+  { key: 'road_damage', icon: '\u26A0\uFE0F', label: 'Road Damage', color: colors.issueCategories.road_damage },
+  { key: 'construction', icon: '\u{1F3D7}', label: 'Construction', color: colors.issueCategories.construction },
+  { key: 'drainage', icon: '\u{1F327}', label: 'Drainage', color: colors.issueCategories.drainage },
+  { key: 'traffic', icon: '\u{1F6A6}', label: 'Traffic', color: colors.issueCategories.traffic },
+  { key: 'healthcare', icon: '\u{1F3E5}', label: 'Healthcare', color: colors.issueCategories.healthcare },
+  { key: 'education', icon: '\u{1F4DA}', label: 'Education', color: colors.issueCategories.education },
+  { key: 'public_safety', icon: '\u{1F6E1}', label: 'Public Safety', color: colors.issueCategories.public_safety },
+  { key: 'other', icon: '\u2699\uFE0F', label: 'Other', color: colors.issueCategories.other },
 ];
 
 // Department mappings fetched from API; falls back to generic label
@@ -358,7 +359,7 @@ export const ReportIssueScreen: React.FC = () => {
       <Text style={styles.stepSubtitle}>
         {t('issues.aiSuggests')}{' '}
         <Text style={styles.aiSuggestion}>
-          {t(`issues.${data.suggestedCategory || 'other'}`)}
+          {CATEGORY_CONFIG.find(c => c.key === (data.suggestedCategory || 'other'))?.label || 'Other'}
         </Text>
         {t('issues.tapToChange')}
       </Text>
@@ -393,7 +394,7 @@ export const ReportIssueScreen: React.FC = () => {
                 ]}
                 numberOfLines={1}
               >
-                {t(`issues.${cat.key}`)}
+                {cat.label}
               </Text>
               {isSuggested && !data.category && (
                 <Text style={styles.aiTag}>AI</Text>

@@ -3,7 +3,7 @@
     "name": "Civitro",
     "slug": "civitro",
     "owner": "pratikbloom",
-    "version": "1.0.0",
+    "version": "1.1.2",
     "orientation": "portrait",
     "scheme": "civitro",
     "userInterfaceStyle": "light",
@@ -29,9 +29,16 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "civitro.com", "pathPrefix": "/share" }
+            {
+              "scheme": "https",
+              "host": "civitro.com",
+              "pathPrefix": "/share"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "softwareKeyboardLayoutMode": "adjustResize",
@@ -43,9 +50,11 @@
     },
     "ios": {
       "bundleIdentifier": "in.civitro.app",
-      "buildNumber": "18",
+      "buildNumber": "24",
       "supportsTablet": true,
-      "associatedDomains": ["applinks:civitro.com"],
+      "associatedDomains": [
+        "applinks:civitro.com"
+      ],
       "infoPlist": {
         "NSCameraUsageDescription": "Civitro needs camera access to capture issue photos",
         "NSPhotoLibraryUsageDescription": "Civitro needs photo library access to attach images to issues",

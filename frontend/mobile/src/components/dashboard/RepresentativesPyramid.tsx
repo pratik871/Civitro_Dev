@@ -133,7 +133,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
       )}
 
       {/* Inline expanded card (single) */}
-      {!showAll && selectedKey && (
+      {!showAll && selectedKey && reps.find(r => r.tierKey === selectedKey) && (
         <RepCard
           rep={reps.find(r => r.tierKey === selectedKey)!}
           onMessage={onMessage}

@@ -7,12 +7,13 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { VoiceCard } from '../../components/voices/VoiceCard';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useVoices, useLikeVoice } from '../../hooks/useVoices';
+import { useAuthStore } from '../../stores/authStore';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -21,8 +22,11 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export const VoicesListScreen: React.FC = () => {
   const { data: voices, isLoading, refetch } = useVoices();
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
   const { t } = useTranslation();
   const likeMutation = useLikeVoice();
+  const myOnly = (route.params as any)?.myVoices as boolean | undefined;
+  const userId = useAuthStore(state => state.user?.id);
 
   if (isLoading) {
     return (
@@ -35,7 +39,7 @@ export const VoicesListScreen: React.FC = () => {
   return (
     <View style={{ flex: 1 }}>
       <FlatList
-        data={voices ?? []}
+        data={myOnly ? (voices ?? []).filter(v => v.userId === userId) : (voices ?? [])}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <VoiceCard

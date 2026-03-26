@@ -269,13 +269,13 @@ export const HomeScreen: React.FC = () => {
 
           {/* Greeting */}
           <View style={styles.greetingBlock}>
-            <Text style={styles.greetingText}>
+            <Text style={styles.greetingText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               {greeting}, {firstName}
             </Text>
-            <Text style={styles.greetingSubText}>
+            <Text style={styles.greetingSubText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               {civicLevel} Level · {dashboardStats?.ward_name || user?.ward || 'Ward 45'}
             </Text>
-            <Text style={styles.lastSynced}>Last synced: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+            <Text style={styles.lastSynced} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>Last synced: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
           </View>
         </View>
 
@@ -371,10 +371,26 @@ export const HomeScreen: React.FC = () => {
         {/* ============================================================ */}
         <View style={styles.taglineWrap}>
           <View style={styles.taglineRow}>
+            <Svg width={98} height={56} viewBox="0 0 641 366" style={{ marginTop: -16, marginRight: -6 }}>
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M1125.26 361.315C1125.35 361.306 1125.43 361.296 1125.51 361.287C1158.61 359.981 1192.51 369.093 1218.01 390.742C1236.3 406.276 1248.82 426.994 1250.74 450.975C1252.8 475.223 1245.41 498.519 1229.48 516.96C1218.08 530.16 1205.23 538.725 1189.25 545.663C1172.86 552.784 1157.05 555.186 1139.39 556.544C1103.33 556.978 1070.59 549.543 1042.59 525.374C1024.36 509.791 1013.21 487.489 1011.69 463.55C1010.2 440.805 1017.83 418.403 1032.91 401.307C1057.29 373.428 1089.49 363.736 1125.26 361.315ZM1136.46 521.252C1144.95 520.369 1150.01 519.856 1157.95 517.075C1186.57 507.049 1201.63 480.618 1198.38 450.904C1196.7 434.896 1188.61 420.253 1175.94 410.321C1163.3 400.284 1143.92 394.272 1128.01 396.11C1107.91 397.775 1091.18 403.348 1077.66 419.084C1056.4 443.822 1059.63 484.224 1084.8 505.056C1100.25 517.844 1116.78 521.654 1136.46 521.252Z" />
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M788.176 365.053C824.179 364.389 859.776 365.809 896.376 364.945C932.495 364.094 979.55 365.577 998.434 403.081C1004.86 415.838 1003.71 430.288 998.928 443.394C992.509 460.984 977.304 468.08 961.43 475.277C987.042 500.659 1013.62 527.749 1038.8 553.588C1019.67 554.062 997.754 553.509 978.394 553.538C967.965 543.694 956.455 530.872 946.653 520.273C935.009 507.821 923.429 495.31 911.912 482.741C911.202 506.02 911.822 530.15 912.197 553.463C904.832 553.61 870.056 554.659 865.258 552.952L864.873 551.549L864.809 423.392L911.691 423.452L911.974 457.047C929.753 454.737 952.495 451.709 952.423 428.605C952.307 391.096 899.493 397.408 874.611 397.396C859.378 397.316 844.145 397.339 828.912 397.466C828.122 448.464 828.861 502.655 829.279 553.768C811.623 553.539 793.965 553.465 776.308 553.548L776.256 445.021C776.264 430.121 775.678 410.202 777.095 395.594C777.583 390.558 785.857 371.6 788.176 365.053Z" />
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M717.471 345.088C736.021 345.179 759.714 344.524 777.744 345.355C746.903 420.795 712.742 496.302 681.591 571.984C664.386 572.759 634.756 572.884 617.77 572.045C588.104 505.787 555.52 440.353 525.658 374.142C521.305 364.49 516.754 354.822 512.155 345.288L575.063 345.273C600.378 400.803 623.119 458.491 648.83 513.307C654.754 501.199 661.928 480.665 667.552 467.525C684.8 427.229 700.077 385.282 717.471 345.088Z" />
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M213.234 361.327C234.061 361.563 251.634 362.415 271.561 369.226L271.615 408.784C267.864 407.454 264.108 406.152 260.335 404.885C221.993 392.003 166.118 394.609 143.781 433.917C137.145 445.373 135.421 459.025 139.001 471.772C150.81 514.34 207.116 523.389 244.071 515.536C253.019 513.634 262.651 510.36 271.533 507.846C271.896 515.308 271.682 524.366 271.703 531.946L271.779 550.138C256.65 554.132 243.188 556.647 227.395 557.258C187.661 558.797 139.424 548.689 109.548 520.582C93.3341 505.29 83.8414 484.193 83.1499 461.914C82.0554 421.739 108.473 390.96 143.809 375.201C166.483 365.089 188.743 361.973 213.234 361.327Z" />
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M500.47 361.379C503.523 363.88 532.09 429.256 535.691 437.471C524.125 475.458 509.867 515.389 497.528 553.589C476.984 554.509 456.772 553.451 436.205 553.479C422.742 514.297 406.952 475.113 392.211 436.337C383.853 414.558 372.537 387.383 365.448 365.636C370.854 364.885 380.837 365.093 386.495 365.104L420.105 365.213C435.644 408.137 450.954 451.143 466.034 494.23C470.492 479.031 473.709 463.376 478.021 448.126C486.141 419.408 492.597 390.124 500.47 361.379Z" />
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M328.78 365.284C335.468 365.209 342.723 365.452 349.454 365.546C349.771 371.838 349.399 381.237 349.348 387.731L349.192 428.899L349.637 553.658C339.736 553.862 329.368 553.733 319.43 553.757L297.976 553.7C297.533 532.026 297.876 509.114 297.879 487.377L297.866 365.484C308.166 365.287 318.353 365.572 328.78 365.284Z" />
+              <Path fill="#DA5E34" transform="scale(0.476934 0.476562)" d="M576.072 291.009C616.117 285.657 675.933 283.354 716.025 291.199C714.138 300.499 711.401 310 709.64 318.952C680.388 318.047 676.755 313.403 675.831 345.299L616.723 345.277C613.963 311.069 613.071 319.284 582.268 318.993C580.22 309.713 578.228 300.249 576.072 291.009Z" />
+              <Path fill="#DA5E34" transform="scale(0.476934 0.476562)" d="M717.471 345.088C721.44 334.405 728.39 309.173 738.663 304.442C770.496 289.78 903.097 320.285 942.824 329.371C960.859 333.496 980.351 336.692 997.642 343.341C999.31 343.987 1000.96 344.68 1002.59 345.418C972.932 343.306 799.363 319.123 785.074 331.385C781.13 334.77 780.129 340.958 777.744 345.355C759.714 344.524 736.021 345.179 717.471 345.088Z" />
+              <Path fill="#121825" transform="scale(0.476934 0.476562)" d="M616.723 345.277L675.831 345.299L673.874 388.33C672.794 417.602 673.702 417.818 662.021 445.183C657.508 455.909 652.862 466.579 648.085 477.19C640.937 465.919 624.545 428.027 620.128 414.552C619.341 412.15 618.76 392.523 618.623 388.822C618.159 374.3 617.526 359.784 616.723 345.277Z" />
+              <Path fill="#DA5E34" transform="scale(0.476934 0.476562)" d="M292.175 345.94C336.359 331.754 517.165 286.282 553.502 305.139C563.304 310.226 571.057 335.22 575.063 345.273L512.155 345.288C509.682 340.332 507.382 331.405 501.75 329.494C475.794 320.688 330.828 342.644 292.175 345.94Z" />
+              <Circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="525" cy="259" r="33" />
+              <Circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="765" cy="259" r="33" />
+            </Svg>
             <Text style={styles.taglineText}>{'DEMOCRACY'}</Text>
             <Text style={styles.taglineDot}>{'\u2022'}</Text>
             <Text style={styles.taglineText}>{'YOU SHAPE'}</Text>
-            <Text style={styles.taglineTM}>{'.TM'}</Text>
+            <Text style={styles.taglineTM}>
+              <Text style={styles.taglineTMDot}>{'.'}</Text>{'TM'}
+            </Text>
             <View style={styles.taglineLine}>
               <Svg width="100%" height={1} viewBox="0 0 100 1" preserveAspectRatio="none">
                 <Defs>
@@ -750,6 +766,15 @@ export const HomeScreen: React.FC = () => {
           )}
         </View>
 
+        {/* End of feed */}
+        <View style={styles.endOfFeed}>
+          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M20 6L9 17l-5-5" stroke="#9CA3AF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+          <Text style={styles.endOfFeedText}>You're all caught up</Text>
+          <Text style={styles.endOfFeedTagline}>Democracy. You Shape.{'\u2122'}</Text>
+        </View>
+
         {/* Bottom spacer for FAB clearance */}
         <View style={styles.bottomSpacer} />
         </>)}
@@ -922,7 +947,8 @@ const styles = StyleSheet.create({
 
   // ---- 2. TAGLINE ----
   taglineWrap: {
-    paddingHorizontal: 20,
+    paddingLeft: 2,
+    paddingRight: 20,
     paddingBottom: 12,
   },
   taglineRow: {
@@ -932,22 +958,30 @@ const styles = StyleSheet.create({
   },
   taglineText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#9CA3AF',
+    fontWeight: '800',
+    color: '#B0B5BE',
     letterSpacing: 1.5,
   },
   taglineDot: {
     color: SAFFRON,
-    fontSize: 24,
+    fontSize: 14,
     fontWeight: '700',
-    marginTop: 4,
+    marginTop: 2,
+    marginLeft: -8,
+    marginRight: -1,
+  },
+  taglineTMDot: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    fontWeight: '700',
+    marginLeft: -2,
   },
   taglineTM: {
     fontSize: 10,
     color: SAFFRON,
-    fontWeight: '900',
+    fontWeight: '800',
     marginTop: -8,
-    marginLeft: -1,
+    marginLeft: -7,
   },
   taglineLine: {
     flex: 1,
@@ -1032,6 +1066,24 @@ const styles = StyleSheet.create({
   },
 
   // ---- BOTTOM SPACER ----
+  endOfFeed: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 6,
+  },
+  endOfFeedText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  endOfFeedTagline: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    textAlign: 'center',
+    opacity: 0.7,
+  },
   bottomSpacer: {
     height: 100,
   },

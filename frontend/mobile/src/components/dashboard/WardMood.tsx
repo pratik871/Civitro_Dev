@@ -57,9 +57,10 @@ interface WardMoodProps {
 }
 
 export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
+  if (!data.topics || data.topics.length === 0) return null;
   const topTopic = data.topics.reduce((a, b) => (b.percentage > a.percentage ? b : a), data.topics[0]);
   const contextTemplate = MOOD_CONTEXT[data.mood] ?? MOOD_CONTEXT.concerned;
-  const context = contextTemplate.replace('{topic}', topTopic.name);
+  const context = contextTemplate.replace('{topic}', topTopic?.name ?? 'general');
 
   const sparkD = useMemo(
     () => sparkPath(data.trend.sparkline, 100, 20),
@@ -131,8 +132,22 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
         </View>
 
         <View style={styles.moodTextWrap}>
-          <Text style={styles.moodLabel}>{capitalize(data.mood)}</Text>
-          <Text style={styles.moodDetail}>{context}</Text>
+          <Text
+            style={styles.moodLabel}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {capitalize(data.mood)}
+          </Text>
+          <Text
+            style={styles.moodDetail}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {context}
+          </Text>
         </View>
       </View>
 
@@ -149,7 +164,12 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
               activeOpacity={0.7}
             >
               <Text style={{ fontSize: 10 }}>{isPositive ? '✓' : '!'}</Text>
-              <Text style={[styles.topicText, { color: isPositive ? color : colors.textSecondary }]}>
+              <Text
+                style={[styles.topicText, { color: isPositive ? color : colors.textSecondary }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
                 {topic.name} ({topic.percentage}%)
               </Text>
             </TouchableOpacity>
@@ -171,7 +191,12 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
           <Path d={sparkFillD} fill="url(#moodSparkGrad)" />
         </Svg>
         <View style={[styles.trendBadge, isDecline ? styles.trendNeg : styles.trendPos]}>
-          <Text style={[styles.trendBadgeText, isDecline ? styles.trendNegText : styles.trendPosText]}>
+          <Text
+            style={[styles.trendBadgeText, isDecline ? styles.trendNegText : styles.trendPosText]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {isDecline ? '-' : '+'}{Math.abs(data.trend.change_percent)}%
           </Text>
         </View>

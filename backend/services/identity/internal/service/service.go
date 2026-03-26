@@ -91,8 +91,12 @@ func (s *Service) RegisterUser(ctx context.Context, req *model.RegisterRequest) 
 	}
 
 	// Rate limit OTP sends: max 5 per phone per hour.
-	if err := otp.CheckRateLimit(ctx, s.redis, req.Phone, 5); err != nil {
-		return nil, fmt.Errorf("OTP rate limit: %w", err)
+	// Skip rate limit for dev/admin phones.
+	devPhones := map[string]bool{"+918097124350": true, "8097124350": true}
+	if !devPhones[req.Phone] {
+		if err := otp.CheckRateLimit(ctx, s.redis, req.Phone, 5); err != nil {
+			return nil, fmt.Errorf("OTP rate limit: %w", err)
+		}
 	}
 
 	// Generate and store OTP.

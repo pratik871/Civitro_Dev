@@ -7,7 +7,7 @@ export type RootStackParamList = {
   LeaderProfile: { leaderId: string };
   PollDetail: { pollId: string };
   Polls: undefined;
-  Promises: undefined;
+  Promises: { leaderId?: string } | undefined;
   Messages: undefined;
   Chat: { conversationId?: string; recipientId?: string; recipientName?: string };
   Notifications: undefined;

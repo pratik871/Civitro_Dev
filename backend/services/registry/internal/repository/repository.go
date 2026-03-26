@@ -26,6 +26,7 @@ type Repository interface {
 	GetStaffByRepID(ctx context.Context, repID string) ([]model.StaffAccount, error)
 	GetSeatReservation(ctx context.Context, boundaryID, electionCycleID string) (*model.SeatReservation, error)
 	GetRepresentativeStats(ctx context.Context, id string) (map[string]interface{}, error)
+	GetRecentActivity(ctx context.Context, repID string, limit int) ([]map[string]interface{}, error)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -107,14 +108,18 @@ func (r *PostgresRepository) ListAll(ctx context.Context) ([]model.Representativ
 // GetRepresentativeStats returns enriched stats for a representative.
 func (r *PostgresRepository) GetRepresentativeStats(ctx context.Context, id string) (map[string]interface{}, error) {
 	stats := map[string]interface{}{
-		"total_ratings":      0,
-		"issues_total":       0,
-		"issues_resolved":    0,
-		"response_rate":      0.0,
-		"promises_total":     0,
-		"promises_fulfilled": 0,
-		"chi_score":          0,
-		"boundary_name":      "",
+		"total_ratings":          0,
+		"issues_total":           0,
+		"issues_resolved":        0,
+		"response_rate":          0.0,
+		"promises_total":         0,
+		"promises_fulfilled":     0,
+		"promise_completion_rate": 0.0,
+		"chi_score":              0,
+		"boundary_name":          "",
+		"avg_response_days":      0.0,
+		"citizen_satisfaction":   0.0,
+		"active_since":          "",
 	}
 
 	// Total ratings + breakdown averages
@@ -134,6 +139,20 @@ func (r *PostgresRepository) GetRepresentativeStats(ctx context.Context, id stri
 	stats["delivery_on_promises"] = avgDelivery
 	stats["accessibility"] = avgAccess
 	stats["overall_impact"] = avgImpact
+
+	// Citizen satisfaction — average overall score
+	if totalRatings > 0 {
+		var avgScore float64
+		_ = r.pool.QueryRow(ctx, `SELECT COALESCE(AVG(score),0) FROM satisfaction_surveys WHERE representative_id = $1 AND score > 0`, id).Scan(&avgScore)
+		stats["citizen_satisfaction"] = avgScore
+	}
+
+	// Active since — term_start from representatives
+	var termStart *time.Time
+	_ = r.pool.QueryRow(ctx, `SELECT term_start FROM representatives WHERE id = $1`, id).Scan(&termStart)
+	if termStart != nil {
+		stats["active_since"] = termStart.Format("2006-01-02")
+	}
 
 	// Get boundary_id and name
 	var boundaryID, boundaryName string
@@ -155,6 +174,14 @@ func (r *PostgresRepository) GetRepresentativeStats(ctx context.Context, id stri
 			stats["response_rate"] = float64(issuesResolved) / float64(issuesTotal)
 		}
 
+		// Avg response time (days between created_at and updated_at for resolved issues)
+		var avgDays float64
+		_ = r.pool.QueryRow(ctx, `
+			SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 86400), 0)
+			FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved'
+		`, boundaryID).Scan(&avgDays)
+		stats["avg_response_days"] = avgDays
+
 		// CHI
 		var chiScore float64
 		_ = r.pool.QueryRow(ctx, `SELECT COALESCE(overall_score, 0) FROM chi_scores WHERE boundary_id = $1::uuid ORDER BY computed_at DESC LIMIT 1`, boundaryID).Scan(&chiScore)
@@ -167,6 +194,9 @@ func (r *PostgresRepository) GetRepresentativeStats(ctx context.Context, id stri
 	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM promises WHERE leader_id = $1 AND status = 'fulfilled'`, id).Scan(&promisesFulfilled)
 	stats["promises_total"] = promisesTotal
 	stats["promises_fulfilled"] = promisesFulfilled
+	if promisesTotal > 0 {
+		stats["promise_completion_rate"] = float64(promisesFulfilled) / float64(promisesTotal)
+	}
 
 	return stats, nil
 }
@@ -343,4 +373,39 @@ func generateID() string {
 	data := fmt.Sprintf("%d", time.Now().UnixNano())
 	h := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(h[:16])
+}
+
+// GetRecentActivity returns recent activity entries for a representative.
+func (r *PostgresRepository) GetRecentActivity(ctx context.Context, repID string, limit int) ([]map[string]interface{}, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, type, title, description, created_at
+		FROM representative_activity
+		WHERE representative_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`, repID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []map[string]interface{}
+	for rows.Next() {
+		var id, actType, title, desc string
+		var createdAt time.Time
+		if err := rows.Scan(&id, &actType, &title, &desc, &createdAt); err != nil {
+			return nil, err
+		}
+		result = append(result, map[string]interface{}{
+			"id":          id,
+			"type":        actType,
+			"title":       title,
+			"description": desc,
+			"timestamp":   createdAt,
+		})
+	}
+	if result == nil {
+		result = []map[string]interface{}{}
+	}
+	return result, nil
 }

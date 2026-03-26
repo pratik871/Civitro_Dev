@@ -8,6 +8,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -39,6 +40,9 @@ const STATUS_CONFIG: Record<string, { color: string; label: string; icon: string
 };
 
 export const PromisesScreen: React.FC = () => {
+  const route = useRoute();
+  const leaderIdFilter = (route.params as any)?.leaderId as string | undefined;
+
   const [filter, setFilter] = useState<string>('all');
   const { data: promises, isLoading } = useQuery<PromiseItem[]>({
     queryKey: ['promises'],
@@ -49,9 +53,14 @@ export const PromisesScreen: React.FC = () => {
     staleTime: 60000,
   });
 
-  const filters = ['all', 'in_progress', 'fulfilled', 'pending', 'broken'];
+  const filters = ['all', 'on_track', 'fulfilled', 'detected'];
 
-  const allPromises = promises ?? [];
+  // Filter by leader if coming from leader profile
+  const leaderPromises = leaderIdFilter
+    ? (promises ?? []).filter((p: any) => p.leader_id === leaderIdFilter || p.leaderId === leaderIdFilter)
+    : (promises ?? []);
+
+  const allPromises = leaderPromises;
 
   const filtered = filter === 'all'
     ? allPromises

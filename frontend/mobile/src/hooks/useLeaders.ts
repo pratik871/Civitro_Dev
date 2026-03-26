@@ -82,6 +82,10 @@ function mapLeader(raw: RawRepresentative): Leader {
     promisesTotal: 0,
     issuesResolved: 0,
     issuesTotal: 0,
+    avgResponseDays: 0,
+    citizenSatisfaction: 0,
+    promiseCompletionRate: 0,
+    activeSince: '',
     recentActivity: [],
   };
 }
@@ -124,8 +128,26 @@ export function useLeader(leaderId: string) {
           accessibility: stats.accessibility ?? 0,
           overallImpact: stats.overall_impact ?? 0,
         };
+        leader.avgResponseDays = stats.avg_response_days ?? 0;
+        leader.citizenSatisfaction = stats.citizen_satisfaction ?? 0;
+        leader.promiseCompletionRate = stats.promise_completion_rate ?? 0;
+        leader.activeSince = stats.active_since ?? '';
       } catch {
         // Stats endpoint unavailable — use defaults
+      }
+
+      // Fetch recent activity
+      try {
+        const actRes = await api.get<{ activities: any[] }>(`/api/v1/representatives/${leaderId}/activity`);
+        leader.recentActivity = (actRes.activities ?? []).map((a: any) => ({
+          id: a.id,
+          type: a.type,
+          title: a.title,
+          description: a.description,
+          timestamp: a.timestamp,
+        }));
+      } catch {
+        // Activity endpoint unavailable
       }
 
       return leader;

@@ -8,7 +8,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PollCard } from '../../components/polls/PollCard';
 import { usePolls, useVotePoll, useRetractVote } from '../../hooks/usePolls';
@@ -21,6 +21,8 @@ type PollsNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const PollsScreen: React.FC = () => {
   const navigation = useNavigation<PollsNavProp>();
+  const route = useRoute();
+  const myVoted = (route.params as any)?.myVoted as boolean | undefined;
   const { data: polls, isLoading, refetch } = usePolls();
   const voteMutation = useVotePoll();
   const retractMutation = useRetractVote();
@@ -37,7 +39,7 @@ export const PollsScreen: React.FC = () => {
   const sortedOnce = useRef(false);
   const sortedOrderRef = useRef<string[]>([]);
 
-  const rawPolls = polls ?? [];
+  const rawPolls = myVoted ? (polls ?? []).filter(p => p.hasVoted) : (polls ?? []);
 
   if (!sortedOnce.current && rawPolls.length > 0) {
     const sorted = [...rawPolls].sort((a, b) => {

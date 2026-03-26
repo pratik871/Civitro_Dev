@@ -54,6 +54,10 @@ export interface Leader {
   promisesTotal: number;
   issuesResolved: number;
   issuesTotal: number;
+  avgResponseDays: number;
+  citizenSatisfaction: number;
+  promiseCompletionRate: number;
+  activeSince: string;
   recentActivity: LeaderActivity[];
 }
 

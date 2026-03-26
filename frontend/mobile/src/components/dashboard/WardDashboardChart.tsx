@@ -150,8 +150,8 @@ export const WardDashboardChart: React.FC<WardDashboardChartProps> = ({
             {segments.map((seg, i) => (
               <View key={i} style={styles.statItem}>
                 <View style={[styles.statDot, { backgroundColor: seg.color }]} />
-                <Text style={styles.statCount}>{seg.count}</Text>
-                <Text style={styles.statLabel}>{seg.label}</Text>
+                <Text style={styles.statCount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{seg.count}</Text>
+                <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{seg.label}</Text>
               </View>
             ))}
           </View>
@@ -161,11 +161,11 @@ export const WardDashboardChart: React.FC<WardDashboardChartProps> = ({
         <View style={styles.wardMeta}>
           <View style={styles.pulseRow}>
             <View style={styles.pulseDot} />
-            <Text style={styles.pulseText}>
+            <Text style={styles.pulseText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               {t('home.resolutionRate')} <Text style={styles.pulseBold}>{resolutionTrend}</Text>
             </Text>
           </View>
-          <Text style={styles.wardRank}>
+          <Text style={styles.wardRank} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {t('home.rank')} <Text style={styles.pulseBold}>#{rank}</Text> / {totalWards}
           </Text>
         </View>

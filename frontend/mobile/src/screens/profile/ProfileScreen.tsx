@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,9 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Alert,
+  Modal,
 } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,6 +24,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
 import type { RootStackParamList } from '../../navigation/types';
 
 type ProfileNavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -44,19 +46,15 @@ export const ProfileScreen: React.FC = () => {
   const darkMode = useSettingsStore(state => state.darkMode);
   const setDarkMode = useSettingsStore(state => state.setDarkMode);
   const { refreshProfile } = useAuth();
+  const { data: stats } = useDashboardStats();
 
   // Refresh civic score whenever this screen comes into focus
   useFocusEffect(useCallback(() => { refreshProfile(); }, [refreshProfile]));
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const handleLogout = () => {
-    Alert.alert(t('profile.logout'), t('profile.logoutConfirm'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('profile.logout'),
-        style: 'destructive',
-        onPress: logout,
-      },
-    ]);
+    setShowLogoutModal(true);
   };
 
   return (
@@ -122,30 +120,30 @@ export const ProfileScreen: React.FC = () => {
       <Card style={styles.statsCard}>
         <Text style={styles.sectionTitle}>{t('profile.yourActivity')}</Text>
         <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
+          <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('IssuesList' as any, { myIssues: true })} activeOpacity={0.7}>
             <Text style={styles.statValue}>
-              {user?.issuesReported ?? 0}
+              {stats?.issues_reported ?? 0}
             </Text>
             <Text style={styles.statLabel}>{t('profile.issuesReported')}</Text>
-          </View>
-          <View style={styles.statItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('IssuesList' as any, { myIssues: true, status: 'resolved' })} activeOpacity={0.7}>
             <Text style={[styles.statValue, { color: colors.success }]}>
-              {user?.issuesResolved ?? 0}
+              {stats?.validations ?? 0}
             </Text>
             <Text style={styles.statLabel}>{t('profile.issuesResolved')}</Text>
-          </View>
-          <View style={styles.statItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('VoicesList' as any, { myVoices: true })} activeOpacity={0.7}>
             <Text style={styles.statValue}>
-              {user?.voicesCreated ?? 0}
+              {stats?.actions_started ?? 0}
             </Text>
             <Text style={styles.statLabel}>{t('profile.voicesCreated')}</Text>
-          </View>
-          <View style={styles.statItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('Polls' as any, { myVoted: true })} activeOpacity={0.7}>
             <Text style={styles.statValue}>
-              {user?.pollsVoted ?? 0}
+              {stats?.polls_voted ?? 0}
             </Text>
             <Text style={styles.statLabel}>{t('profile.pollsVoted')}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </Card>
 
@@ -194,6 +192,43 @@ export const ProfileScreen: React.FC = () => {
       <Text style={styles.versionText}>Civitro v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
 
       <View style={styles.bottomSpacer} />
+
+      {/* Logout Confirmation Modal */}
+      <Modal visible={showLogoutModal} transparent animationType="fade" onRequestClose={() => setShowLogoutModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.logoutModal}>
+            {/* Icon */}
+            <View style={styles.logoutIconWrap}>
+              <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
+                <Path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#EF4444" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M16 17l5-5-5-5M21 12H9" stroke="#EF4444" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+
+            <Text style={styles.logoutModalTitle}>Leaving so soon?</Text>
+            <Text style={styles.logoutModalDesc}>
+              You'll need to sign in again to continue your civic journey. Your progress is safely saved.
+            </Text>
+
+            {/* Buttons */}
+            <TouchableOpacity
+              style={styles.logoutConfirmBtn}
+              onPress={() => { setShowLogoutModal(false); logout(); }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.logoutConfirmText}>Yes, Log Out</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.logoutCancelBtn}
+              onPress={() => setShowLogoutModal(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.logoutCancelText}>Stay & Keep Building</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -338,5 +373,75 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+
+  // Logout modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(11, 20, 38, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  logoutModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  logoutIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  logoutModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0B1426',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  logoutModalDesc: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  logoutConfirmBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  logoutConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  logoutCancelBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  logoutCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0B1426',
   },
 });

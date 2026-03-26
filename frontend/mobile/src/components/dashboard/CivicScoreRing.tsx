@@ -36,12 +36,12 @@ interface CivicTier {
 }
 
 const CIVIC_TIERS: CivicTier[] = [
-  { name: 'Observer',    minScore: 0,   minReported: 0 },
-  { name: 'Reporter',    minScore: 10,  minReported: 3 },
-  { name: 'Validator',   minScore: 25,  minReported: 5 },
-  { name: 'Advocate',    minScore: 50,  minReported: 10 },
-  { name: 'Champion',    minScore: 75,  minReported: 20 },
-  { name: 'Guardian',    minScore: 100, minReported: 50 },
+  { name: 'Observer',    minScore: 0,    minReported: 0 },
+  { name: 'Reporter',    minScore: 50,   minReported: 3 },
+  { name: 'Validator',   minScore: 100,  minReported: 10 },
+  { name: 'Advocate',    minScore: 250,  minReported: 25 },
+  { name: 'Champion',    minScore: 500,  minReported: 50 },
+  { name: 'Guardian',    minScore: 1000, minReported: 100 },
 ];
 
 function computeMilestone(score: number, reported: number) {
@@ -123,7 +123,19 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
   onBoostPress,
 }) => {
   const { t } = useTranslation();
-  const progress = Math.min(score / maxScore, 1);
+  // Ring progress based on civic tier — fills within current→next tier range
+  const currentTierIdx = (() => {
+    let idx = 0;
+    for (let i = CIVIC_TIERS.length - 1; i >= 0; i--) {
+      if (score >= CIVIC_TIERS[i].minScore) { idx = i; break; }
+    }
+    return idx;
+  })();
+  const isMaxTier = currentTierIdx >= CIVIC_TIERS.length - 1;
+  const prevScore = CIVIC_TIERS[currentTierIdx].minScore;
+  const nextScore = isMaxTier ? prevScore : CIVIC_TIERS[currentTierIdx + 1].minScore;
+  const tierRange = nextScore - prevScore;
+  const progress = isMaxTier ? 1 : tierRange > 0 ? Math.min((score - prevScore) / tierRange, 1) : 1;
   const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
 
   const milestone = computeMilestone(score, reported);
@@ -149,7 +161,7 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
 
   return (
     <View style={styles.card}>
-      {/* Top-right saffron glow (radial gradient like HTML ::before) */}
+      {/* Top-right saffron glow */}
       <View style={styles.glowWrap} pointerEvents="none">
         <Svg width={240} height={240} viewBox="0 0 240 240">
           <Defs>
@@ -205,8 +217,8 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
 
         {/* Details */}
         <View style={styles.scoreDetails}>
-          <Text style={styles.journeyTitle}>{t('home.yourCivicJourney')}</Text>
-          <Text style={styles.journeySubtitle}>
+          <Text style={styles.journeyTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{t('home.yourCivicJourney')}</Text>
+          <Text style={styles.journeySubtitle} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
             {t('home.civicJourneyDesc')}
           </Text>
 
@@ -216,7 +228,7 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
           </View>
 
           <View style={styles.milestoneRow}>
-            <Text style={styles.milestoneText}>
+            <Text style={styles.milestoneText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               {milestone.prefix}
               {milestone.highlight ? <Text style={styles.milestoneHighlight}>{milestone.highlight}</Text> : null}
               {milestone.suffix}

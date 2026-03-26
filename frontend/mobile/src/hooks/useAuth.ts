@@ -152,8 +152,8 @@ export function useAuth() {
         // Persist user + tokens in store
         login(user, tokens);
 
-        // Request GPS location and send to backend (fire-and-forget)
-        requestAndSendLocation();
+        // Skip auto-location update — user sets ward manually via profile
+        // requestAndSendLocation();
 
         return { success: true };
       } catch (error) {

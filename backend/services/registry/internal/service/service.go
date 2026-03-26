@@ -40,6 +40,11 @@ func (s *Service) GetRepresentativeStats(ctx context.Context, id string) (map[st
 	return s.repo.GetRepresentativeStats(ctx, id)
 }
 
+// GetRecentActivity returns recent activity for a representative.
+func (s *Service) GetRecentActivity(ctx context.Context, repID string, limit int) ([]map[string]interface{}, error) {
+	return s.repo.GetRecentActivity(ctx, repID, limit)
+}
+
 func (s *Service) GetRepresentative(ctx context.Context, id string) (*model.RepresentativeResponse, error) {
 	rep, err := s.repo.GetByID(ctx, id)
 	if err != nil {

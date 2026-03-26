@@ -538,7 +538,7 @@ func (r *PostgresRepository) computeWardMood(ctx context.Context, wardID string)
 // ListPromises returns all promises with leader names.
 func (r *PostgresRepository) ListPromises(ctx context.Context) ([]map[string]interface{}, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT p.id, p.promise_text, p.category, p.status, p.progress_pct,
+		SELECT p.id, p.leader_id, p.promise_text, p.category, p.status, p.progress_pct,
 		       p.timeline, p.created_at,
 		       COALESCE(r.name, '') as leader_name,
 		       COALESCE(r.position, '') as leader_role
@@ -554,14 +554,15 @@ func (r *PostgresRepository) ListPromises(ctx context.Context) ([]map[string]int
 
 	var result []map[string]interface{}
 	for rows.Next() {
-		var id, text, category, status, timeline, leaderName, leaderRole string
+		var id, leaderID, text, category, status, timeline, leaderName, leaderRole string
 		var progressPct int
 		var createdAt interface{}
-		if err := rows.Scan(&id, &text, &category, &status, &progressPct, &timeline, &createdAt, &leaderName, &leaderRole); err != nil {
+		if err := rows.Scan(&id, &leaderID, &text, &category, &status, &progressPct, &timeline, &createdAt, &leaderName, &leaderRole); err != nil {
 			return nil, err
 		}
 		result = append(result, map[string]interface{}{
 			"id":          id,
+			"leader_id":   leaderID,
 			"title":       text,
 			"description": text,
 			"category":    category,

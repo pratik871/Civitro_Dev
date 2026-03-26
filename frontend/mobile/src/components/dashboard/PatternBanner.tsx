@@ -80,17 +80,36 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
       </View>
 
       {/* Body */}
-      <Text style={styles.description}>{description}</Text>
+      <Text
+        style={styles.description}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {description}
+      </Text>
 
       {/* Stats */}
       <View style={styles.statsRow}>
         {stats.map((stat, i) => (
           <View key={i} style={styles.statItem}>
             {renderStatIcon(stat.icon)}
-            <Text style={[styles.statValue, stat.valueColor ? { color: stat.valueColor } : null]}>
+            <Text
+              style={[styles.statValue, stat.valueColor ? { color: stat.valueColor } : null]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
               {stat.value}
             </Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
+            <Text
+              style={styles.statLabel}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {stat.label}
+            </Text>
           </View>
         ))}
       </View>

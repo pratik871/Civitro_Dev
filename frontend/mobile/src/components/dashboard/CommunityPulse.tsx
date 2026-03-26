@@ -41,7 +41,12 @@ export const CommunityPulse: React.FC<CommunityPulseProps> = ({
             </View>
           ))}
         </View>
-        <Text style={styles.communityText}>
+        <Text
+          style={styles.communityText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {t('home.activeCitizens', { count: activeCitizens })}
         </Text>
       </View>
@@ -55,7 +60,14 @@ export const CommunityPulse: React.FC<CommunityPulseProps> = ({
             strokeLinecap="round"
           />
         </Svg>
-        <Text style={styles.trendText}>+{weeklyTrendPercent}%</Text>
+        <Text
+          style={styles.trendText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          +{weeklyTrendPercent}%
+        </Text>
       </View>
     </View>
   );

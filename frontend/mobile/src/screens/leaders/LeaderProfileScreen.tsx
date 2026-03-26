@@ -30,6 +30,15 @@ const ACTIVITY_ICONS: Record<string, string> = {
   meeting: '\u{1F91D}',
 };
 
+const PROMISE_STATUS: Record<string, { color: string; label: string; icon: string }> = {
+  detected: { color: colors.info, label: 'Detected', icon: '\u{1F50D}' },
+  pending: { color: colors.textMuted, label: 'Pending', icon: '\u23F3' },
+  on_track: { color: colors.warning, label: 'On Track', icon: '\u{1F3D7}' },
+  in_progress: { color: colors.warning, label: 'In Progress', icon: '\u{1F3D7}' },
+  fulfilled: { color: colors.success, label: 'Fulfilled', icon: '\u2705' },
+  broken: { color: colors.error, label: 'Broken', icon: '\u274C' },
+};
+
 type LeaderProfileNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const LeaderProfileScreen: React.FC = () => {
@@ -76,6 +85,19 @@ export const LeaderProfileScreen: React.FC = () => {
   const myRating = myRatingData?.score ?? 0;
   const totalRatings = myRatingData?.totalRatings ?? 0;
   const ratingSubmitted = myRating > 0;
+
+  // Fetch this leader's promises
+  const { data: leaderPromises } = useQuery<any[]>({
+    queryKey: ['leader-promises', leaderId],
+    queryFn: async () => {
+      const res = await api.get<{ promises: any[] } | any[]>('/api/v1/promises');
+      const all = Array.isArray(res) ? res : (res.promises ?? []);
+      return all.filter((p: any) => p.leader_id === leaderId);
+    },
+    enabled: !!leaderId,
+    staleTime: 60000,
+  });
+  const promises = leaderPromises ?? [];
 
   const rateMutation = useMutation({
     mutationFn: (data: { score: number; responsiveness: number; transparency: number; delivery_on_promises: number; accessibility: number; overall_impact: number }) =>
@@ -183,50 +205,107 @@ export const LeaderProfileScreen: React.FC = () => {
         />
       </Card>
 
-      {/* Promise Progress */}
+      {/* Promise Tracker */}
       <Card style={styles.sectionCard}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>Promise Tracker</Text>
           <Text style={styles.promiseCount}>
-            {leader.promisesFulfilled}/{leader.promisesTotal} kept
+            {promises.filter(p => p.status === 'fulfilled').length}/{promises.length} kept
           </Text>
         </View>
-        {leader.promisesTotal === 0 ? (
+        {promises.length === 0 ? (
           <Text style={styles.noPromisesText}>No promises tracked yet</Text>
         ) : (
-          <TouchableOpacity
-            style={styles.viewPromisesBtn}
-            onPress={() => navigation.navigate('Promises' as any)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.viewPromisesBtnText}>View All Promises</Text>
-          </TouchableOpacity>
+          <View style={{ gap: spacing.sm }}>
+            {promises.slice(0, 5).map((p: any) => {
+              const sc = PROMISE_STATUS[p.status] ?? PROMISE_STATUS.pending;
+              return (
+                <View key={p.id} style={styles.promiseItem}>
+                  <View style={styles.promiseItemHeader}>
+                    <Text style={styles.promiseItemTitle} numberOfLines={2}>{p.title}</Text>
+                    <View style={[styles.promiseStatusBadge, { backgroundColor: sc.color + '15' }]}>
+                      <Text style={[styles.promiseStatusText, { color: sc.color }]}>{sc.icon} {sc.label}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.promiseProgressRow}>
+                    <View style={styles.promiseProgressBg}>
+                      <View style={[styles.promiseProgressFill, { width: `${p.progress}%`, backgroundColor: sc.color }]} />
+                    </View>
+                    <Text style={[styles.promiseProgressPct, { color: sc.color }]}>{p.progress}%</Text>
+                  </View>
+                  <View style={styles.promiseItemFooter}>
+                    <View style={styles.promiseCategoryBadge}>
+                      <Text style={styles.promiseCategoryText}>{p.category}</Text>
+                    </View>
+                    <Text style={styles.promiseDeadline}>Deadline: {p.deadline}</Text>
+                  </View>
+                </View>
+              );
+            })}
+            {promises.length > 5 && (
+              <TouchableOpacity
+                style={styles.viewPromisesBtn}
+                onPress={() => navigation.navigate('Promises', { leaderId })}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.viewPromisesBtnText}>View All {promises.length} Promises</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       </Card>
 
-      {/* Key Stats */}
+      {/* Performance Stats */}
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Performance Stats</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>
-              {Math.round(leader.responseRate * 100)}%
+            <Text style={[styles.statValue, { color: colors.success }]}>
+              {leader.issuesTotal > 0 ? Math.round((leader.issuesResolved / leader.issuesTotal) * 100) : 0}%
             </Text>
-            <Text style={styles.statLabel}>Response Rate</Text>
+            <Text style={styles.statLabel}>Resolution Rate</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{leader.issuesResolved}</Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>
+              {leader.avgResponseDays > 0 ? leader.avgResponseDays.toFixed(1) : '\u2014'}
+            </Text>
+            <Text style={styles.statLabel}>Avg Response (days)</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: '#D97706' }]}>
+              {leader.citizenSatisfaction > 0 ? leader.citizenSatisfaction.toFixed(1) : '\u2014'}/5
+            </Text>
+            <Text style={styles.statLabel}>Citizen Satisfaction</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: '#7C3AED' }]}>
+              {leader.promiseCompletionRate > 0 ? Math.round(leader.promiseCompletionRate * 100) : 0}%
+            </Text>
+            <Text style={styles.statLabel}>Promises Kept</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+              {leader.issuesResolved}
+            </Text>
             <Text style={styles.statLabel}>Issues Resolved</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{leader.issuesTotal}</Text>
+            <Text style={[styles.statValue, { color: colors.textSecondary }]}>
+              {leader.issuesTotal}
+            </Text>
             <Text style={styles.statLabel}>Total Issues</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>
-              {Math.round((leader.issuesResolved / leader.issuesTotal) * 100)}%
+            <Text style={[styles.statValue, { color: '#059669' }]}>
+              {leader.totalRatings}
             </Text>
-            <Text style={styles.statLabel}>Resolution Rate</Text>
+            <Text style={styles.statLabel}>Total Ratings</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { fontSize: 14, color: colors.textPrimary }]}>
+              {leader.activeSince ? new Date(leader.activeSince).getFullYear().toString() : '\u2014'}
+            </Text>
+            <Text style={styles.statLabel}>Active Since</Text>
           </View>
         </View>
       </Card>
@@ -658,5 +737,75 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#FF6B35',
+  },
+  promiseItem: {
+    backgroundColor: colors.backgroundGray,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+  },
+  promiseItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  promiseItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    flex: 1,
+  },
+  promiseStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+  },
+  promiseStatusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  promiseProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  promiseProgressBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: colors.white,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  promiseProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  promiseProgressPct: {
+    fontSize: 12,
+    fontWeight: '600',
+    width: 36,
+    textAlign: 'right',
+  },
+  promiseItemFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  promiseCategoryBadge: {
+    backgroundColor: colors.white,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  promiseCategoryText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textMuted,
+  },
+  promiseDeadline: {
+    fontSize: 11,
+    color: colors.textMuted,
   },
 });

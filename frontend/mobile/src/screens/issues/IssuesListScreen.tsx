@@ -12,6 +12,7 @@ import { IssueCard } from '../../components/issues/IssueCard';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useIssues } from '../../hooks/useIssues';
+import { useAuthStore } from '../../stores/authStore';
 import type { RootStackParamList } from '../../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -20,11 +21,17 @@ export const IssuesListScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
   const categoryFilter = (route.params as any)?.category as string | undefined;
+  const myIssues = (route.params as any)?.myIssues as boolean | undefined;
+  const statusFilter = (route.params as any)?.status as string | undefined;
+  const userId = useAuthStore(state => state.user?.id);
   const { data: issues, isLoading, refetch } = useIssues();
 
-  const filteredIssues = categoryFilter
-    ? (issues ?? []).filter(i => i.category === categoryFilter)
-    : (issues ?? []);
+  const filteredIssues = (issues ?? []).filter(i => {
+    if (categoryFilter && i.category !== categoryFilter) return false;
+    if (statusFilter && i.status !== statusFilter) return false;
+    if (myIssues && i.reportedBy !== userId) return false;
+    return true;
+  });
 
   if (isLoading) {
     return (

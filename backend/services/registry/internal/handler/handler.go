@@ -28,6 +28,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		reps.GET("/list", h.ListAll)
 		reps.GET("/:id", h.GetRepresentative)
 		reps.GET("/:id/stats", h.GetRepresentativeStats)
+		reps.GET("/:id/activity", h.GetRecentActivity)
 		reps.GET("/boundary/:boundary_id", h.GetByBoundary)
 		reps.GET("/designation/:designation", h.GetByDesignation)
 		reps.GET("/type/:official_type", h.GetByOfficialType)
@@ -80,6 +81,21 @@ func (h *Handler) GetRepresentativeStats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stats)
+}
+
+// GetRecentActivity handles GET /representatives/:id/activity.
+func (h *Handler) GetRecentActivity(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("representative id is required"))
+		return
+	}
+	activities, err := h.svc.GetRecentActivity(c.Request.Context(), id, 10)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"activities": activities})
 }
 
 // GetByBoundary handles GET /representatives/boundary/:boundary_id.

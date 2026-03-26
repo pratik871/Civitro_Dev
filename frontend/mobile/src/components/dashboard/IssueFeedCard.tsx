@@ -188,13 +188,21 @@ export const IssueFeedCard: React.FC<IssueFeedCardProps> = ({
               color: STATUS_RESOLVED,
             },
           ]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
         >
           {timeLabel}
         </Text>
       </View>
 
       {/* Body */}
-      <Text style={styles.title} numberOfLines={2}>
+      <Text
+        style={styles.title}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {issue.title}
       </Text>
       <View style={styles.locationRow}>
@@ -204,7 +212,12 @@ export const IssueFeedCard: React.FC<IssueFeedCardProps> = ({
             fill={SAFFRON}
           />
         </Svg>
-        <Text style={styles.locationText} numberOfLines={1}>
+        <Text
+          style={styles.locationText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {issue.address}
         </Text>
       </View>
