@@ -24,6 +24,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
+import { mediaUrl } from '../../lib/api';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -69,7 +70,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.profileHeader}>
         <Avatar
           name={user?.name || 'User'}
-          imageUrl={user?.avatarUrl}
+          imageUrl={mediaUrl(user?.avatarUrl)}
           size={80}
           backgroundColor={colors.navy}
         />

@@ -20,7 +20,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
-import { api } from '../../lib/api';
+import { api, mediaUrl } from '../../lib/api';
 
 export const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -34,7 +34,7 @@ export const EditProfileScreen: React.FC = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const hasChanges = name !== (user?.name || '') || email !== (user?.email || '');
-  const displayAvatar = avatarUri || user?.avatarUrl;
+  const displayAvatar = avatarUri || mediaUrl(user?.avatarUrl);
 
   const pickImage = async (source: 'camera' | 'library') => {
     const opts: ImagePicker.ImagePickerOptions = {
