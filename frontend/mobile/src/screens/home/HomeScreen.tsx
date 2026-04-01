@@ -8,6 +8,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
+  Share,
   Modal,
   Pressable,
 } from 'react-native';
@@ -632,6 +633,17 @@ export const HomeScreen: React.FC = () => {
                   const res = await api.post<{ supported: boolean; support_count: number }>(`/api/v1/actions/${id}/support`);
                   // Refetch actions to update the card
                   refetchStats();
+                } catch {}
+              }}
+              onShare={async (id) => {
+                const action = communityActions.find(a => a.id === id);
+                const shareUrl = `https://civitro.com/share/action/${id}`;
+                try {
+                  await Share.share({
+                    title: action ? `Community Action: ${action.title}` : 'Community Action on Civitro',
+                    message: action ? `Support this: "${action.title}"\n\n${shareUrl}` : shareUrl,
+                    url: shareUrl,
+                  });
                 } catch {}
               }}
             />
