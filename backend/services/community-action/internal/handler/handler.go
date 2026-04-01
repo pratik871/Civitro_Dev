@@ -21,6 +21,14 @@ func New(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// RegisterPublicRoutes registers read-only endpoints that don't require auth.
+func (h *Handler) RegisterPublicRoutes(rg *gin.RouterGroup) {
+	actions := rg.Group("/actions")
+	{
+		actions.GET("/:id", h.GetAction)
+	}
+}
+
 // RegisterRoutes registers all community action HTTP routes on the given router group.
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	actions := rg.Group("/actions")

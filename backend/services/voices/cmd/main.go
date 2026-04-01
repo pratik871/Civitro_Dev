@@ -65,6 +65,11 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "voices"})
 	})
 
+	// Public routes (optional auth — for share pages)
+	pub := router.Group("/api/v1")
+	pub.Use(middleware.OptionalJWTAuth())
+	h.RegisterPublicRoutes(pub)
+
 	// API routes (auth required for most endpoints)
 	api := router.Group("/api/v1")
 	api.Use(middleware.JWTAuth())

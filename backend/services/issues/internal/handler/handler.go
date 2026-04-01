@@ -25,6 +25,14 @@ func New(svc *service.Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// RegisterPublicRoutes registers read-only endpoints that don't require auth.
+func (h *Handler) RegisterPublicRoutes(rg *gin.RouterGroup) {
+	issues := rg.Group("/issues")
+	{
+		issues.GET("/:id", h.GetIssue)
+	}
+}
+
 // RegisterRoutes registers all issues HTTP routes on the given router group.
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	issues := rg.Group("/issues")
