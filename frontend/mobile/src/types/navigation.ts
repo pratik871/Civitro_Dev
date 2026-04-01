@@ -28,6 +28,14 @@ export type RootStackParamList = {
   ActionDetail: { actionId: string };
   CreateAction: { patternId?: string } | undefined;
   ActionTimeline: { actionId: string };
+  PromiseDetail: { promiseId: string };
+  Organizations: undefined;
+  OrgDetail: { orgId: string };
+  OrgMembers: { orgId: string };
+  CreateOrg: undefined;
+  Broadcasts: { orgId: string };
+  Datamine: undefined;
+  Heatmap: { boundaryId: string };
 };
 
 export type AuthStackParamList = {

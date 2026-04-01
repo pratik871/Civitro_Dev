@@ -29,6 +29,14 @@ import { ActionsListScreen } from '../screens/actions/ActionsListScreen';
 import { ActionDetailScreen } from '../screens/actions/ActionDetailScreen';
 import { CreateActionScreen } from '../screens/actions/CreateActionScreen';
 import { ActionTimelineScreen } from '../screens/actions/ActionTimelineScreen';
+import { PromiseDetailScreen } from '../screens/promises/PromiseDetailScreen';
+import { OrganizationsScreen } from '../screens/organizations/OrganizationsScreen';
+import { OrgDetailScreen } from '../screens/organizations/OrgDetailScreen';
+import { OrgMembersScreen } from '../screens/organizations/OrgMembersScreen';
+import { CreateOrgScreen } from '../screens/organizations/CreateOrgScreen';
+import { BroadcastsScreen } from '../screens/organizations/BroadcastsScreen';
+import { DatamineScreen } from '../screens/datamine/DatamineScreen';
+import { HeatmapScreen } from '../screens/datamine/HeatmapScreen';
 import { useAuthStore } from '../stores/authStore';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { colors } from '../theme/colors';
@@ -343,6 +351,46 @@ export const RootNavigator: React.FC = () => {
               name="About"
               component={AboutScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="PromiseDetail"
+              component={PromiseDetailScreen}
+              options={{ headerShown: true, headerTitle: 'Promise Details', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="Organizations"
+              component={OrganizationsScreen}
+              options={{ headerShown: true, headerTitle: 'Organizations', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="OrgDetail"
+              component={OrgDetailScreen}
+              options={{ headerShown: true, headerTitle: 'Organization', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="OrgMembers"
+              component={OrgMembersScreen}
+              options={{ headerShown: true, headerTitle: 'Members', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="CreateOrg"
+              component={CreateOrgScreen}
+              options={{ headerShown: true, headerTitle: 'New Organization', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="Broadcasts"
+              component={BroadcastsScreen}
+              options={{ headerShown: true, headerTitle: 'Broadcasts', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="Datamine"
+              component={DatamineScreen}
+              options={{ headerShown: true, headerTitle: 'Analytics', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="Heatmap"
+              component={HeatmapScreen}
+              options={{ headerShown: true, headerTitle: 'Issue Heatmap', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
             />
           </>
         )}
