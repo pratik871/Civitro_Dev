@@ -22,6 +22,20 @@ type Provider interface {
 // NewProvider creates an SMS provider based on configuration.
 func NewProvider(cfg config.SMSConfig) Provider {
 	switch cfg.Provider {
+	case "msg91":
+		return &MSG91Provider{
+			authKey:    cfg.APIKey,
+			templateID: cfg.TemplateID,
+			senderID:   cfg.SenderID,
+			client:     &http.Client{Timeout: 10 * time.Second},
+		}
+	case "twilio":
+		return &TwilioProvider{
+			accountSID: cfg.AccountSID,
+			authToken:  cfg.APIKey,
+			fromNumber: cfg.SenderID,
+			client:     &http.Client{Timeout: 10 * time.Second},
+		}
 	case "http":
 		return &HTTPProvider{
 			endpoint: cfg.Endpoint,
@@ -97,3 +111,99 @@ func (p *HTTPProvider) Send(ctx context.Context, phone, message string) error {
 }
 
 func (p *HTTPProvider) Name() string { return "http" }
+
+// MSG91Provider sends OTP via MSG91's Send OTP API (India-focused).
+type MSG91Provider struct {
+	authKey    string
+	templateID string
+	senderID   string
+	client     *http.Client
+}
+
+func (p *MSG91Provider) Send(ctx context.Context, phone, message string) error {
+	if p.authKey == "" {
+		return fmt.Errorf("sms: MSG91 auth key not configured")
+	}
+
+	payload := fmt.Sprintf(`{"template_id":"%s","mobile":"%s","otp_length":"6","otp_expiry":"5"}`,
+		p.templateID, phone)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		"https://control.msg91.com/api/v5/otp", bytes.NewBufferString(payload))
+	if err != nil {
+		return fmt.Errorf("sms: creating MSG91 request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("authkey", p.authKey)
+
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("sms: MSG91 request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("sms: MSG91 returned status %d", resp.StatusCode)
+	}
+
+	logger.Info().
+		Str("provider", "msg91").
+		Str("phone", phone).
+		Int("status", resp.StatusCode).
+		Msg("SMS sent via MSG91")
+
+	return nil
+}
+
+func (p *MSG91Provider) Name() string { return "msg91" }
+
+// TwilioProvider sends SMS via Twilio's REST API.
+type TwilioProvider struct {
+	accountSID string
+	authToken  string
+	fromNumber string
+	client     *http.Client
+}
+
+func (p *TwilioProvider) Send(ctx context.Context, phone, message string) error {
+	if p.accountSID == "" || p.authToken == "" {
+		return fmt.Errorf("sms: Twilio credentials not configured")
+	}
+
+	endpoint := fmt.Sprintf("https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json", p.accountSID)
+
+	form := url.Values{
+		"To":   {phone},
+		"From": {p.fromNumber},
+		"Body": {message},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewBufferString(form.Encode()))
+	if err != nil {
+		return fmt.Errorf("sms: creating Twilio request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(p.accountSID, p.authToken)
+
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("sms: Twilio request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("sms: Twilio returned status %d", resp.StatusCode)
+	}
+
+	logger.Info().
+		Str("provider", "twilio").
+		Str("phone", phone).
+		Int("status", resp.StatusCode).
+		Msg("SMS sent via Twilio")
+
+	return nil
+}
+
+func (p *TwilioProvider) Name() string { return "twilio" }

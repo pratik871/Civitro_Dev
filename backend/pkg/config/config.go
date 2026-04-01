@@ -435,10 +435,12 @@ type EmailConfig struct {
 }
 
 type SMSConfig struct {
-	Provider string `yaml:"provider"  json:"provider"  mapstructure:"provider"`
-	APIKey   string `yaml:"api_key"   json:"api_key"   mapstructure:"api_key"`
-	SenderID string `yaml:"sender_id" json:"sender_id" mapstructure:"sender_id"`
-	Endpoint string `yaml:"endpoint"  json:"endpoint"  mapstructure:"endpoint"`
+	Provider   string `yaml:"provider"    json:"provider"    mapstructure:"provider"`
+	APIKey     string `yaml:"api_key"     json:"api_key"     mapstructure:"api_key"`
+	SenderID   string `yaml:"sender_id"   json:"sender_id"   mapstructure:"sender_id"`
+	Endpoint   string `yaml:"endpoint"    json:"endpoint"    mapstructure:"endpoint"`
+	TemplateID string `yaml:"template_id" json:"template_id" mapstructure:"template_id"`
+	AccountSID string `yaml:"account_sid" json:"account_sid" mapstructure:"account_sid"`
 }
 
 // -----------------------------------------------------------------------------

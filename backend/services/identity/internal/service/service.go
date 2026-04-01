@@ -99,10 +99,17 @@ func (s *Service) RegisterUser(ctx context.Context, req *model.RegisterRequest) 
 		}
 	}
 
-	// Generate and store OTP.
-	// In dev/docker mode, use a fixed OTP for easy testing.
-	// Fixed OTP for now — switch to otp.Generate(6) when SMS provider is ready.
-	code := "111111"
+	// Generate OTP. Use fixed code for console provider (dev), real random for production.
+	var code string
+	if s.smsProvider.Name() == "console" {
+		code = "111111"
+	} else {
+		var err error
+		code, err = otp.Generate(6)
+		if err != nil {
+			return nil, fmt.Errorf("generating OTP: %w", err)
+		}
+	}
 
 	if err := otp.Store(ctx, s.redis, req.Phone, code, 5*time.Minute); err != nil {
 		return nil, fmt.Errorf("storing OTP: %w", err)
