@@ -34,7 +34,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		voices.POST("", h.CreateVoice)
 		voices.GET("/feed", h.GetFeed)
-		voices.GET("/:id", h.GetVoice)
+		// GET /:id is registered via RegisterPublicRoutes with optional auth
 		voices.POST("/:id/like", h.ToggleLike)
 		voices.POST("/:id/share", h.ShareVoice)
 		voices.POST("/:id/bookmark", h.BookmarkVoice)

@@ -42,7 +42,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		issues.GET("/trending", h.GetTrending)
 		issues.GET("/promises", h.ListPromises)
 		issues.GET("/chi", h.GetCHI)
-		issues.GET("/:id", h.GetIssue)
+		// GET /:id is registered via RegisterPublicRoutes with optional auth
 		issues.PUT("/:id/status", h.UpdateStatus)
 		issues.GET("/boundary/:boundary_id", h.GetByBoundary)
 		issues.POST("/:id/upvote", h.UpvoteIssue)

@@ -36,7 +36,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		actions.GET("", h.ListTrending)
 		actions.POST("", h.CreateAction)
 		actions.GET("/trending", h.ListTrending)
-		actions.GET("/:id", h.GetAction)
+		// GET /:id is registered via RegisterPublicRoutes with optional auth
 		actions.GET("/ward/:ward_id", h.ListByWard)
 		actions.POST("/:id/support", h.AddSupport)
 		actions.DELETE("/:id/support", h.RemoveSupport)
