@@ -129,10 +129,12 @@ export const IssueDetailScreen: React.FC = () => {
   };
 
   const handleShare = async () => {
+    const shareUrl = `https://civitro.com/share/issue/${issue.id}`;
     try {
       await Share.share({
         title: `Issue: ${issue.title}`,
-        message: `Check out this civic issue: ${issue.title} (${ISSUE_CATEGORY_LABELS[issue.category]}) — ${issue.address}. Track it on Civitro!`,
+        message: `${issue.title} (${ISSUE_CATEGORY_LABELS[issue.category]}) — ${issue.address}\n\n${shareUrl}`,
+        url: shareUrl,
       });
     } catch {
       // user cancelled

@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "in.civitro.app",
-      "sha256_cert_fingerprints": []
+      "sha256_cert_fingerprints": ["7A:9E:C7:96:F2:77:5E:92:11:9E:EB:68:71:F5:8C:80:17:C7:30:FC:96:05:10:98:60:3F:D5:8F:61:F7:C8:F4"]
     }
   }
 ]

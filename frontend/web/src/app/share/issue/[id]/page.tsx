@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Link from "next/link";
+import SharePageClient from "@/components/share/SharePageClient";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.civitro.com";
 
@@ -11,39 +11,39 @@ interface IssueData {
   severity: string;
   upvotes_count: number;
   comment_count: number;
+  confirmations_count?: number;
   gps_lat: number;
   gps_lng: number;
   created_at: string;
+  boundary_name?: string;
 }
 
-const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  reported: { label: "Reported", color: "#EF4444", bg: "#FEF2F2" },
-  assigned: { label: "Assigned", color: "#F59E0B", bg: "#FFFBEB" },
-  acknowledged: { label: "Acknowledged", color: "#F59E0B", bg: "#FFFBEB" },
-  work_started: { label: "In Progress", color: "#3B82F6", bg: "#EFF6FF" },
-  resolved: { label: "Resolved", color: "#10B981", bg: "#ECFDF5" },
-  completed: { label: "Completed", color: "#10B981", bg: "#ECFDF5" },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  reported: { label: "Reported", color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+  assigned: { label: "Assigned", color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+  acknowledged: { label: "Acknowledged", color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+  work_started: { label: "In Progress", color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+  resolved: { label: "Resolved", color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+  completed: { label: "Completed", color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  pothole: "🕳️ Pothole",
-  water_supply: "💧 Water Supply",
-  streetlight: "💡 Streetlight",
-  garbage: "🗑️ Garbage",
-  drainage: "🌊 Drainage",
-  road_damage: "🛣️ Road Damage",
-  traffic: "🚦 Traffic",
-  construction: "🏗️ Construction",
-  healthcare: "🏥 Healthcare",
-  education: "📚 Education",
-  public_safety: "🛡️ Public Safety",
+const CATEGORY_LABELS: Record<string, { emoji: string; name: string }> = {
+  pothole: { emoji: "🕳️", name: "Pothole" },
+  water_supply: { emoji: "💧", name: "Water Supply" },
+  streetlight: { emoji: "💡", name: "Streetlight" },
+  garbage: { emoji: "🗑️", name: "Garbage" },
+  drainage: { emoji: "🌊", name: "Drainage" },
+  road_damage: { emoji: "🛣️", name: "Road Damage" },
+  traffic: { emoji: "🚦", name: "Traffic" },
+  construction: { emoji: "🏗️", name: "Construction" },
+  healthcare: { emoji: "🏥", name: "Healthcare" },
+  education: { emoji: "📚", name: "Education" },
+  public_safety: { emoji: "🛡️", name: "Public Safety" },
 };
 
 async function getIssue(id: string): Promise<IssueData | null> {
   try {
-    const res = await fetch(`${API_URL}/api/v1/issues/${id}`, {
-      next: { revalidate: 60 },
-    });
+    const res = await fetch(`${API_URL}/api/v1/issues/${id}`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     const data = await res.json();
     return data.issue ?? data;
@@ -52,124 +52,121 @@ async function getIssue(id: string): Promise<IssueData | null> {
   }
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const issue = await getIssue(params.id);
-  const text = issue?.text ?? "Civic Issue on Civitro";
-  const category = CATEGORY_LABELS[issue?.category ?? ""] ?? issue?.category ?? "";
-  const truncated = text.length > 120 ? text.slice(0, 117) + "..." : text;
+  const cat = CATEGORY_LABELS[issue?.category ?? ""];
+  const title = issue?.text
+    ? `${cat?.emoji ?? "📍"} ${issue.text.slice(0, 60)}${issue.text.length > 60 ? "..." : ""}`
+    : "Civic Issue on Civitro";
+  const desc = issue
+    ? `${issue.upvotes_count ?? 0} people have upvoted this. Help fix this issue.`
+    : "Report and track civic issues on Civitro.";
 
   return {
-    title: `${category}: ${truncated} — Civitro`,
-    description: `${truncated} — Report and track civic issues on Civitro.`,
-    openGraph: {
-      title: `${category}: ${truncated}`,
-      description: "Civic issue reported on Civitro — Democracy You Shape.",
-      type: "article",
-      siteName: "Civitro",
-    },
+    title: `${title} — Civitro`,
+    description: desc,
+    openGraph: { title, description: desc, type: "article", siteName: "Civitro" },
+    twitter: { card: "summary_large_image", title, description: desc },
   };
 }
 
-export default async function ShareIssuePage({
-  params,
-}: {
-  params: { id: string };
-}) {
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+export default async function ShareIssuePage({ params }: { params: { id: string } }) {
   const issue = await getIssue(params.id);
 
   if (!issue) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Issue not found</h1>
-          <p className="text-gray-500 mb-6">This issue may have been removed.</p>
-          <Link href="/" className="text-orange-500 font-medium hover:underline">
-            Go to Civitro →
-          </Link>
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">🔍</span>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Issue not found</h1>
+          <p className="text-gray-500 mb-6">This issue may have been removed or resolved.</p>
         </div>
       </div>
     );
   }
 
-  const status = STATUS_LABELS[issue.status] ?? { label: issue.status, color: "#6B7280", bg: "#F3F4F6" };
-  const category = CATEGORY_LABELS[issue.category] ?? issue.category;
-  const date = new Date(issue.created_at).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const status = STATUS_CONFIG[issue.status] ?? { label: issue.status, color: "#6B7280", bg: "#F3F4F6", border: "#E5E7EB" };
+  const cat = CATEGORY_LABELS[issue.category] ?? { emoji: "📍", name: issue.category };
+  const totalEngagement = (issue.upvotes_count ?? 0) + (issue.comment_count ?? 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-100 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
-            <span className="text-lg font-bold text-gray-900">Civitro</span>
-          </Link>
-          <Link href="/" className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600">
-            Open App
-          </Link>
+    <SharePageClient contentType="issue" contentId={issue.id} ctaLabel="Help fix this issue" ctaAction="upvote">
+      {/* Urgency / Social Proof Banner */}
+      {totalEngagement > 5 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
+          <span className="text-amber-600 text-sm">🔥</span>
+          <p className="text-sm font-medium text-amber-800">
+            {issue.upvotes_count} people have flagged this issue
+          </p>
         </div>
-      </nav>
+      )}
 
-      <div className="max-w-2xl mx-auto p-4 mt-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Status bar */}
-          <div className="h-1" style={{ backgroundColor: status.color }} />
+      {/* Main Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Status stripe */}
+        <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${status.color}, ${status.color}88)` }} />
 
-          <div className="p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium" style={{ color: status.color, backgroundColor: status.bg, padding: "4px 12px", borderRadius: "8px" }}>
+        <div className="p-5">
+          {/* Top row: category + status + time */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{cat.emoji}</span>
+              <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{ color: status.color, backgroundColor: status.bg, border: `1px solid ${status.border}` }}
+              >
                 {status.label}
               </span>
-              <span className="text-sm text-gray-500">{date}</span>
             </div>
+          </div>
 
-            {/* Category */}
-            <p className="text-sm text-gray-500 mb-2">{category}</p>
+          {/* Issue text — the hook */}
+          <h1 className="text-xl font-bold text-gray-900 leading-snug mb-2">{issue.text}</h1>
 
-            {/* Issue text */}
-            <p className="text-lg text-gray-900 leading-relaxed mb-4">{issue.text}</p>
+          {/* Location + time */}
+          <div className="flex items-center gap-3 text-sm text-gray-500 mb-5">
+            {issue.boundary_name && (
+              <span className="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5C2.5 7.25 6 11 6 11s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" strokeWidth="1.2"/><circle cx="6" cy="4.5" r="1.2" stroke="currentColor" strokeWidth="1"/></svg>
+                {issue.boundary_name}
+              </span>
+            )}
+            <span>{timeAgo(issue.created_at)}</span>
+          </div>
 
-            {/* Stats */}
-            <div className="flex gap-6 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-1.5 text-gray-500">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 3v10M5 6l3-3 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span className="text-sm font-medium">{issue.upvotes_count ?? 0} upvotes</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-gray-500">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M14 10a1.5 1.5 0 01-1.5 1.5H5l-3 3V3.5A1.5 1.5 0 013.5 2h9A1.5 1.5 0 0114 3.5V10z" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-                <span className="text-sm font-medium">{issue.comment_count ?? 0} comments</span>
-              </div>
-              <span className="text-sm text-gray-400">ID: {issue.id}</span>
+          {/* Social proof stats */}
+          <div className="grid grid-cols-3 gap-3 p-4 bg-gray-50 rounded-xl">
+            <div className="text-center">
+              <p className="text-xl font-bold text-gray-900">{issue.upvotes_count ?? 0}</p>
+              <p className="text-xs text-gray-500 font-medium">upvotes</p>
+            </div>
+            <div className="text-center border-x border-gray-200">
+              <p className="text-xl font-bold text-gray-900">{issue.comment_count ?? 0}</p>
+              <p className="text-xs text-gray-500 font-medium">comments</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-gray-900">{issue.confirmations_count ?? 0}</p>
+              <p className="text-xs text-gray-500 font-medium">confirmed</p>
             </div>
           </div>
         </div>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm mb-3">Help resolve this issue — report on Civitro</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-medium rounded-xl hover:bg-orange-600">
-            Open in Civitro
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M10 5l3 3-3 3" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </Link>
-        </div>
-
-        <p className="text-center text-gray-400 text-xs mt-8">Democracy. You Shape.™</p>
       </div>
-    </div>
+    </SharePageClient>
   );
 }

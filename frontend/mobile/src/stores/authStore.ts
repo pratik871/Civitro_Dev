@@ -2,11 +2,17 @@ import { create } from 'zustand';
 import type { User, AuthTokens } from '../types/user';
 import { saveTokens, clearAll, saveUser, getUser, getTokens } from '../lib/auth';
 
+interface PendingDeepLink {
+  screen: string;
+  params: Record<string, string>;
+}
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isInitialized: boolean;
+  pendingDeepLink: PendingDeepLink | null;
 
   // Actions
   initialize: () => Promise<void>;
@@ -14,6 +20,7 @@ interface AuthState {
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => Promise<void>;
   setLoading: (loading: boolean) => void;
+  setPendingDeepLink: (link: PendingDeepLink | null) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -21,6 +28,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   isInitialized: false,
+  pendingDeepLink: null,
 
   initialize: async () => {
     try {
@@ -59,5 +67,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setLoading: (isLoading: boolean) => {
     set({ isLoading });
+  },
+
+  setPendingDeepLink: (link: PendingDeepLink | null) => {
+    set({ pendingDeepLink: link });
   },
 }));

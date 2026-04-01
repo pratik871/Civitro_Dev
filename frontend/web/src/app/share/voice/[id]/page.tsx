@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Link from "next/link";
+import SharePageClient from "@/components/share/SharePageClient";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.civitro.com";
 
@@ -15,9 +15,7 @@ interface VoiceData {
 
 async function getVoice(id: string): Promise<VoiceData | null> {
   try {
-    const res = await fetch(`${API_URL}/api/v1/voices/${id}`, {
-      next: { revalidate: 60 },
-    });
+    const res = await fetch(`${API_URL}/api/v1/voices/${id}`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     const data = await res.json();
     return data.voice ?? data;
@@ -26,104 +24,90 @@ async function getVoice(id: string): Promise<VoiceData | null> {
   }
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const voice = await getVoice(params.id);
   const text = voice?.text ?? "Community Voice on Civitro";
   const truncated = text.length > 120 ? text.slice(0, 117) + "..." : text;
+  const engagement = (voice?.likes_count ?? 0) + (voice?.replies_count ?? 0);
+  const desc = engagement > 0
+    ? `${engagement} people engaged with this. Join the conversation.`
+    : "Shared from Civitro — Democracy You Shape.™";
 
   return {
     title: `${truncated} — Civitro`,
-    description: truncated,
-    openGraph: {
-      title: truncated,
-      description: "Shared from Civitro — Democracy You Shape.",
-      type: "article",
-      siteName: "Civitro",
-    },
-    twitter: {
-      card: "summary",
-      title: truncated,
-      description: "Shared from Civitro — Democracy You Shape.",
-    },
+    description: desc,
+    openGraph: { title: truncated, description: desc, type: "article", siteName: "Civitro" },
+    twitter: { card: "summary", title: truncated, description: desc },
   };
 }
 
-export default async function ShareVoicePage({
-  params,
-}: {
-  params: { id: string };
-}) {
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+export default async function ShareVoicePage({ params }: { params: { id: string } }) {
   const voice = await getVoice(params.id);
 
   if (!voice) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Voice not found</h1>
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">🔍</span>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Voice not found</h1>
           <p className="text-gray-500 mb-6">This post may have been removed.</p>
-          <Link href="/" className="text-orange-500 font-medium hover:underline">
-            Go to Civitro →
-          </Link>
         </div>
       </div>
     );
   }
 
   const tags = voice.hashtags ?? [];
-  const date = new Date(voice.created_at).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const totalEngagement = (voice.likes_count ?? 0) + (voice.replies_count ?? 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Nav */}
-      <nav className="bg-white border-b border-gray-100 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center">
+    <SharePageClient contentType="voice" contentId={voice.id} ctaLabel="Join the conversation" ctaAction="upvote">
+      {/* Social proof */}
+      {totalEngagement > 3 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
+          <span className="text-blue-500">💬</span>
+          <p className="text-sm font-medium text-blue-800">
+            {totalEngagement} people are engaging with this voice
+          </p>
+        </div>
+      )}
+
+      {/* Main Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-5">
+          {/* Author row */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-sm">C</span>
             </div>
-            <span className="text-lg font-bold text-gray-900">Civitro</span>
-          </Link>
-          <Link
-            href="/"
-            className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600"
-          >
-            Open App
-          </Link>
-        </div>
-      </nav>
-
-      {/* Voice Card */}
-      <div className="max-w-2xl mx-auto p-4 mt-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          {/* Author */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-              <span className="text-orange-500 font-bold">C</span>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Citizen</p>
-              <p className="text-sm text-gray-500">{date}</p>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 text-sm">Citizen</p>
+              <p className="text-xs text-gray-400">{timeAgo(voice.created_at)}</p>
             </div>
           </div>
 
-          {/* Text */}
-          <p className="text-lg text-gray-900 leading-relaxed mb-4">{voice.text}</p>
+          {/* Voice text — the hook */}
+          <p className="text-lg text-gray-900 leading-relaxed mb-4 font-medium">{voice.text}</p>
 
-          {/* Tags */}
+          {/* Hashtags */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-orange-50 text-orange-600 text-sm font-medium rounded-full"
+                  className="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-semibold rounded-full border border-orange-100"
                 >
                   #{tag}
                 </span>
@@ -131,42 +115,25 @@ export default async function ShareVoicePage({
             </div>
           )}
 
-          {/* Stats */}
+          {/* Engagement stats */}
           <div className="flex gap-6 pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 3v10M5 6l3-3 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <div className="flex items-center gap-2 text-gray-500">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M9 4v10M6 7l3-3 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-sm font-medium">{voice.likes_count ?? 0} upvotes</span>
+              <span className="text-sm font-semibold text-gray-700">{voice.likes_count ?? 0}</span>
+              <span className="text-xs text-gray-400">upvotes</span>
             </div>
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M14 10a1.5 1.5 0 01-1.5 1.5H5l-3 3V3.5A1.5 1.5 0 013.5 2h9A1.5 1.5 0 0114 3.5V10z" stroke="currentColor" strokeWidth="1.5" />
+            <div className="flex items-center gap-2 text-gray-500">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M16 12a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h10a2 2 0 012 2v8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-sm font-medium">{voice.replies_count ?? 0} comments</span>
+              <span className="text-sm font-semibold text-gray-700">{voice.replies_count ?? 0}</span>
+              <span className="text-xs text-gray-400">replies</span>
             </div>
           </div>
         </div>
-
-        {/* CTA */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm mb-3">Join the conversation on Civitro</p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-medium rounded-xl hover:bg-orange-600"
-          >
-            Open in Civitro
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M10 5l3 3-3 3" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </Link>
-        </div>
-
-        {/* Tagline */}
-        <p className="text-center text-gray-400 text-xs mt-8">
-          Democracy. You Shape.™
-        </p>
       </div>
-    </div>
+    </SharePageClient>
   );
 }

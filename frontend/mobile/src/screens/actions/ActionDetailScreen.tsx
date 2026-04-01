@@ -83,10 +83,12 @@ export const ActionDetailScreen: React.FC = () => {
   };
 
   const handleShare = async () => {
+    const shareUrl = `https://civitro.com/share/action/${action.id}`;
     try {
       await Share.share({
         title: `Community Action: ${action.title}`,
-        message: `Support this community action: "${action.title}" — ${action.supportCount} supporters.\n\nhttps://civitro.com/share/action/${action.id}`,
+        message: `Support this community action: "${action.title}" — ${action.supportCount} supporters.\n\n${shareUrl}`,
+        url: shareUrl,
       });
     } catch {
       // user cancelled

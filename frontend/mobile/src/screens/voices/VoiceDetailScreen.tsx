@@ -71,12 +71,14 @@ export const VoiceDetailScreen: React.FC = () => {
   };
 
   const handleShare = async () => {
+    const shareUrl = `https://civitro.com/share/voice/${voiceId}`;
     try {
       await Share.share({
         title: 'Community Voice',
         message: voice
-          ? `"${voice.text}"\n\nhttps://civitro.com/share/voice/${voiceId}`
+          ? `"${voice.text}"\n\n${shareUrl}`
           : 'Check out this community voice on Civitro!',
+        url: shareUrl,
       });
       shareMutation.mutate(voiceId);
     } catch {

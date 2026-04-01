@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import { Linking } from 'react-native';
+import { NavigationContainer, DefaultTheme, DarkTheme, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
@@ -35,13 +36,65 @@ import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Parse a deep link URL into screen + params
+function parseDeepLink(url: string): { screen: string; params: Record<string, string> } | null {
+  const match = url.match(/share\/(issue|voice|action)\/([^/?#]+)/);
+  if (!match) return null;
+  const type = match[1];
+  const id = match[2];
+  const screenMap: Record<string, { screen: string; paramKey: string }> = {
+    issue: { screen: 'IssueDetail', paramKey: 'issueId' },
+    voice: { screen: 'VoiceDetail', paramKey: 'voiceId' },
+    action: { screen: 'ActionDetail', paramKey: 'actionId' },
+  };
+  const entry = screenMap[type];
+  if (!entry) return null;
+  return { screen: entry.screen, params: { [entry.paramKey]: id } };
+}
+
 export const RootNavigator: React.FC = () => {
-  const { isAuthenticated, isInitialized, initialize } = useAuthStore();
+  const { isAuthenticated, isInitialized, initialize, pendingDeepLink, setPendingDeepLink } = useAuthStore();
   const darkMode = useSettingsStore(state => state.darkMode);
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Capture deep links when not authenticated
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const handleURL = (event: { url: string }) => {
+      if (!isAuthenticated) {
+        const parsed = parseDeepLink(event.url);
+        if (parsed) setPendingDeepLink(parsed);
+      }
+    };
+
+    // Check initial URL
+    Linking.getInitialURL().then((url) => {
+      if (url && !isAuthenticated) {
+        const parsed = parseDeepLink(url);
+        if (parsed) setPendingDeepLink(parsed);
+      }
+    });
+
+    const sub = Linking.addEventListener('url', handleURL);
+    return () => sub.remove();
+  }, [isInitialized, isAuthenticated, setPendingDeepLink]);
+
+  // Navigate to pending deep link after authentication
+  useEffect(() => {
+    if (isAuthenticated && pendingDeepLink && navigationRef.current) {
+      // Small delay to let the navigator mount the authenticated screens
+      const timer = setTimeout(() => {
+        navigationRef.current?.navigate(pendingDeepLink.screen as any, pendingDeepLink.params as any);
+        setPendingDeepLink(null);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, pendingDeepLink, setPendingDeepLink]);
 
   if (!isInitialized) {
     return null;
@@ -69,7 +122,7 @@ export const RootNavigator: React.FC = () => {
   };
 
   return (
-    <NavigationContainer theme={darkMode ? CivitroDarkTheme : CivitroLightTheme} linking={linking}>
+    <NavigationContainer ref={navigationRef} theme={darkMode ? CivitroDarkTheme : CivitroLightTheme} linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
