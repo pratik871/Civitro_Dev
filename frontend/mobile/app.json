@@ -50,7 +50,7 @@
     },
     "ios": {
       "bundleIdentifier": "in.civitro.app",
-      "buildNumber": "25",
+      "buildNumber": "26",
       "supportsTablet": true,
       "associatedDomains": [
         "applinks:civitro.com"
