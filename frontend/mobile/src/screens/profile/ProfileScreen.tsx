@@ -8,8 +8,13 @@ import {
   TouchableOpacity,
   StatusBar,
   Modal,
+  Alert,
+  Platform,
+  ActionSheetIOS,
+  ActivityIndicator,
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,7 +29,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
-import { mediaUrl } from '../../lib/api';
+import { api, mediaUrl } from '../../lib/api';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -44,6 +49,7 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileNavProp>();
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
+  const updateUser = useAuthStore(state => state.updateUser);
   const darkMode = useSettingsStore(state => state.darkMode);
   const setDarkMode = useSettingsStore(state => state.setDarkMode);
   const { refreshProfile } = useAuth();
@@ -53,6 +59,52 @@ export const ProfileScreen: React.FC = () => {
   useFocusEffect(useCallback(() => { refreshProfile(); }, [refreshProfile]));
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const pickImage = async (source: 'camera' | 'library') => {
+    const opts: ImagePicker.ImagePickerOptions = {
+      mediaTypes: 'images',
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    };
+    let result: ImagePicker.ImagePickerResult;
+    if (source === 'camera') {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) { Alert.alert('Permission needed', 'Camera access is required.'); return; }
+      result = await ImagePicker.launchCameraAsync(opts);
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync(opts);
+    }
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    setUploadingAvatar(true);
+    try {
+      const form = new FormData();
+      form.append('avatar', { uri: asset.uri, type: asset.mimeType || 'image/jpeg', name: asset.fileName || 'avatar.jpg' } as any);
+      const res = await api.upload<{ avatar_url: string }>('/api/v1/auth/avatar', form);
+      await updateUser({ avatarUrl: res.avatar_url });
+    } catch (e: any) {
+      Alert.alert('Upload failed', e?.message || 'Could not upload photo.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarPress = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: ['Cancel', 'Take Photo', 'Choose from Library'], cancelButtonIndex: 0 },
+        (index) => { if (index === 1) pickImage('camera'); else if (index === 2) pickImage('library'); },
+      );
+    } else {
+      Alert.alert('Change Photo', '', [
+        { text: 'Take Photo', onPress: () => pickImage('camera') },
+        { text: 'Choose from Library', onPress: () => pickImage('library') },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -68,12 +120,27 @@ export const ProfileScreen: React.FC = () => {
 
       {/* Profile Header */}
       <View style={styles.profileHeader}>
-        <Avatar
-          name={user?.name || 'User'}
-          imageUrl={mediaUrl(user?.avatarUrl)}
-          size={80}
-          backgroundColor={colors.navy}
-        />
+        <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
+          <View>
+            <Avatar
+              name={user?.name || 'User'}
+              imageUrl={mediaUrl(user?.avatarUrl)}
+              size={80}
+              backgroundColor={colors.navy}
+            />
+            {uploadingAvatar && (
+              <View style={styles.avatarLoading}>
+                <ActivityIndicator size="small" color="#FFF" />
+              </View>
+            )}
+            <View style={styles.cameraIcon}>
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                <Circle cx={12} cy={13} r={4} stroke="#FFF" strokeWidth={2} />
+              </Svg>
+            </View>
+          </View>
+        </TouchableOpacity>
         <Text style={styles.name}>{user?.name || 'Citizen'}</Text>
         <Text style={styles.phone}>{user?.phone || ''}</Text>
         {(user?.ward || user?.constituency) && (
@@ -81,17 +148,6 @@ export const ProfileScreen: React.FC = () => {
             {[user?.ward, user?.constituency].filter(Boolean).join(' | ')}
           </Text>
         )}
-        <TouchableOpacity
-          style={styles.editProfileBtn}
-          onPress={() => navigation.navigate('EditProfile' as any)}
-          activeOpacity={0.7}
-        >
-          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#FF6B35" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            <Path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#FF6B35" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
-          <Text style={styles.editProfileText}>Edit Profile</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Civic Score */}
@@ -275,22 +331,25 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: spacing.xs,
   },
-  editProfileBtn: {
-    flexDirection: 'row',
+  avatarLoading: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 40,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
-    marginTop: spacing.md,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#FF6B35',
-    backgroundColor: '#FFF7F3',
+    justifyContent: 'center',
   },
-  editProfileText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FF6B35',
-    marginLeft: 6,
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FF6B35',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
   },
   scoreCard: {
     marginBottom: spacing.md,

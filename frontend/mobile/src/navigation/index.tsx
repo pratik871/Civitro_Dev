@@ -29,7 +29,6 @@ import { ActionsListScreen } from '../screens/actions/ActionsListScreen';
 import { ActionDetailScreen } from '../screens/actions/ActionDetailScreen';
 import { CreateActionScreen } from '../screens/actions/CreateActionScreen';
 import { ActionTimelineScreen } from '../screens/actions/ActionTimelineScreen';
-import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { useAuthStore } from '../stores/authStore';
 import { colors } from '../theme/colors';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -339,11 +338,6 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="About"
               component={AboutScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="EditProfile"
-              component={EditProfileScreen}
               options={{ headerShown: false }}
             />
           </>

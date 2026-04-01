@@ -28,7 +28,6 @@ export type RootStackParamList = {
   ActionDetail: { actionId: string };
   CreateAction: { patternId?: string } | undefined;
   ActionTimeline: { actionId: string };
-  EditProfile: undefined;
 };
 
 export type AuthStackParamList = {
