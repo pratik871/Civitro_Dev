@@ -29,6 +29,11 @@ func (h *PollHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.GET("/polls/:id/results", h.GetResults)
 	rg.GET("/polls/boundary/:boundary_id", h.GetByBoundary)
 	rg.DELETE("/polls/:id", h.DeletePoll)
+
+	// Participatory Budgeting
+	rg.GET("/polls/budgets/:boundary_id", h.ListBudgetProposals)
+	rg.POST("/polls/budgets/:boundary_id/vote", h.SubmitBudgetVote)
+	rg.GET("/polls/budgets/:boundary_id/results", h.GetBudgetResults)
 }
 
 // ListPolls returns all polls formatted for the frontend.
@@ -195,4 +200,79 @@ func (h *PollHandler) DeletePoll(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "poll deleted"})
+}
+
+// ---------------------------------------------------------------------------
+// Participatory Budgeting endpoints
+// ---------------------------------------------------------------------------
+
+// ListBudgetProposals returns budget proposals for a boundary.
+// GET /polls/budgets/:boundary_id
+func (h *PollHandler) ListBudgetProposals(c *gin.Context) {
+	boundaryID := c.Param("boundary_id")
+	if boundaryID == "" {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("boundary_id is required"))
+		return
+	}
+
+	uid, _ := c.Get("user_id")
+	userID, _ := uid.(string)
+
+	proposals, err := h.svc.ListBudgetProposals(c.Request.Context(), boundaryID, userID)
+	if err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"boundary_id": boundaryID,
+		"proposals":   proposals,
+	})
+}
+
+// SubmitBudgetVote records a user's budget allocation vote.
+// POST /polls/budgets/:boundary_id/vote
+func (h *PollHandler) SubmitBudgetVote(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		apperrors.AbortWithError(c, apperrors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	boundaryID := c.Param("boundary_id")
+	if boundaryID == "" {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("boundary_id is required"))
+		return
+	}
+
+	var req model.BudgetVoteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("invalid request body: "+err.Error()))
+		return
+	}
+
+	if err := h.svc.SubmitBudgetVote(c.Request.Context(), boundaryID, userID.(string), req); err != nil {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "budget vote recorded"})
+}
+
+// GetBudgetResults returns aggregated budget results for a boundary.
+// GET /polls/budgets/:boundary_id/results
+func (h *PollHandler) GetBudgetResults(c *gin.Context) {
+	boundaryID := c.Param("boundary_id")
+	if boundaryID == "" {
+		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("boundary_id is required"))
+		return
+	}
+
+	results, err := h.svc.GetBudgetResults(c.Request.Context(), boundaryID)
+	if err != nil {
+		apperrors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, results)
 }

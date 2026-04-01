@@ -415,3 +415,142 @@ func (r *PollRepository) ClosePoll(ctx context.Context, pollID string) error {
 	)
 	return err
 }
+
+// ---------------------------------------------------------------------------
+// Participatory Budgeting
+// ---------------------------------------------------------------------------
+
+// ListBudgetProposals returns all budget proposals for a boundary in the current fiscal year.
+func (r *PollRepository) ListBudgetProposals(ctx context.Context, boundaryID, fiscalYear string) ([]model.BudgetProposal, error) {
+	query := `
+		SELECT id, boundary_id, title, COALESCE(description, ''), category,
+		       requested_amount, fiscal_year, status,
+		       COALESCE(created_by::text, ''), created_at, updated_at
+		FROM budget_proposals
+		WHERE boundary_id = $1 AND fiscal_year = $2
+		ORDER BY created_at DESC`
+
+	rows, err := r.db.Query(ctx, query, boundaryID, fiscalYear)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var proposals []model.BudgetProposal
+	for rows.Next() {
+		var p model.BudgetProposal
+		if err := rows.Scan(
+			&p.ID, &p.BoundaryID, &p.Title, &p.Description, &p.Category,
+			&p.RequestedAmount, &p.FiscalYear, &p.Status,
+			&p.CreatedBy, &p.CreatedAt, &p.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		proposals = append(proposals, p)
+	}
+	return proposals, rows.Err()
+}
+
+// GetUserBudgetVotes returns all budget votes for a user in a given boundary + fiscal year.
+func (r *PollRepository) GetUserBudgetVotes(ctx context.Context, userID, boundaryID, fiscalYear string) (map[string]int16, error) {
+	query := `
+		SELECT bv.proposal_id, bv.allocation_pct
+		FROM budget_votes bv
+		JOIN budget_proposals bp ON bp.id = bv.proposal_id
+		WHERE bv.user_id = $1 AND bp.boundary_id = $2 AND bp.fiscal_year = $3`
+
+	rows, err := r.db.Query(ctx, query, userID, boundaryID, fiscalYear)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(map[string]int16)
+	for rows.Next() {
+		var proposalID string
+		var pct int16
+		if err := rows.Scan(&proposalID, &pct); err != nil {
+			return nil, err
+		}
+		result[proposalID] = pct
+	}
+	return result, rows.Err()
+}
+
+// SubmitBudgetVotes upserts budget votes for a user in a transaction.
+func (r *PollRepository) SubmitBudgetVotes(ctx context.Context, userID string, allocations []model.BudgetAllocation) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	upsertQuery := `
+		INSERT INTO budget_votes (user_id, proposal_id, allocation_pct)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, proposal_id) DO UPDATE
+			SET allocation_pct = EXCLUDED.allocation_pct`
+
+	for _, alloc := range allocations {
+		_, err := tx.Exec(ctx, upsertQuery, userID, alloc.ProposalID, alloc.AllocationPct)
+		if err != nil {
+			return fmt.Errorf("failed to upsert vote for proposal %s: %w", alloc.ProposalID, err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+// GetBudgetResults returns aggregated budget results for a boundary.
+func (r *PollRepository) GetBudgetResults(ctx context.Context, boundaryID, fiscalYear string) (*model.BudgetResults, error) {
+	// Get total unique voters for this boundary's budget
+	voterQuery := `
+		SELECT COUNT(DISTINCT bv.user_id)
+		FROM budget_votes bv
+		JOIN budget_proposals bp ON bp.id = bv.proposal_id
+		WHERE bp.boundary_id = $1 AND bp.fiscal_year = $2`
+
+	var totalVoters int
+	if err := r.db.QueryRow(ctx, voterQuery, boundaryID, fiscalYear).Scan(&totalVoters); err != nil {
+		return nil, err
+	}
+
+	// Get per-proposal aggregated results
+	resultQuery := `
+		SELECT bp.id, bp.title, bp.category, bp.requested_amount,
+		       COALESCE(AVG(bv.allocation_pct), 0) AS avg_allocation,
+		       COUNT(DISTINCT bv.user_id) AS total_voters
+		FROM budget_proposals bp
+		LEFT JOIN budget_votes bv ON bv.proposal_id = bp.id
+		WHERE bp.boundary_id = $1 AND bp.fiscal_year = $2
+		GROUP BY bp.id, bp.title, bp.category, bp.requested_amount
+		ORDER BY avg_allocation DESC`
+
+	rows, err := r.db.Query(ctx, resultQuery, boundaryID, fiscalYear)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var proposals []model.BudgetProposalResult
+	for rows.Next() {
+		var pr model.BudgetProposalResult
+		if err := rows.Scan(
+			&pr.ProposalID, &pr.Title, &pr.Category, &pr.RequestedAmount,
+			&pr.AvgAllocation, &pr.TotalVoters,
+		); err != nil {
+			return nil, err
+		}
+		proposals = append(proposals, pr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &model.BudgetResults{
+		BoundaryID:  boundaryID,
+		FiscalYear:  fiscalYear,
+		TotalVoters: totalVoters,
+		Proposals:   proposals,
+	}, nil
+}

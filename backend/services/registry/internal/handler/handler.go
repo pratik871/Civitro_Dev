@@ -29,6 +29,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		reps.GET("/:id", h.GetRepresentative)
 		reps.GET("/:id/stats", h.GetRepresentativeStats)
 		reps.GET("/:id/activity", h.GetRecentActivity)
+		reps.GET("/:id/dashboard", h.GetDashboard)
 		reps.GET("/boundary/:boundary_id", h.GetByBoundary)
 		reps.GET("/designation/:designation", h.GetByDesignation)
 		reps.GET("/type/:official_type", h.GetByOfficialType)
@@ -216,6 +217,24 @@ func (h *Handler) AddStaff(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, staff)
+}
+
+// GetDashboard handles GET /representatives/:id/dashboard.
+// Returns aggregated stats for a leader's dashboard view.
+func (h *Handler) GetDashboard(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("representative id is required"))
+		return
+	}
+
+	dashboard, err := h.svc.GetDashboard(c.Request.Context(), id)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dashboard)
 }
 
 // GetStaff handles GET /representatives/:id/staff.

@@ -27,6 +27,7 @@ type Repository interface {
 	GetSeatReservation(ctx context.Context, boundaryID, electionCycleID string) (*model.SeatReservation, error)
 	GetRepresentativeStats(ctx context.Context, id string) (map[string]interface{}, error)
 	GetRecentActivity(ctx context.Context, repID string, limit int) ([]map[string]interface{}, error)
+	GetDashboard(ctx context.Context, id string) (map[string]interface{}, error)
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -408,4 +409,112 @@ func (r *PostgresRepository) GetRecentActivity(ctx context.Context, repID string
 		result = []map[string]interface{}{}
 	}
 	return result, nil
+}
+
+// GetDashboard returns aggregated dashboard data for a representative.
+// Combines representative profile info with issue stats, ratings, and pending actions.
+func (r *PostgresRepository) GetDashboard(ctx context.Context, id string) (map[string]interface{}, error) {
+	dashboard := map[string]interface{}{
+		"leader_id":            id,
+		"leader_name":          "",
+		"ward":                 "",
+		"boundary_id":          "",
+		"party":                "",
+		"designation":          "",
+		"issues_in_ward":       0,
+		"resolved_count":       0,
+		"pending_count":        0,
+		"avg_response_days":    0.0,
+		"citizen_satisfaction": 0.0,
+		"pending_actions":      0,
+		"total_ratings":        0,
+		"recent_issues":        []map[string]interface{}{},
+	}
+
+	// Get representative info
+	var name, party, designation, boundaryID, boundaryName string
+	err := r.pool.QueryRow(ctx, `
+		SELECT r.name, COALESCE(r.party, ''), COALESCE(r.designation, ''),
+		       COALESCE(r.boundary_id::text, ''), COALESCE(b.name, '')
+		FROM representatives r
+		LEFT JOIN boundaries b ON b.id = r.boundary_id
+		WHERE r.id = $1
+	`, id).Scan(&name, &party, &designation, &boundaryID, &boundaryName)
+	if err != nil {
+		return nil, fmt.Errorf("representative not found: %w", err)
+	}
+
+	dashboard["leader_name"] = name
+	dashboard["party"] = party
+	dashboard["designation"] = designation
+	dashboard["boundary_id"] = boundaryID
+	dashboard["ward"] = boundaryName
+
+	// Total ratings count
+	var totalRatings int
+	_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM satisfaction_surveys WHERE representative_id = $1`, id).Scan(&totalRatings)
+	dashboard["total_ratings"] = totalRatings
+
+	// Citizen satisfaction — average overall score
+	if totalRatings > 0 {
+		var avgScore float64
+		_ = r.pool.QueryRow(ctx, `SELECT COALESCE(AVG(score), 0) FROM satisfaction_surveys WHERE representative_id = $1 AND score > 0`, id).Scan(&avgScore)
+		dashboard["citizen_satisfaction"] = avgScore
+	}
+
+	if boundaryID != "" {
+		// Issues in ward
+		var issuesInWard, resolvedCount, pendingCount int
+		_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid`, boundaryID).Scan(&issuesInWard)
+		_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved'`, boundaryID).Scan(&resolvedCount)
+		_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status IN ('reported', 'acknowledged')`, boundaryID).Scan(&pendingCount)
+		dashboard["issues_in_ward"] = issuesInWard
+		dashboard["resolved_count"] = resolvedCount
+		dashboard["pending_count"] = pendingCount
+
+		// Pending actions (issues that need attention — reported but not acknowledged)
+		var pendingActions int
+		_ = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM issues WHERE boundary_id = $1::uuid AND status = 'reported'`, boundaryID).Scan(&pendingActions)
+		dashboard["pending_actions"] = pendingActions
+
+		// Avg response time (days between created_at and updated_at for resolved issues)
+		var avgDays float64
+		_ = r.pool.QueryRow(ctx, `
+			SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 86400), 0)
+			FROM issues WHERE boundary_id = $1::uuid AND status = 'resolved'
+		`, boundaryID).Scan(&avgDays)
+		dashboard["avg_response_days"] = avgDays
+
+		// Recent 10 issues in this boundary
+		rows, err := r.pool.Query(ctx, `
+			SELECT id, COALESCE(text, ''), category, status, created_at
+			FROM issues
+			WHERE boundary_id = $1::uuid
+			ORDER BY created_at DESC
+			LIMIT 10
+		`, boundaryID)
+		if err == nil {
+			defer rows.Close()
+			var recentIssues []map[string]interface{}
+			for rows.Next() {
+				var issueID, text, category, status string
+				var createdAt time.Time
+				if err := rows.Scan(&issueID, &text, &category, &status, &createdAt); err != nil {
+					continue
+				}
+				recentIssues = append(recentIssues, map[string]interface{}{
+					"id":         issueID,
+					"text":       text,
+					"category":   category,
+					"status":     status,
+					"created_at": createdAt,
+				})
+			}
+			if recentIssues != nil {
+				dashboard["recent_issues"] = recentIssues
+			}
+		}
+	}
+
+	return dashboard, nil
 }

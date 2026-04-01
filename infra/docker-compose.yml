@@ -960,6 +960,37 @@ services:
     networks:
       - civitro-network
 
+  # ── Service 24: Fraud Detection Engine ───────────────────────
+  fraud:
+    build:
+      context: ../ai
+      dockerfile: services/fraud/Dockerfile
+    container_name: civitro-fraud
+    restart: unless-stopped
+    profiles: ["wave3"]
+    ports:
+      - "8024:8024"
+    environment:
+      - APP_ENV=docker
+      - CIVITRO_ENV=docker
+    volumes:
+      - ../config:/app/config:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8024/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - civitro-network
+
   # ── Service 23: Pattern Detection Engine ─────────────────────
   pattern-detection:
     build:

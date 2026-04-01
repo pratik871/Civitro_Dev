@@ -236,6 +236,110 @@ func (s *PollService) DeletePoll(ctx context.Context, pollID string) error {
 	return nil
 }
 
+// ---------------------------------------------------------------------------
+// Participatory Budgeting
+// ---------------------------------------------------------------------------
+
+// currentFiscalYear returns the Indian fiscal year string, e.g. "2026-27".
+func currentFiscalYear() string {
+	now := time.Now().UTC()
+	year := now.Year()
+	month := now.Month()
+	// Indian fiscal year runs April to March
+	if month < 4 {
+		year--
+	}
+	return fmt.Sprintf("%d-%02d", year, (year+1)%100)
+}
+
+// ListBudgetProposals returns budget proposals for a boundary (current fiscal year).
+func (s *PollService) ListBudgetProposals(ctx context.Context, boundaryID, userID string) ([]model.BudgetProposalResponse, error) {
+	fy := currentFiscalYear()
+
+	proposals, err := s.repo.ListBudgetProposals(ctx, boundaryID, fy)
+	if err != nil {
+		logger.Error().Err(err).Str("boundary_id", boundaryID).Msg("failed to list budget proposals")
+		return nil, err
+	}
+
+	// Get user's existing votes if authenticated
+	var userVotes map[string]int16
+	if userID != "" {
+		userVotes, err = s.repo.GetUserBudgetVotes(ctx, userID, boundaryID, fy)
+		if err != nil {
+			logger.Error().Err(err).Str("user_id", userID).Msg("failed to get user budget votes")
+			// Non-fatal — continue without vote data
+			userVotes = make(map[string]int16)
+		}
+	}
+
+	responses := make([]model.BudgetProposalResponse, 0, len(proposals))
+	for _, p := range proposals {
+		resp := model.BudgetProposalResponse{
+			ID:              p.ID,
+			Title:           p.Title,
+			Description:     p.Description,
+			Category:        p.Category,
+			RequestedAmount: p.RequestedAmount,
+			FiscalYear:      p.FiscalYear,
+			Status:          p.Status,
+			CreatedBy:       p.CreatedBy,
+			CreatedAt:       p.CreatedAt,
+			UserAllocation:  0,
+		}
+		if pct, ok := userVotes[p.ID]; ok {
+			resp.UserAllocation = pct
+		}
+		responses = append(responses, resp)
+	}
+
+	return responses, nil
+}
+
+// SubmitBudgetVote validates and submits a budget allocation vote.
+func (s *PollService) SubmitBudgetVote(ctx context.Context, boundaryID, userID string, req model.BudgetVoteRequest) error {
+	if len(req.Allocations) == 0 {
+		return fmt.Errorf("at least one allocation is required")
+	}
+
+	// Verify allocations sum to 100
+	var total int16
+	for _, alloc := range req.Allocations {
+		if alloc.AllocationPct < 0 || alloc.AllocationPct > 100 {
+			return fmt.Errorf("allocation_pct must be between 0 and 100")
+		}
+		total += alloc.AllocationPct
+	}
+	if total != 100 {
+		return fmt.Errorf("allocations must sum to 100, got %d", total)
+	}
+
+	if err := s.repo.SubmitBudgetVotes(ctx, userID, req.Allocations); err != nil {
+		logger.Error().Err(err).Str("user_id", userID).Str("boundary_id", boundaryID).Msg("failed to submit budget votes")
+		return err
+	}
+
+	logger.Info().Str("user_id", userID).Str("boundary_id", boundaryID).Int("allocations", len(req.Allocations)).Msg("budget vote submitted")
+	return nil
+}
+
+// GetBudgetResults returns aggregated budget results for a boundary.
+func (s *PollService) GetBudgetResults(ctx context.Context, boundaryID string) (*model.BudgetResults, error) {
+	fy := currentFiscalYear()
+
+	results, err := s.repo.GetBudgetResults(ctx, boundaryID, fy)
+	if err != nil {
+		logger.Error().Err(err).Str("boundary_id", boundaryID).Msg("failed to get budget results")
+		return nil, err
+	}
+
+	if results.Proposals == nil {
+		results.Proposals = []model.BudgetProposalResult{}
+	}
+
+	return results, nil
+}
+
 func generateID() string {
 	return time.Now().UTC().Format("20060102150405.000000")
 }

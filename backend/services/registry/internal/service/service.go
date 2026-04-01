@@ -174,6 +174,11 @@ func (s *Service) AddStaff(ctx context.Context, repID string, req *model.AddStaf
 	return staff, nil
 }
 
+// GetDashboard returns aggregated dashboard data for a representative.
+func (s *Service) GetDashboard(ctx context.Context, id string) (map[string]interface{}, error) {
+	return s.repo.GetDashboard(ctx, id)
+}
+
 // GetStaff retrieves all staff accounts for a representative.
 func (s *Service) GetStaff(ctx context.Context, repID string) (*model.StaffListResponse, error) {
 	staff, err := s.repo.GetStaffByRepID(ctx, repID)

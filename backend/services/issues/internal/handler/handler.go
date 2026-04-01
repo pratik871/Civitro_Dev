@@ -30,6 +30,7 @@ func (h *Handler) RegisterPublicRoutes(rg *gin.RouterGroup) {
 	issues := rg.Group("/issues")
 	{
 		issues.GET("/:id", h.GetIssue)
+		issues.GET("/boundary/:boundary_id", h.GetByBoundary)
 	}
 }
 

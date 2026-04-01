@@ -76,6 +76,13 @@ func main() {
 	authed.DELETE("/polls/:id/vote", h.RetractVote)
 	authed.DELETE("/polls/:id", h.DeletePoll)
 
+	// Participatory Budgeting routes
+	authed.POST("/polls/budgets/:boundary_id/vote", h.SubmitBudgetVote)
+
+	// Budget read routes (public with optional auth for user vote status)
+	public.GET("/polls/budgets/:boundary_id", h.ListBudgetProposals)
+	public.GET("/polls/budgets/:boundary_id/results", h.GetBudgetResults)
+
 	// Start HTTP server.
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", 8013),

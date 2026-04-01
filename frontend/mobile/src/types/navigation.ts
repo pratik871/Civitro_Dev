@@ -36,6 +36,9 @@ export type RootStackParamList = {
   Broadcasts: { orgId: string };
   Datamine: undefined;
   Heatmap: { boundaryId: string };
+  LeaderDashboard: { leaderId: string };
+  ExitPoll: undefined;
+  Budget: { boundaryId: string };
 };
 
 export type AuthStackParamList = {

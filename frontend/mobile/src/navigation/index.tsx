@@ -37,6 +37,9 @@ import { CreateOrgScreen } from '../screens/organizations/CreateOrgScreen';
 import { BroadcastsScreen } from '../screens/organizations/BroadcastsScreen';
 import { DatamineScreen } from '../screens/datamine/DatamineScreen';
 import { HeatmapScreen } from '../screens/datamine/HeatmapScreen';
+import { LeaderDashboardScreen } from '../screens/leader-dashboard/LeaderDashboardScreen';
+import { ExitPollScreen } from '../screens/polls/ExitPollScreen';
+import { BudgetScreen } from '../screens/budgets/BudgetScreen';
 import { useAuthStore } from '../stores/authStore';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { colors } from '../theme/colors';
@@ -391,6 +394,21 @@ export const RootNavigator: React.FC = () => {
               name="Heatmap"
               component={HeatmapScreen}
               options={{ headerShown: true, headerTitle: 'Issue Heatmap', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="LeaderDashboard"
+              component={LeaderDashboardScreen}
+              options={{ headerShown: true, headerTitle: 'Leader Dashboard', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="ExitPoll"
+              component={ExitPollScreen}
+              options={{ headerShown: true, headerTitle: 'Exit Polls', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
+            />
+            <Stack.Screen
+              name="Budget"
+              component={BudgetScreen}
+              options={{ headerShown: true, headerTitle: 'Participatory Budget', headerTintColor: colors.textPrimary, headerStyle: { backgroundColor: colors.background } }}
             />
           </>
         )}
