@@ -292,6 +292,7 @@ func (s *Service) GetProfile(ctx context.Context, userID string) (*model.Profile
 		Phone:             user.Phone,
 		Name:              user.Name,
 		Email:             user.Email,
+		AvatarURL:         user.AvatarURL,
 		Role:              user.Role,
 		VerificationLevel: user.VerificationLevel,
 		PreferredLanguage: user.PreferredLanguage,
@@ -308,6 +309,11 @@ func (s *Service) GetProfile(ctx context.Context, userID string) (*model.Profile
 // UpdateLanguage updates the user's preferred language.
 func (s *Service) UpdateLanguage(ctx context.Context, userID, language string) error {
 	return s.repo.UpdatePreferredLanguage(ctx, userID, language)
+}
+
+// UpdateAvatarURL updates the user's avatar URL.
+func (s *Service) UpdateAvatarURL(ctx context.Context, userID, avatarURL string) error {
+	return s.repo.UpdateAvatarURL(ctx, userID, avatarURL)
 }
 
 // UpdateProfile updates the user's name and/or email.

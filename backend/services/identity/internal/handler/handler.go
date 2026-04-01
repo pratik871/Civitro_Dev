@@ -1,11 +1,16 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/civitro/pkg/errors"
 	"github.com/civitro/pkg/middleware"
+	"github.com/civitro/pkg/storage"
 	"github.com/civitro/services/identity/internal/model"
 	"github.com/civitro/services/identity/internal/service"
 	"github.com/gin-gonic/gin"
@@ -47,6 +52,7 @@ func (h *Handler) RegisterProtectedRoutes(rg *gin.RouterGroup) {
 	{
 		auth.GET("/me", h.GetProfile)
 		auth.PUT("/profile", h.UpdateProfile)
+		auth.POST("/avatar", h.UploadAvatar)
 		auth.GET("/dashboard-stats", h.GetDashboardStats)
 		auth.PUT("/language", h.UpdateLanguage)
 		auth.PUT("/location", h.UpdateLocation)
@@ -153,6 +159,59 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// UploadAvatar handles POST /auth/avatar.
+func (h *Handler) UploadAvatar(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	file, header, err := c.Request.FormFile("avatar")
+	if err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("avatar file is required"))
+		return
+	}
+	defer file.Close()
+
+	ct := header.Header.Get("Content-Type")
+	if !strings.HasPrefix(ct, "image/") {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("file must be an image"))
+		return
+	}
+
+	if header.Size > 5<<20 {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("file too large (max 5MB)"))
+		return
+	}
+
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".jpg"
+	}
+	key := fmt.Sprintf("avatars/%s-%d%s", userID, time.Now().UnixNano(), ext)
+
+	s3, err := storage.S3(c.Request.Context())
+	if err != nil {
+		errors.HandleError(c, fmt.Errorf("storage unavailable: %w", err))
+		return
+	}
+
+	_, err = s3.Upload(c.Request.Context(), key, file, header.Size, ct)
+	if err != nil {
+		errors.HandleError(c, fmt.Errorf("failed to upload avatar: %w", err))
+		return
+	}
+
+	avatarURL := fmt.Sprintf("/media/%s", key)
+	if err := h.svc.UpdateAvatarURL(c.Request.Context(), userID, avatarURL); err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"avatar_url": avatarURL})
 }
 
 // GetDashboardStats handles GET /auth/dashboard-stats.

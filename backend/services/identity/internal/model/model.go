@@ -17,6 +17,7 @@ type User struct {
 	Phone             string            `json:"phone"`
 	Name              string            `json:"name"`
 	Email             string            `json:"email,omitempty"`
+	AvatarURL         string            `json:"avatar_url,omitempty"`
 	Role              string            `json:"role"`
 	VerificationLevel VerificationLevel `json:"verification_level"`
 	AadhaarHash       string            `json:"-"`
@@ -203,6 +204,7 @@ type ProfileResponse struct {
 	Phone             string            `json:"phone"`
 	Name              string            `json:"name"`
 	Email             string            `json:"email,omitempty"`
+	AvatarURL         string            `json:"avatar_url,omitempty"`
 	Role              string            `json:"role"`
 	VerificationLevel VerificationLevel `json:"verification_level"`
 	PreferredLanguage string            `json:"preferred_language"`

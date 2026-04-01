@@ -35,6 +35,7 @@ type Repository interface {
 	UpdateVerificationLevel(ctx context.Context, userID string, level model.VerificationLevel, aadhaarHash string) error
 	UpdatePreferredLanguage(ctx context.Context, userID string, language string) error
 	UpdateProfile(ctx context.Context, userID string, name, email *string) error
+	UpdateAvatarURL(ctx context.Context, userID, avatarURL string) error
 
 	// Refresh tokens
 	CreateRefreshToken(ctx context.Context, token *model.RefreshToken) error
@@ -102,12 +103,12 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *model.User) e
 // GetUserByPhone retrieves a user by their phone number.
 func (r *PostgresRepository) GetUserByPhone(ctx context.Context, phone string) (*model.User, error) {
 	query := `
-		SELECT id, phone, name, email, COALESCE(role, 'citizen'), verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at
+		SELECT id, phone, name, email, COALESCE(avatar_url, ''), COALESCE(role, 'citizen'), verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at
 		FROM users WHERE phone = $1
 	`
 	user := &model.User{}
 	err := r.pool.QueryRow(ctx, query, phone).Scan(
-		&user.ID, &user.Phone, &user.Name, &user.Email, &user.Role,
+		&user.ID, &user.Phone, &user.Name, &user.Email, &user.AvatarURL, &user.Role,
 		&user.VerificationLevel, &user.AadhaarHash, &user.DeviceFingerprint,
 		&user.PreferredLanguage,
 		&user.CreatedAt, &user.UpdatedAt,
@@ -124,12 +125,12 @@ func (r *PostgresRepository) GetUserByPhone(ctx context.Context, phone string) (
 // GetUserByID retrieves a user by their ID.
 func (r *PostgresRepository) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	query := `
-		SELECT id, phone, name, email, COALESCE(role, 'citizen'), verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at
+		SELECT id, phone, name, email, COALESCE(avatar_url, ''), COALESCE(role, 'citizen'), verification_level, aadhaar_hash, device_fingerprint, preferred_language, created_at, updated_at
 		FROM users WHERE id = $1
 	`
 	user := &model.User{}
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&user.ID, &user.Phone, &user.Name, &user.Email, &user.Role,
+		&user.ID, &user.Phone, &user.Name, &user.Email, &user.AvatarURL, &user.Role,
 		&user.VerificationLevel, &user.AadhaarHash, &user.DeviceFingerprint,
 		&user.PreferredLanguage,
 		&user.CreatedAt, &user.UpdatedAt,
@@ -210,6 +211,18 @@ func (r *PostgresRepository) UpdateProfile(ctx context.Context, userID string, n
 
 	query := fmt.Sprintf("UPDATE users SET %s WHERE id = $%d", strings.Join(setClauses, ", "), argIdx)
 	tag, err := r.pool.Exec(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) UpdateAvatarURL(ctx context.Context, userID, avatarURL string) error {
+	query := `UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2`
+	tag, err := r.pool.Exec(ctx, query, avatarURL, userID)
 	if err != nil {
 		return err
 	}

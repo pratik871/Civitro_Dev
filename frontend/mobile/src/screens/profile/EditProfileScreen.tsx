@@ -10,8 +10,10 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  ActionSheetIOS,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar } from '../../components/ui/Avatar';
@@ -27,9 +29,74 @@ export const EditProfileScreen: React.FC = () => {
 
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const hasChanges = name !== (user?.name || '') || email !== (user?.email || '');
+  const displayAvatar = avatarUri || user?.avatarUrl;
+
+  const pickImage = async (source: 'camera' | 'library') => {
+    const opts: ImagePicker.ImagePickerOptions = {
+      mediaTypes: 'images',
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    };
+
+    let result: ImagePicker.ImagePickerResult;
+    if (source === 'camera') {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) { Alert.alert('Permission needed', 'Camera access is required.'); return; }
+      result = await ImagePicker.launchCameraAsync(opts);
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync(opts);
+    }
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    setAvatarUri(asset.uri);
+    setUploadingAvatar(true);
+
+    try {
+      const form = new FormData();
+      form.append('avatar', {
+        uri: asset.uri,
+        type: asset.mimeType || 'image/jpeg',
+        name: asset.fileName || 'avatar.jpg',
+      } as any);
+
+      const res = await api.post('/api/v1/auth/avatar', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      await updateUser({ avatarUrl: res.data.avatar_url });
+    } catch (e: any) {
+      Alert.alert('Upload failed', e?.response?.data?.error?.message || 'Could not upload photo.');
+      setAvatarUri(null);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarPress = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: ['Cancel', 'Take Photo', 'Choose from Library'], cancelButtonIndex: 0 },
+        (index) => {
+          if (index === 1) pickImage('camera');
+          else if (index === 2) pickImage('library');
+        },
+      );
+    } else {
+      Alert.alert('Change Photo', '', [
+        { text: 'Take Photo', onPress: () => pickImage('camera') },
+        { text: 'Choose from Library', onPress: () => pickImage('library') },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim() || name.trim().length < 2) {
@@ -89,7 +156,28 @@ export const EditProfileScreen: React.FC = () => {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {/* Avatar */}
           <View style={styles.avatarSection}>
-            <Avatar name={name || 'User'} size={96} backgroundColor={colors.navy} />
+            <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
+              <View>
+                <Avatar
+                  name={name || 'User'}
+                  imageUrl={displayAvatar}
+                  size={96}
+                  backgroundColor={colors.navy}
+                />
+                {uploadingAvatar && (
+                  <View style={styles.avatarLoading}>
+                    <ActivityIndicator size="small" color="#FFF" />
+                  </View>
+                )}
+                <View style={styles.cameraIcon}>
+                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                    <Path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    <Circle cx={12} cy={13} r={4} stroke="#FFF" strokeWidth={2} />
+                  </Svg>
+                </View>
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.changePhotoText}>Tap to change photo</Text>
           </View>
 
           {/* Name */}
@@ -203,6 +291,32 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: 'center',
     paddingVertical: spacing.xl,
+  },
+  avatarLoading: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 48,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FF6B35',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  changePhotoText: {
+    fontSize: 13,
+    color: '#FF6B35',
+    fontWeight: '500',
+    marginTop: 8,
   },
   field: {
     marginBottom: spacing.lg,

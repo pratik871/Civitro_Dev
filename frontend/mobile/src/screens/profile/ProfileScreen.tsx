@@ -69,6 +69,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.profileHeader}>
         <Avatar
           name={user?.name || 'User'}
+          imageUrl={user?.avatarUrl}
           size={80}
           backgroundColor={colors.navy}
         />
