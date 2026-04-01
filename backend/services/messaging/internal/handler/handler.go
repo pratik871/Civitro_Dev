@@ -75,15 +75,11 @@ func (h *MessagingHandler) GetMessages(c *gin.Context) {
 }
 
 // GetConversations returns all conversations for the authenticated user.
-// GET /conversations?user_id=xxx
+// GET /conversations
 func (h *MessagingHandler) GetConversations(c *gin.Context) {
-	userID := c.Query("user_id")
+	userID := c.GetString("user_id")
 	if userID == "" {
-		// Fall back to auth context.
-		userID = c.GetString("user_id")
-	}
-	if userID == "" {
-		apperrors.AbortWithError(c, apperrors.ErrBadRequest.WithMessage("user_id is required"))
+		apperrors.AbortWithError(c, apperrors.ErrUnauthorized.WithMessage("user not authenticated"))
 		return
 	}
 

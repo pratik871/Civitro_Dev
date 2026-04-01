@@ -31,13 +31,14 @@ type Message struct {
 
 // ConversationPreview is a summary view of a conversation for listing.
 type ConversationPreview struct {
-	ConversationID string `json:"conversation_id"`
-	OtherUserID    string `json:"other_user_id"`
-	OtherUserName  string `json:"other_user_name"`
-	OtherUserRole  string `json:"other_user_role"`
-	LastMessage    string `json:"last_message"`
-	UnreadCount    int    `json:"unread_count"`
-	Online         bool   `json:"online"`
+	ConversationID string  `json:"conversation_id"`
+	OtherUserID    string  `json:"other_user_id"`
+	OtherUserName  string  `json:"other_user_name"`
+	OtherUserRole  string  `json:"other_user_role"`
+	LastMessage    string  `json:"last_message"`
+	LastMessageAt  *string `json:"last_message_at"`
+	UnreadCount    int     `json:"unread_count"`
+	Online         bool    `json:"online"`
 }
 
 // SendMessageRequest is the payload for sending a message.

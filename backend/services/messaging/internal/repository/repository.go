@@ -90,6 +90,7 @@ func (r *MessageRepository) GetConversations(ctx context.Context, userID string)
 		           (SELECT text FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1),
 		           ''
 		       ) AS last_message,
+		       (SELECT MAX(created_at)::text FROM messages WHERE conversation_id = c.id) AS last_message_at,
 		       COALESCE(
 		           (SELECT COUNT(*) FROM messages m
 		            WHERE m.conversation_id = c.id
@@ -117,7 +118,7 @@ func (r *MessageRepository) GetConversations(ctx context.Context, userID string)
 	for rows.Next() {
 		var p model.ConversationPreview
 		if err := rows.Scan(
-			&p.ConversationID, &p.LastMessage, &p.UnreadCount,
+			&p.ConversationID, &p.LastMessage, &p.LastMessageAt, &p.UnreadCount,
 			&p.OtherUserID, &p.OtherUserName, &p.OtherUserRole,
 		); err != nil {
 			return nil, err

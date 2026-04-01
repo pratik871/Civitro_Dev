@@ -129,9 +129,10 @@ export function useSendMessage() {
       conversationId: string;
       text: string;
     }) => {
+      if (!user?.id) throw new Error('Not authenticated');
       const res = await api.post<ChatMessage>('/api/v1/messages', {
         conversation_id: conversationId,
-        sender_id: user?.id ?? '',
+        sender_id: user.id,
         text,
       });
       return res;
@@ -156,11 +157,12 @@ export function useCreateConversation() {
 
   return useMutation({
     mutationFn: async ({ recipientId }: { recipientId: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
       const res = await api.post<CreateConversationResponse>(
         '/api/v1/conversations',
         {
           type: 'dm',
-          participants: [user?.id ?? '', recipientId],
+          participants: [user.id, recipientId],
         },
       );
       return res;
