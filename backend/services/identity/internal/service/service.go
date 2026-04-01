@@ -310,6 +310,14 @@ func (s *Service) UpdateLanguage(ctx context.Context, userID, language string) e
 	return s.repo.UpdatePreferredLanguage(ctx, userID, language)
 }
 
+// UpdateProfile updates the user's name and/or email.
+func (s *Service) UpdateProfile(ctx context.Context, userID string, req *model.UpdateProfileRequest) (*model.ProfileResponse, error) {
+	if err := s.repo.UpdateProfile(ctx, userID, req.Name, req.Email); err != nil {
+		return nil, err
+	}
+	return s.GetProfile(ctx, userID)
+}
+
 // UpdateLocation updates the user's GPS location, resolves boundaries via the geospatial service,
 // and stores the primary (most granular) boundary.
 func (s *Service) UpdateLocation(ctx context.Context, userID string, req *model.UpdateLocationRequest) (*model.UpdateLocationResponse, error) {

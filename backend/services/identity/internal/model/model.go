@@ -191,6 +191,12 @@ type WardMood struct {
 	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
+// UpdateProfileRequest is the request body for updating user profile.
+type UpdateProfileRequest struct {
+	Name  *string `json:"name,omitempty"`
+	Email *string `json:"email,omitempty"`
+}
+
 // ProfileResponse is the response for user profile retrieval.
 type ProfileResponse struct {
 	ID                string            `json:"id"`

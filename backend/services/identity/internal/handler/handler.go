@@ -46,6 +46,7 @@ func (h *Handler) RegisterProtectedRoutes(rg *gin.RouterGroup) {
 	auth.Use(middleware.JWTAuth())
 	{
 		auth.GET("/me", h.GetProfile)
+		auth.PUT("/profile", h.UpdateProfile)
 		auth.GET("/dashboard-stats", h.GetDashboardStats)
 		auth.PUT("/language", h.UpdateLanguage)
 		auth.PUT("/location", h.UpdateLocation)
@@ -113,6 +114,39 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	}
 
 	resp, err := h.svc.GetProfile(c.Request.Context(), userID)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// UpdateProfile handles PUT /auth/profile.
+func (h *Handler) UpdateProfile(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	var req model.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("invalid request body"))
+		return
+	}
+
+	if req.Name == nil && req.Email == nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("at least one field must be provided"))
+		return
+	}
+
+	if req.Name != nil && len(*req.Name) < 2 {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("name must be at least 2 characters"))
+		return
+	}
+
+	resp, err := h.svc.UpdateProfile(c.Request.Context(), userID, &req)
 	if err != nil {
 		errors.HandleError(c, err)
 		return

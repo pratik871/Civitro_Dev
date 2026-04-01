@@ -79,6 +79,17 @@ export const ProfileScreen: React.FC = () => {
             {[user?.ward, user?.constituency].filter(Boolean).join(' | ')}
           </Text>
         )}
+        <TouchableOpacity
+          style={styles.editProfileBtn}
+          onPress={() => navigation.navigate('EditProfile' as any)}
+          activeOpacity={0.7}
+        >
+          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+            <Path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#FF6B35" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#FF6B35" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+          <Text style={styles.editProfileText}>Edit Profile</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Civic Score */}
@@ -261,6 +272,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     marginTop: spacing.xs,
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#FF6B35',
+    backgroundColor: '#FFF7F3',
+  },
+  editProfileText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF6B35',
+    marginLeft: 6,
   },
   scoreCard: {
     marginBottom: spacing.md,

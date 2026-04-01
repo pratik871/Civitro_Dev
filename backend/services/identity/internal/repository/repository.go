@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,7 @@ type Repository interface {
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	UpdateVerificationLevel(ctx context.Context, userID string, level model.VerificationLevel, aadhaarHash string) error
 	UpdatePreferredLanguage(ctx context.Context, userID string, language string) error
+	UpdateProfile(ctx context.Context, userID string, name, email *string) error
 
 	// Refresh tokens
 	CreateRefreshToken(ctx context.Context, token *model.RefreshToken) error
@@ -176,6 +178,38 @@ func (r *PostgresRepository) UpdateVerificationLevel(ctx context.Context, userID
 func (r *PostgresRepository) UpdatePreferredLanguage(ctx context.Context, userID string, language string) error {
 	query := `UPDATE users SET preferred_language = $1, updated_at = NOW() WHERE id = $2`
 	tag, err := r.pool.Exec(ctx, query, language, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) UpdateProfile(ctx context.Context, userID string, name, email *string) error {
+	if name == nil && email == nil {
+		return nil
+	}
+	setClauses := []string{}
+	args := []interface{}{}
+	argIdx := 1
+
+	if name != nil {
+		setClauses = append(setClauses, fmt.Sprintf("name = $%d", argIdx))
+		args = append(args, *name)
+		argIdx++
+	}
+	if email != nil {
+		setClauses = append(setClauses, fmt.Sprintf("email = $%d", argIdx))
+		args = append(args, *email)
+		argIdx++
+	}
+	setClauses = append(setClauses, "updated_at = NOW()")
+	args = append(args, userID)
+
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = $%d", strings.Join(setClauses, ", "), argIdx)
+	tag, err := r.pool.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
