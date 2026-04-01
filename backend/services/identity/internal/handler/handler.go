@@ -53,6 +53,7 @@ func (h *Handler) RegisterProtectedRoutes(rg *gin.RouterGroup) {
 		auth.GET("/me", h.GetProfile)
 		auth.PUT("/profile", h.UpdateProfile)
 		auth.POST("/avatar", h.UploadAvatar)
+		auth.PUT("/push-token", h.RegisterPushToken)
 		auth.GET("/dashboard-stats", h.GetDashboardStats)
 		auth.PUT("/language", h.UpdateLanguage)
 		auth.PUT("/location", h.UpdateLocation)
@@ -212,6 +213,28 @@ func (h *Handler) UploadAvatar(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"avatar_url": avatarURL})
+}
+
+// RegisterPushToken handles PUT /auth/push-token.
+func (h *Handler) RegisterPushToken(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		errors.AbortWithError(c, errors.ErrUnauthorized.WithMessage("user not authenticated"))
+		return
+	}
+
+	var req model.RegisterPushTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errors.AbortWithError(c, errors.ErrBadRequest.WithMessage("invalid request body: "+err.Error()))
+		return
+	}
+
+	if err := h.svc.RegisterPushToken(c.Request.Context(), userID, req.Token, req.Platform); err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "push token registered"})
 }
 
 // GetDashboardStats handles GET /auth/dashboard-stats.

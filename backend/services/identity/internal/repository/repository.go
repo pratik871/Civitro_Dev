@@ -66,6 +66,9 @@ type Repository interface {
 
 	// Promises
 	ListPromises(ctx context.Context) ([]map[string]interface{}, error)
+
+	// Push tokens
+	UpsertPushToken(ctx context.Context, userID, token, platform string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -962,4 +965,21 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 	}
 
 	return stats, nil
+}
+
+// ---------------------------------------------------------------------------
+// Push Tokens
+// ---------------------------------------------------------------------------
+
+// UpsertPushToken inserts or updates a push notification token for a user.
+func (r *PostgresRepository) UpsertPushToken(ctx context.Context, userID, token, platform string) error {
+	query := `
+		INSERT INTO push_tokens (user_id, token, platform, created_at, updated_at)
+		VALUES ($1, $2, $3, NOW(), NOW())
+		ON CONFLICT (user_id, token) DO UPDATE SET
+			platform = EXCLUDED.platform,
+			updated_at = NOW()
+	`
+	_, err := r.pool.Exec(ctx, query, userID, token, platform)
+	return err
 }

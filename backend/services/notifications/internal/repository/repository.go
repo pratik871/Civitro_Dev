@@ -160,6 +160,28 @@ func (r *Repository) CountPushToday(ctx context.Context, userID string) (int64, 
 	return count, err
 }
 
+// GetPushTokens retrieves all push notification tokens for a user.
+func (r *Repository) GetPushTokens(ctx context.Context, userID string) ([]string, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT token FROM push_tokens WHERE user_id = $1 ORDER BY updated_at DESC`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tokens []string
+	for rows.Next() {
+		var token string
+		if err := rows.Scan(&token); err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token)
+	}
+	return tokens, nil
+}
+
 // itoa converts an int to a string (simple helper to avoid importing strconv).
 func itoa(n int) string {
 	if n < 10 {

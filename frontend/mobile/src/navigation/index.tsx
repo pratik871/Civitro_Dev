@@ -30,6 +30,7 @@ import { ActionDetailScreen } from '../screens/actions/ActionDetailScreen';
 import { CreateActionScreen } from '../screens/actions/CreateActionScreen';
 import { ActionTimelineScreen } from '../screens/actions/ActionTimelineScreen';
 import { useAuthStore } from '../stores/authStore';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { colors } from '../theme/colors';
 import { useSettingsStore } from '../stores/settingsStore';
 import type { RootStackParamList } from './types';
@@ -56,6 +57,9 @@ export const RootNavigator: React.FC = () => {
   const { isAuthenticated, isInitialized, initialize, pendingDeepLink, setPendingDeepLink } = useAuthStore();
   const darkMode = useSettingsStore(state => state.darkMode);
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+
+  // Register push notification token when authenticated
+  usePushNotifications();
 
   useEffect(() => {
     initialize();

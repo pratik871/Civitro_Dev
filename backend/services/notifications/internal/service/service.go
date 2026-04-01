@@ -1,9 +1,12 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/civitro/pkg/logger"
@@ -122,9 +125,9 @@ func (s *Service) SendNotification(ctx context.Context, req model.SendNotificati
 		return err
 	}
 
-	// Console provider for local dev: print to stdout.
+	// Deliver push notification via Expo Push API.
 	if pushCount < model.MaxPushPerDay {
-		s.deliverPush(notification)
+		s.deliverPush(ctx, notification)
 	}
 
 	return nil
@@ -144,10 +147,76 @@ func (s *Service) GetUnreadCount(ctx context.Context, userID string) (*model.Unr
 	}, nil
 }
 
-// deliverPush is the console push provider for local development.
-func (s *Service) deliverPush(n *model.Notification) {
-	fmt.Printf("[PUSH] user=%s type=%s title=%q body=%q\n",
-		n.UserID, n.Type, n.Title, n.Body)
+// expoPushEndpoint is the Expo Push API URL.
+const expoPushEndpoint = "https://exp.host/--/api/v2/push/send"
+
+// expoPushMessage represents a single message payload for the Expo Push API.
+type expoPushMessage struct {
+	To    string                 `json:"to"`
+	Title string                 `json:"title"`
+	Body  string                 `json:"body"`
+	Data  map[string]interface{} `json:"data,omitempty"`
+	Sound string                 `json:"sound,omitempty"`
+}
+
+// deliverPush sends a push notification via the Expo Push API.
+// Falls back to console logging if no tokens are found or the API call fails.
+func (s *Service) deliverPush(ctx context.Context, n *model.Notification) {
+	tokens, err := s.repo.GetPushTokens(ctx, n.UserID)
+	if err != nil {
+		logger.Warn().Err(err).Str("user_id", n.UserID).Msg("failed to fetch push tokens, falling back to console")
+		fmt.Printf("[PUSH] user=%s type=%s title=%q body=%q\n", n.UserID, n.Type, n.Title, n.Body)
+		return
+	}
+
+	if len(tokens) == 0 {
+		logger.Info().Str("user_id", n.UserID).Msg("no push tokens registered, skipping push delivery")
+		return
+	}
+
+	for _, token := range tokens {
+		msg := expoPushMessage{
+			To:    token,
+			Title: n.Title,
+			Body:  n.Body,
+			Data:  n.Data,
+			Sound: "default",
+		}
+
+		payload, err := json.Marshal(msg)
+		if err != nil {
+			logger.Error().Err(err).Str("token", token).Msg("failed to marshal push message")
+			continue
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, expoPushEndpoint, bytes.NewReader(payload))
+		if err != nil {
+			logger.Error().Err(err).Str("token", token).Msg("failed to create push request")
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			logger.Error().Err(err).Str("token", token).Msg("failed to send push notification")
+			continue
+		}
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			logger.Warn().
+				Int("status", resp.StatusCode).
+				Str("token", token).
+				Str("user_id", n.UserID).
+				Msg("Expo Push API returned non-200 status")
+		} else {
+			logger.Info().
+				Str("user_id", n.UserID).
+				Str("type", string(n.Type)).
+				Msg("push notification delivered via Expo")
+		}
+	}
 }
 
 // generateID creates a UUID v4 for notification entries.

@@ -478,6 +478,18 @@ func (s *Service) VerifyAadhaar(ctx context.Context, userID string, zipData []by
 	}, nil
 }
 
+// RegisterPushToken stores or updates a push notification token for a user.
+func (s *Service) RegisterPushToken(ctx context.Context, userID, token, platform string) error {
+	if token == "" {
+		return errors.New("push token is required")
+	}
+	validPlatforms := map[string]bool{"expo": true, "fcm": true, "apns": true}
+	if !validPlatforms[platform] {
+		return errors.New("platform must be one of: expo, fcm, apns")
+	}
+	return s.repo.UpsertPushToken(ctx, userID, token, platform)
+}
+
 // ListPromises returns all promises with leader names.
 func (s *Service) ListPromises(ctx context.Context) ([]map[string]interface{}, error) {
 	return s.repo.ListPromises(ctx)
