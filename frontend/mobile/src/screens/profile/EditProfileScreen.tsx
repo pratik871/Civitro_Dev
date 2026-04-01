@@ -67,13 +67,11 @@ export const EditProfileScreen: React.FC = () => {
         name: asset.fileName || 'avatar.jpg',
       } as any);
 
-      const res = await api.post('/api/v1/auth/avatar', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.upload<{ avatar_url: string }>('/api/v1/auth/avatar', form);
 
-      await updateUser({ avatarUrl: res.data.avatar_url });
+      await updateUser({ avatarUrl: res.avatar_url });
     } catch (e: any) {
-      Alert.alert('Upload failed', e?.response?.data?.error?.message || 'Could not upload photo.');
+      Alert.alert('Upload failed', e?.message || 'Could not upload photo.');
       setAvatarUri(null);
     } finally {
       setUploadingAvatar(false);
@@ -110,8 +108,7 @@ export const EditProfileScreen: React.FC = () => {
       if (name !== user?.name) body.name = name.trim();
       if (email !== (user?.email || '')) body.email = email.trim();
 
-      const res = await api.put('/api/v1/auth/profile', body);
-      const data = res.data;
+      const data = await api.put<{ name: string; email: string }>('/api/v1/auth/profile', body);
 
       await updateUser({
         name: data.name ?? name.trim(),
@@ -120,7 +117,7 @@ export const EditProfileScreen: React.FC = () => {
 
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.error?.message || 'Could not update profile.');
+      Alert.alert('Error', e?.message || 'Could not update profile.');
     } finally {
       setSaving(false);
     }
