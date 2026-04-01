@@ -22,7 +22,7 @@
       "package": "in.civitro.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1A365D"
+        "backgroundColor": "#ffffff"
       },
       "intentFilters": [
         {
@@ -50,7 +50,7 @@
     },
     "ios": {
       "bundleIdentifier": "in.civitro.app",
-      "buildNumber": "24",
+      "buildNumber": "25",
       "supportsTablet": true,
       "associatedDomains": [
         "applinks:civitro.com"
@@ -66,7 +66,8 @@
       "expo-asset",
       "expo-font",
       "expo-location",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {
