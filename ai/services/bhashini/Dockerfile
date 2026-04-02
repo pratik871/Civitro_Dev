@@ -26,13 +26,8 @@ FROM builder AS downloader
 ARG HF_TOKEN
 ENV HF_TOKEN=${HF_TOKEN}
 
-RUN python -c " \
-from huggingface_hub import snapshot_download; \
-snapshot_download('ai4bharat/indictrans2-en-indic-dist-200M', token='${HF_TOKEN}', cache_dir='/models'); \
-snapshot_download('ai4bharat/indictrans2-indic-en-dist-200M', token='${HF_TOKEN}', cache_dir='/models'); \
-snapshot_download('ai4bharat/indictrans2-indic-indic-dist-320M', token='${HF_TOKEN}', cache_dir='/models'); \
-print('All 3 models downloaded successfully') \
-"
+COPY services/bhashini/download_models.py /tmp/download_models.py
+RUN python /tmp/download_models.py
 
 # ---------- runtime (no token, fully offline) ----------
 FROM python:3.11-slim
