@@ -16,9 +16,9 @@ RUN pip install --no-cache-dir \
     nltk>=3.8.0
 
 # Install IndicTransToolkit from GitHub (handles preprocessing/postprocessing)
-RUN apt-get update && apt-get install -y --no-install-recommends git && \
+RUN apt-get update && apt-get install -y --no-install-recommends git build-essential && \
     pip install --no-cache-dir git+https://github.com/VarunGumma/IndicTransToolkit.git && \
-    apt-get remove -y git && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+    apt-get remove -y git build-essential && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Pre-download nltk punkt tokenizer (needed by IndicTransToolkit)
 RUN python -c "import nltk; nltk.download('punkt', download_dir='/usr/share/nltk_data'); nltk.download('punkt_tab', download_dir='/usr/share/nltk_data')"
