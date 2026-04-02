@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir \
     transformers>=4.38.0 \
     sentencepiece>=0.2.0 \
     protobuf>=4.25.0 \
-    IndicTransToolkit>=0.0.2
+    huggingface_hub>=0.20.0
 
 # Install FastAPI runtime
 RUN pip install --no-cache-dir \
@@ -20,7 +20,21 @@ RUN pip install --no-cache-dir \
     "uvicorn[standard]>=0.30.0" \
     pydantic>=2.10.0
 
-# ---------- runtime ----------
+# ---------- download models (build-time only, token not stored in final image) ----------
+FROM builder AS downloader
+
+ARG HF_TOKEN
+ENV HF_TOKEN=${HF_TOKEN}
+
+RUN python -c " \
+from huggingface_hub import snapshot_download; \
+snapshot_download('ai4bharat/indictrans2-en-indic-dist-200M', token='${HF_TOKEN}', cache_dir='/models'); \
+snapshot_download('ai4bharat/indictrans2-indic-en-dist-200M', token='${HF_TOKEN}', cache_dir='/models'); \
+snapshot_download('ai4bharat/indictrans2-indic-indic-dist-320M', token='${HF_TOKEN}', cache_dir='/models'); \
+print('All 3 models downloaded successfully') \
+"
+
+# ---------- runtime (no token, fully offline) ----------
 FROM python:3.11-slim
 
 RUN adduser --disabled-password --gecos "" appuser
@@ -30,12 +44,14 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Bake models into image — no runtime downloads needed
+COPY --from=downloader /models /models
+
 COPY services/bhashini/app /app/app
 
-# Models volume — HuggingFace models cached here across restarts
-VOLUME /models
 ENV HF_HOME=/models
 ENV TRANSFORMERS_CACHE=/models
+ENV HF_HUB_OFFLINE=1
 ENV TORCH_NUM_THREADS=2
 
 USER appuser

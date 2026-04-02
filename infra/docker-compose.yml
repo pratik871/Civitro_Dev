@@ -11,7 +11,6 @@ volumes:
   timescaledb-data:
   minio-data:
   ollama-data:
-  bhashini-models:
 
 services:
   # ── PostgreSQL with PostGIS ──────────────────────────────────
@@ -1028,6 +1027,8 @@ services:
     build:
       context: ../ai
       dockerfile: services/bhashini/Dockerfile
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
     container_name: civitro-bhashini
     restart: unless-stopped
     profiles: ["wave3"]
@@ -1035,11 +1036,8 @@ services:
       - "8025:8025"
     environment:
       - APP_ENV=docker
-      - HF_HOME=/models
-      - TRANSFORMERS_CACHE=/models
+      - HF_HUB_OFFLINE=1
       - TORCH_NUM_THREADS=2
-    volumes:
-      - bhashini-models:/models
     deploy:
       resources:
         limits:
