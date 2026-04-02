@@ -279,7 +279,7 @@ class BhashiniNMTService:
         if tgt_flores is None:
             raise ValueError(f"Unsupported target language: {target_lang}")
 
-        # Pre-process with IndicProcessor if available
+        # Pre-process: IndicTrans2 tokenizer expects language-tagged input
         if self._ip is not None:
             processed_texts = self._ip.preprocess_batch(
                 texts,
@@ -287,7 +287,8 @@ class BhashiniNMTService:
                 tgt_lang=tgt_flores,
             )
         else:
-            processed_texts = texts
+            # Without IndicTransToolkit, manually add language tags
+            processed_texts = [f"{src_flores} {t}" for t in texts]
 
         # Tokenize
         inputs = tokenizer(
