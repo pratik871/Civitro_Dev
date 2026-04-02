@@ -391,9 +391,9 @@ export const HomeScreen: React.FC = () => {
               <Circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="525" cy="259" r="33" />
               <Circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="765" cy="259" r="33" />
             </Svg>
-            <Text style={styles.taglineText}>{t('home.democracyTagline', 'DEMOCRACY')}</Text>
+            <Text style={styles.taglineText}>DEMOCRACY</Text>
             <Text style={styles.taglineDot}>{'\u2022'}</Text>
-            <Text style={styles.taglineText}>{t('home.youShape', 'YOU SHAPE')}</Text>
+            <Text style={styles.taglineText}>YOU SHAPE</Text>
             <Text style={styles.taglineTM}>
               <Text style={styles.taglineTMDot}>{'.'}</Text>{'TM'}
             </Text>
@@ -789,7 +789,7 @@ export const HomeScreen: React.FC = () => {
             <Path d="M20 6L9 17l-5-5" stroke="#9CA3AF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
           <Text style={styles.endOfFeedText}>{t('home.allCaughtUp', "You're all caught up")}</Text>
-          <Text style={styles.endOfFeedTagline}>{t('home.democracyYouShape', 'Democracy. You Shape.')}{'\u2122'}</Text>
+          <Text style={styles.endOfFeedTagline}>Democracy. You Shape.{'\u2122'}</Text>
         </View>
 
         {/* Bottom spacer for FAB clearance */}
