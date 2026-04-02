@@ -395,5 +395,20 @@
     "madeInIndia": "भारत में निर्मित",
     "lastUpdated": "अंतिम अपडेट",
     "version": "संस्करण"
+  },
+  "actions": {
+    "communityActions": "सामुदायिक कार्रवाई",
+    "supporters": "समर्थक",
+    "ofGoal": "लक्ष्य का",
+    "incidents": "घटनाएं",
+    "locations": "स्थान",
+    "impact": "प्रभाव",
+    "support": "समर्थन",
+    "supported": "समर्थित",
+    "share": "शेयर"
+  },
+  "dashboard": {
+    "wardMood": "वार्ड मूड",
+    "weekTrend": "7-दिन का रुझान"
   }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -55,6 +56,7 @@ const ActionCard: React.FC<{
   onSupport?: () => void;
   onShare?: () => void;
 }> = ({ action, onPress, onSupport, onShare }) => {
+  const { t } = useTranslation();
   const [supported, setSupported] = React.useState(action.hasSupported ?? false);
   const badgeStyle = BADGE_STYLES[action.badgeType] ?? BADGE_STYLES.new;
   const language = useSettingsStore(state => state.language);
@@ -100,7 +102,7 @@ const ActionCard: React.FC<{
           adjustsFontSizeToFit
           minimumFontScale={0.7}
         >
-          {action.supporters} supporters
+          {action.supporters} {t('actions.supporters', 'supporters')}
         </Text>
         <Text
           style={styles.goal}
@@ -108,7 +110,7 @@ const ActionCard: React.FC<{
           adjustsFontSizeToFit
           minimumFontScale={0.7}
         >
-          {action.goalPercent}% of goal
+          {action.goalPercent}% {t('actions.ofGoal', 'of goal')}
         </Text>
       </View>
 
@@ -120,7 +122,7 @@ const ActionCard: React.FC<{
             <Rect x={1} y={1} width={10} height={10} rx={1} stroke={colors.textMuted} strokeWidth={1.5} />
           </Svg>
           <Text style={styles.evCount}>{action.incidents}</Text>
-          <Text style={styles.evLabel}>incidents</Text>
+          <Text style={styles.evLabel}>{t('actions.incidents', 'incidents')}</Text>
         </View>
         <View style={styles.evidenceItem}>
           <Svg viewBox="0 0 12 12" width={12} height={12} fill="none">
@@ -133,7 +135,7 @@ const ActionCard: React.FC<{
             <Circle cx={6} cy={6} r={1.5} stroke={colors.textMuted} strokeWidth={1.5} />
           </Svg>
           <Text style={styles.evCount}>{action.locations}</Text>
-          <Text style={styles.evLabel}>locations</Text>
+          <Text style={styles.evLabel}>{t('actions.locations', 'locations')}</Text>
         </View>
         <View style={styles.evidenceItem}>
           <Svg viewBox="0 0 12 12" width={12} height={12} fill="none">
@@ -147,7 +149,7 @@ const ActionCard: React.FC<{
           >
             {action.impactLabel}
           </Text>
-          <Text style={styles.evLabel}>impact</Text>
+          <Text style={styles.evLabel}>{t('actions.impact', 'impact')}</Text>
         </View>
       </View>
 
@@ -167,7 +169,7 @@ const ActionCard: React.FC<{
               <Path d="M7 1v12M1 7h12" stroke="white" strokeWidth={2} strokeLinecap="round" />
             </Svg>
           )}
-          <Text style={styles.supportBtnText}>{supported ? 'Supported' : 'Support'}</Text>
+          <Text style={styles.supportBtnText}>{supported ? t('actions.supported', 'Supported') : t('actions.support', 'Support')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.shareBtn} onPress={(e) => { e.stopPropagation(); onShare?.(); }} activeOpacity={0.7}>
           <Svg viewBox="0 0 14 14" width={14} height={14} fill="none">
@@ -176,7 +178,7 @@ const ActionCard: React.FC<{
             <Circle cx={11} cy={11} r={2} stroke={colors.textSecondary} strokeWidth={1.5} />
             <Path d="M5.5 6l4-2M5.5 8l4 2" stroke={colors.textSecondary} strokeWidth={1.5} strokeLinecap="round" />
           </Svg>
-          <Text style={styles.shareBtnText}>Share</Text>
+          <Text style={styles.shareBtnText}>{t('actions.share', 'Share')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -203,12 +205,13 @@ export const CommunityActionsSection: React.FC<CommunityActionCardProps> = ({
   onShare,
   onSeeAll,
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Community Actions</Text>
+        <Text style={styles.sectionTitle}>{t('actions.communityActions', 'Community Actions')}</Text>
         <TouchableOpacity onPress={onSeeAll} activeOpacity={0.7}>
-          <Text style={styles.seeAll}>See All</Text>
+          <Text style={styles.seeAll}>{t('common.seeAll', 'See All')}</Text>
         </TouchableOpacity>
       </View>
       <ScrollView
