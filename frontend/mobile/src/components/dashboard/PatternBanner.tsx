@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
-import api from '../../lib/api';
+import { translateCached } from '../../lib/translationCache';
 
 const SAFFRON = '#FF6B35';
 const SAFFRON_LIGHT = '#FFF3ED';
@@ -40,11 +40,7 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
 
   useEffect(() => {
     if (language === 'en' || !description) { setTranslatedDesc(''); return; }
-    api.post<{ translated_text: string }>('/api/v1/translate', {
-      text: description,
-      source_language: 'en',
-      target_language: language,
-    }).then(res => setTranslatedDesc(res.translated_text)).catch(() => {});
+    translateCached(description, language).then(setTranslatedDesc);
   }, [language, description]);
 
   const renderStatIcon = (icon: string) => {

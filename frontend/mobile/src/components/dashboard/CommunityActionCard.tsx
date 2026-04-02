@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
-import api from '../../lib/api';
+import { translateCached } from '../../lib/translationCache';
 
 const SAFFRON = '#FF6B35';
 
@@ -64,11 +64,7 @@ const ActionCard: React.FC<{
 
   useEffect(() => {
     if (language === 'en' || !action.title) { setTranslatedTitle(''); return; }
-    api.post<{ translated_text: string }>('/api/v1/translate', {
-      text: action.title,
-      source_language: 'en',
-      target_language: language,
-    }).then(res => setTranslatedTitle(res.translated_text)).catch(() => {});
+    translateCached(action.title, language).then(setTranslatedTitle);
   }, [language, action.title]);
 
   return (

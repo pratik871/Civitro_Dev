@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
-import api from '../../lib/api';
+import { batchTranslate } from '../../lib/translationCache';
 import type { WardMoodData } from '../../hooks/useWardMood';
 
 const NAVY = '#0B1426';
@@ -71,7 +71,7 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
   const contextTemplate = MOOD_CONTEXT[data.mood] ?? MOOD_CONTEXT.concerned;
   const context = contextTemplate.replace('{topic}', topTopic?.name ?? 'general');
 
-  // Auto-translate when language is not English
+  // Auto-translate all texts in a single batch call + cache
   useEffect(() => {
     if (language === 'en') {
       setTranslatedTopics({});
@@ -80,29 +80,13 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
       return;
     }
 
-    // Translate mood label
-    api.post<{ translated_text: string }>('/api/v1/translate', {
-      text: capitalize(data.mood),
-      source_language: 'en',
-      target_language: language,
-    }).then(res => setTranslatedMood(res.translated_text)).catch(() => {});
-
-    // Translate context
-    api.post<{ translated_text: string }>('/api/v1/translate', {
-      text: context,
-      source_language: 'en',
-      target_language: language,
-    }).then(res => setTranslatedContext(res.translated_text)).catch(() => {});
-
-    // Translate topic names
-    data.topics.forEach(topic => {
-      api.post<{ translated_text: string }>('/api/v1/translate', {
-        text: topic.name,
-        source_language: 'en',
-        target_language: language,
-      }).then(res => {
-        setTranslatedTopics(prev => ({ ...prev, [topic.name]: res.translated_text }));
-      }).catch(() => {});
+    const allTexts = [capitalize(data.mood), context, ...data.topics.map(t => t.name)];
+    batchTranslate(allTexts, language).then(results => {
+      setTranslatedMood(results[capitalize(data.mood)] || '');
+      setTranslatedContext(results[context] || '');
+      const topicMap: Record<string, string> = {};
+      data.topics.forEach(t => { topicMap[t.name] = results[t.name] || ''; });
+      setTranslatedTopics(topicMap);
     });
   }, [language, data.mood, data.topics.length]);
 

@@ -4,7 +4,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useSettingsStore } from '../../stores/settingsStore';
-import api from '../../lib/api';
+import { translateCached } from '../../lib/translationCache';
 import type { Issue, IssueCategory, IssueStatus } from '../../types/issue';
 
 const SAFFRON = '#FF6B35';
@@ -161,11 +161,7 @@ export const IssueFeedCard: React.FC<IssueFeedCardProps> = ({
 
   useEffect(() => {
     if (language === 'en' || !issue.title) { setTranslatedTitle(''); return; }
-    api.post<{ translated_text: string }>('/api/v1/translate', {
-      text: issue.title,
-      source_language: 'auto',
-      target_language: language,
-    }).then(res => setTranslatedTitle(res.translated_text)).catch(() => {});
+    translateCached(issue.title, language, 'auto').then(setTranslatedTitle);
   }, [language, issue.title]);
 
   // Time ago
