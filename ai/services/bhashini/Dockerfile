@@ -9,11 +9,10 @@ RUN pip install --no-cache-dir \
 
 # Install IndicTransToolkit and dependencies
 RUN pip install --no-cache-dir \
-    transformers>=4.38.0 \
+    transformers==4.44.2 \
     sentencepiece>=0.2.0 \
     protobuf>=4.25.0 \
-    huggingface_hub>=0.20.0 \
-    optimum>=1.17.0
+    huggingface_hub>=0.20.0
 
 # Install FastAPI runtime
 RUN pip install --no-cache-dir \
