@@ -13,7 +13,7 @@ import Svg, { Circle, Path, Line } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { transliterateName } from '../../lib/transliterate';
+import { transliterateName, translateTitle } from '../../lib/transliterate';
 import {
   GOVERNANCE_TIERS,
   TIER_LEVEL_COLORS,
@@ -203,6 +203,7 @@ interface RepCardProps {
 
 const RepCard: React.FC<RepCardProps> = ({ rep, translitName, onMessage, onRate, onViewIssues }) => {
   const { t } = useTranslation();
+  const language = useSettingsStore(state => state.language);
   const tier = GOVERNANCE_TIERS.find(t => t.key === rep.tierKey);
   if (!tier) return null;
   const levelColors = TIER_LEVEL_COLORS[tier.level];
@@ -227,7 +228,7 @@ const RepCard: React.FC<RepCardProps> = ({ rep, translitName, onMessage, onRate,
 
       {/* Name & title */}
       <Text style={styles.repName}>{translitName || rep.name}</Text>
-      <Text style={styles.repTitle}>{rep.title}</Text>
+      <Text style={styles.repTitle}>{translateTitle(rep.title, language)}</Text>
 
       {/* Meta pills */}
       <View style={styles.metaRow}>
@@ -261,7 +262,7 @@ const RepCard: React.FC<RepCardProps> = ({ rep, translitName, onMessage, onRate,
         )}
         {rep.issuesLabel && (
           <View style={[styles.pill, { backgroundColor: colors.borderLight }]}>
-            <Text style={[styles.pillText, { color: colors.textSecondary }]}>{rep.issuesLabel}</Text>
+            <Text style={[styles.pillText, { color: colors.textSecondary }]}>{translateTitle(rep.issuesLabel!, language)}</Text>
           </View>
         )}
       </View>

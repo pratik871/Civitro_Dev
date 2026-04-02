@@ -60,6 +60,83 @@ const MARATHI_NAMES: Record<string, string> = {
   pawar: 'पवार', more: 'मोरे', chavan: 'चव्हाण',
 };
 
+// Common governance/political terms Hindi translations
+const TITLE_TERMS_HI: Record<string, string> = {
+  'ward councillor': 'वार्ड पार्षद',
+  'mayor': 'महापौर',
+  'district collector': 'जिला कलेक्टर',
+  'mla': 'विधायक',
+  'mp': 'सांसद',
+  'chief minister': 'मुख्यमंत्री',
+  'prime minister': 'प्रधानमंत्री',
+  'ministry': 'मंत्रालय',
+  'minister': 'मंत्री',
+  'government': 'सरकार',
+  'govt.': 'सरकार',
+  'govt': 'सरकार',
+  'constituency': 'निर्वाचन क्षेत्र',
+  'ward': 'वार्ड',
+  'appointed': 'नियुक्त',
+  'elected': 'निर्वाचित',
+  'terminal escalation': 'अंतिम वृद्धि',
+  'public record': 'सार्वजनिक रिकॉर्ड',
+  'water supply': 'जल आपूर्ति',
+  'sanitation': 'स्वच्छता',
+  'of india': 'भारत की',
+  'of maharashtra': 'महाराष्ट्र की',
+  'mumbai': 'मुंबई',
+  'mumbai suburban': 'मुंबई उपनगरीय',
+  'min.': 'मंत्री',
+};
+
+const TITLE_TERMS_MR: Record<string, string> = {
+  'ward councillor': 'नगरसेवक',
+  'mayor': 'महापौर',
+  'district collector': 'जिल्हाधिकारी',
+  'mla': 'आमदार',
+  'mp': 'खासदार',
+  'chief minister': 'मुख्यमंत्री',
+  'prime minister': 'पंतप्रधान',
+  'ministry': 'मंत्रालय',
+  'minister': 'मंत्री',
+  'government': 'शासन',
+  'govt.': 'शासन',
+  'govt': 'शासन',
+  'constituency': 'मतदारसंघ',
+  'ward': 'प्रभाग',
+  'appointed': 'नियुक्त',
+  'elected': 'निर्वाचित',
+  'water supply': 'पाणीपुरवठा',
+  'sanitation': 'स्वच्छता',
+  'of india': 'भारताचे',
+  'of maharashtra': 'महाराष्ट्राचे',
+  'mumbai': 'मुंबई',
+  'mumbai suburban': 'मुंबई उपनगर',
+};
+
+/**
+ * Translate a governance title by replacing known terms.
+ * E.g., "Ward Councillor · BJP · Ward 45" → "वार्ड पार्षद · BJP · वार्ड 45"
+ */
+export function translateTitle(title: string, targetLang: string): string {
+  if (targetLang === 'en' || !title) return title;
+
+  const dict = targetLang === 'mr' ? TITLE_TERMS_MR
+    : ['hi', 'sa', 'ne'].includes(targetLang) ? TITLE_TERMS_HI
+    : null;
+
+  if (!dict) return title;
+
+  let result = title;
+  // Sort by length descending so longer phrases match first
+  const entries = Object.entries(dict).sort((a, b) => b[0].length - a[0].length);
+  for (const [eng, translated] of entries) {
+    const regex = new RegExp(eng.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    result = result.replace(regex, translated);
+  }
+  return result;
+}
+
 /**
  * Transliterate a name to the target language script.
  * Uses dictionary lookup for known Indian names.
