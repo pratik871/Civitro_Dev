@@ -12,24 +12,27 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/civitro/pkg/logger"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/messaging/internal/model"
 	"github.com/civitro/services/messaging/internal/repository"
 )
 
 // MessagingService contains business logic for conversations and messaging.
 type MessagingService struct {
-	repo *repository.MessageRepository
-	hub  *WebSocketHub
+	repo       *repository.MessageRepository
+	hub        *WebSocketHub
+	translator *translate.Client
 }
 
 // NewMessagingService creates a new MessagingService.
-func NewMessagingService(repo *repository.MessageRepository) *MessagingService {
+func NewMessagingService(repo *repository.MessageRepository, translator *translate.Client) *MessagingService {
 	hub := NewWebSocketHub()
 	go hub.Run()
 
 	return &MessagingService{
-		repo: repo,
-		hub:  hub,
+		repo:       repo,
+		hub:        hub,
+		translator: translator,
 	}
 }
 
@@ -59,6 +62,35 @@ func (s *MessagingService) SendMessage(ctx context.Context, req model.SendMessag
 		Text:           req.Text,
 		MediaURL:       req.MediaURL,
 		CreatedAt:      time.Now().UTC(),
+	}
+
+	// Detect sender's language and translate for recipients with different preferred languages.
+	if s.translator != nil && req.Text != "" {
+		detectedLang, err := s.translator.DetectLanguage(ctx, req.Text)
+		if err == nil {
+			msg.OriginalLanguage = detectedLang
+
+			// Find a recipient whose preferred language differs from the sender's.
+			// For DM conversations this provides the translated version.
+			for _, participantID := range conv.Participants {
+				if participantID == req.SenderID {
+					continue
+				}
+				recipientLang, err := s.repo.GetUserPreferredLanguage(ctx, participantID)
+				if err != nil || recipientLang == "" || recipientLang == detectedLang {
+					continue
+				}
+				// Translate to the first recipient's language that differs.
+				if translated, err := s.translator.TranslateIfNeeded(ctx, req.Text, detectedLang, recipientLang); err == nil {
+					msg.TranslatedText = translated
+				} else {
+					logger.Warn().Err(err).Str("msg_id", msg.ID).Msg("message translation failed")
+				}
+				break
+			}
+		} else {
+			logger.Warn().Err(err).Msg("failed to detect message language")
+		}
 	}
 
 	if err := s.repo.CreateMessage(ctx, msg); err != nil {

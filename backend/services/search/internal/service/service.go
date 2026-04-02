@@ -4,23 +4,47 @@ import (
 	"context"
 
 	"github.com/civitro/pkg/logger"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/search/internal/model"
 	"github.com/civitro/services/search/internal/repository"
 )
 
 // Service implements the search business logic.
 type Service struct {
-	repo *repository.Repository
+	repo       *repository.Repository
+	translator *translate.Client
 }
 
 // New creates a new search service.
-func New(repo *repository.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo *repository.Repository, translator *translate.Client) *Service {
+	return &Service{repo: repo, translator: translator}
 }
 
 // Search executes a search query across OpenSearch indices.
+// If the query is in a non-English language, it is translated to English before
+// searching (since content is indexed in English via text_en). The original
+// query is preserved in the response.
 func (s *Service) Search(ctx context.Context, query model.SearchQuery) (*model.SearchResponse, error) {
 	query.Defaults()
+
+	originalQuery := query.Query
+
+	// Detect query language and translate to English if needed.
+	if s.translator != nil && query.Query != "" {
+		detectedLang, err := s.translator.DetectLanguage(ctx, query.Query)
+		if err == nil && detectedLang != "en" {
+			if translatedQuery, err := s.translator.Translate(ctx, query.Query, detectedLang, "en"); err == nil {
+				logger.Info().
+					Str("original_query", query.Query).
+					Str("translated_query", translatedQuery).
+					Str("detected_lang", detectedLang).
+					Msg("translated search query to English")
+				query.Query = translatedQuery
+			} else {
+				logger.Warn().Err(err).Str("query", query.Query).Msg("search query translation failed, using original")
+			}
+		}
+	}
 
 	logger.Info().
 		Str("query", query.Query).
@@ -37,7 +61,7 @@ func (s *Service) Search(ctx context.Context, query model.SearchQuery) (*model.S
 	}
 
 	return &model.SearchResponse{
-		Query:   query.Query,
+		Query:   originalQuery,
 		Type:    query.Type,
 		Results: results,
 		Page:    query.Page,

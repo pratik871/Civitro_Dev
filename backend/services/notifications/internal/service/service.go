@@ -10,18 +10,20 @@ import (
 	"time"
 
 	"github.com/civitro/pkg/logger"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/notifications/internal/model"
 	"github.com/civitro/services/notifications/internal/repository"
 )
 
 // Service implements the notifications business logic.
 type Service struct {
-	repo *repository.Repository
+	repo       *repository.Repository
+	translator *translate.Client
 }
 
 // New creates a new notifications service.
-func New(repo *repository.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo *repository.Repository, translator *translate.Client) *Service {
+	return &Service{repo: repo, translator: translator}
 }
 
 // GetNotifications retrieves notifications for a user with cursor-based pagination.
@@ -109,12 +111,31 @@ func (s *Service) SendNotification(ctx context.Context, req model.SendNotificati
 		// Still save the notification, just skip push delivery.
 	}
 
+	// Translate notification title and body to the user's preferred language.
+	title := req.Title
+	body := req.Body
+	if s.translator != nil {
+		preferredLang := s.getUserPreferredLanguage(ctx, req.UserID)
+		if preferredLang != "" && preferredLang != "en" {
+			if translatedTitle, err := s.translator.TranslateIfNeeded(ctx, req.Title, "en", preferredLang); err == nil {
+				title = translatedTitle
+			} else {
+				logger.Warn().Err(err).Str("user_id", req.UserID).Msg("failed to translate notification title")
+			}
+			if translatedBody, err := s.translator.TranslateIfNeeded(ctx, req.Body, "en", preferredLang); err == nil {
+				body = translatedBody
+			} else {
+				logger.Warn().Err(err).Str("user_id", req.UserID).Msg("failed to translate notification body")
+			}
+		}
+	}
+
 	notification := &model.Notification{
 		ID:        generateID(),
 		UserID:    req.UserID,
 		Type:      req.Type,
-		Title:     req.Title,
-		Body:      req.Body,
+		Title:     title,
+		Body:      body,
 		Data:      req.Data,
 		Read:      false,
 		CreatedAt: time.Now(),
@@ -217,6 +238,17 @@ func (s *Service) deliverPush(ctx context.Context, n *model.Notification) {
 				Msg("push notification delivered via Expo")
 		}
 	}
+}
+
+// getUserPreferredLanguage looks up the user's preferred_language from the
+// users table. Returns empty string if not found or on error.
+func (s *Service) getUserPreferredLanguage(ctx context.Context, userID string) string {
+	lang, err := s.repo.GetUserPreferredLanguage(ctx, userID)
+	if err != nil {
+		// Silently fall back — many users won't have a preference set.
+		return ""
+	}
+	return lang
 }
 
 // generateID creates a UUID v4 for notification entries.

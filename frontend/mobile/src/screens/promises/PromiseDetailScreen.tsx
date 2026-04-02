@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import { TranslateButton, TranslatedContentBox } from '../../components/ui/TranslateButton';
 import { usePromiseDetail } from '../../hooks/usePromises';
 import type { PromiseStatus } from '../../hooks/usePromises';
 import { colors } from '../../theme/colors';
@@ -45,6 +46,12 @@ export const PromiseDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { promiseId } = route.params;
   const { data: promise, isLoading } = usePromiseDetail(promiseId);
+
+  // Translation state
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+  const [showTranslatedTitle, setShowTranslatedTitle] = useState(false);
+  const [translatedDesc, setTranslatedDesc] = useState<string | null>(null);
+  const [showTranslatedDesc, setShowTranslatedDesc] = useState(false);
 
   if (isLoading) {
     return (
@@ -87,7 +94,25 @@ export const PromiseDetailScreen: React.FC = () => {
             {statusConfig.icon} {statusConfig.label}
           </Text>
         </View>
-        <Text style={styles.title}>{promise.title}</Text>
+        {showTranslatedTitle && translatedTitle ? (
+          <TranslatedContentBox>
+            <Text style={styles.title}>{translatedTitle}</Text>
+          </TranslatedContentBox>
+        ) : (
+          <Text style={styles.title}>{promise.title}</Text>
+        )}
+        <TranslateButton
+          text={promise.title}
+          onTranslated={(translated) => {
+            if (translated === '__toggle_back__' && translatedTitle) {
+              setShowTranslatedTitle(true);
+            } else {
+              setTranslatedTitle(translated);
+              setShowTranslatedTitle(true);
+            }
+          }}
+          onShowOriginal={() => setShowTranslatedTitle(false)}
+        />
       </Card>
 
       {/* Leader info */}
@@ -115,7 +140,25 @@ export const PromiseDetailScreen: React.FC = () => {
       {/* Description */}
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.descriptionText}>{promise.description}</Text>
+        {showTranslatedDesc && translatedDesc ? (
+          <TranslatedContentBox>
+            <Text style={styles.descriptionText}>{translatedDesc}</Text>
+          </TranslatedContentBox>
+        ) : (
+          <Text style={styles.descriptionText}>{promise.description}</Text>
+        )}
+        <TranslateButton
+          text={promise.description}
+          onTranslated={(translated) => {
+            if (translated === '__toggle_back__' && translatedDesc) {
+              setShowTranslatedDesc(true);
+            } else {
+              setTranslatedDesc(translated);
+              setShowTranslatedDesc(true);
+            }
+          }}
+          onShowOriginal={() => setShowTranslatedDesc(false)}
+        />
       </Card>
 
       {/* Source & detection info */}

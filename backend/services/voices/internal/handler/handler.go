@@ -100,7 +100,7 @@ func (h *Handler) GetFeed(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetVoice handles GET /voices/:id.
+// GetVoice handles GET /voices/:id?lang=xx.
 func (h *Handler) GetVoice(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -108,7 +108,15 @@ func (h *Handler) GetVoice(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GetVoice(c.Request.Context(), id)
+	// Support ?lang=xx query param or Accept-Language header for on-the-fly translation
+	targetLang := c.Query("lang")
+	if targetLang == "" {
+		if al := c.GetHeader("Accept-Language"); len(al) >= 2 {
+			targetLang = al[:2]
+		}
+	}
+
+	resp, err := h.svc.GetVoice(c.Request.Context(), id, targetLang)
 	if err != nil {
 		errors.HandleError(c, err)
 		return

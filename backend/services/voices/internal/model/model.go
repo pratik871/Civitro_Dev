@@ -19,6 +19,7 @@ type Voice struct {
 	ID           string            `json:"id"`
 	UserID       string            `json:"user_id"`
 	Text         string            `json:"text"`
+	TextEN       string            `json:"text_en,omitempty"`
 	MediaURLs    []string          `json:"media_urls,omitempty"`
 	Hashtags     []string          `json:"hashtags,omitempty"`
 	Mentions     []string          `json:"mentions,omitempty"`

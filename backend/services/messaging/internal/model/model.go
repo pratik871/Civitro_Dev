@@ -21,12 +21,14 @@ type Conversation struct {
 
 // Message represents a single message within a conversation.
 type Message struct {
-	ID             string    `json:"id" db:"id"`
-	ConversationID string    `json:"conversation_id" db:"conversation_id"`
-	SenderID       string    `json:"sender_id" db:"sender_id"`
-	Text           string    `json:"text" db:"text"`
-	MediaURL       string    `json:"media_url,omitempty" db:"media_url"`
-	CreatedAt      time.Time `json:"created_at" db:"created_at"`
+	ID               string    `json:"id" db:"id"`
+	ConversationID   string    `json:"conversation_id" db:"conversation_id"`
+	SenderID         string    `json:"sender_id" db:"sender_id"`
+	Text             string    `json:"text" db:"text"`
+	TranslatedText   string    `json:"translated_text,omitempty" db:"translated_text"`
+	OriginalLanguage string    `json:"original_language,omitempty" db:"original_language"`
+	MediaURL         string    `json:"media_url,omitempty" db:"media_url"`
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 }
 
 // ConversationPreview is a summary view of a conversation for listing.

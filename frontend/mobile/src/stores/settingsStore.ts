@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface SettingsState {
   language: string; // BCP-47 code, default 'en'
   darkMode: boolean;
+  autoTranslate: boolean; // When true, content is automatically translated on display
   privacySettings: {
     showProfilePublicly: boolean;
     allowAnonymousVoices: boolean;
@@ -14,6 +15,7 @@ interface SettingsState {
   isLoaded: boolean;
   setLanguage: (code: string) => Promise<void>;
   setDarkMode: (enabled: boolean) => Promise<void>;
+  setAutoTranslate: (enabled: boolean) => Promise<void>;
   updatePrivacy: (key: string, value: boolean) => Promise<void>;
   loadSettings: () => Promise<void>;
 }
@@ -23,6 +25,7 @@ const SETTINGS_KEY = '@civitro_settings';
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   language: 'en',
   darkMode: false,
+  autoTranslate: false,
   privacySettings: {
     showProfilePublicly: true,
     allowAnonymousVoices: false,
@@ -52,6 +55,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
       language: state.language,
       darkMode: enabled,
+      autoTranslate: state.autoTranslate,
       privacySettings: state.privacySettings,
     }));
   },
@@ -61,6 +65,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const state = get();
     await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
       language: state.language,
+      autoTranslate: state.autoTranslate,
+      privacySettings: state.privacySettings,
+    }));
+  },
+
+  setAutoTranslate: async (enabled: boolean) => {
+    set({ autoTranslate: enabled });
+    const state = get();
+    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      language: state.language,
+      darkMode: state.darkMode,
+      autoTranslate: enabled,
       privacySettings: state.privacySettings,
     }));
   },
@@ -72,6 +88,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const state = get();
     await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify({
       language: state.language,
+      autoTranslate: state.autoTranslate,
       privacySettings: updated,
     }));
   },

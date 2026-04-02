@@ -218,3 +218,4 @@ services:
     admin:          { host: localhost, grpc_port: 50068, http_port: 8018 }
     party:          { host: localhost, grpc_port: 50069, http_port: 8019 }
     advertising:    { host: localhost, grpc_port: 50070, http_port: 8020 }
+    translation:    { host: localhost, grpc_port: 50071, http_port: 8021 }

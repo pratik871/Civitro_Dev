@@ -11,21 +11,24 @@ import (
 
 	"github.com/civitro/pkg/events"
 	"github.com/civitro/pkg/logger"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/issues/internal/model"
 	"github.com/civitro/services/issues/internal/repository"
 )
 
 // Service implements the business logic for the issues service.
 type Service struct {
-	repo     repository.Repository
-	producer *events.Producer
+	repo       repository.Repository
+	producer   *events.Producer
+	translator *translate.Client
 }
 
 // New creates a new issues Service.
-func New(repo repository.Repository, producer *events.Producer) *Service {
+func New(repo repository.Repository, producer *events.Producer, translator *translate.Client) *Service {
 	return &Service{
-		repo:     repo,
-		producer: producer,
+		repo:       repo,
+		producer:   producer,
+		translator: translator,
 	}
 }
 
@@ -87,6 +90,17 @@ func (s *Service) CreateIssue(ctx context.Context, userID string, req *model.Cre
 	// Auto-classify via AI (async — updates issue category/severity/confidence in background)
 	go s.classifyIssue(issue)
 
+	// Async: detect language and translate to English for search/admin
+	if s.translator != nil {
+		s.translator.TranslateAsync(issue.Text, "auto", "en", func(translated, detectedLang string) {
+			if err := s.repo.UpdateTranslation(context.Background(), issue.ID, detectedLang, translated); err != nil {
+				logger.Warn().Err(err).Str("issue_id", issue.ID).Msg("failed to store issue translation")
+			} else {
+				logger.Info().Str("issue_id", issue.ID).Str("language", detectedLang).Msg("issue language detected and translated")
+			}
+		})
+	}
+
 	// Create initial ledger entry for issue creation
 	go appendLedger(issue.ID, string(model.StatusReported), userID, "citizen", "Issue reported by citizen")
 
@@ -124,7 +138,9 @@ func (s *Service) ListIssues(ctx context.Context, userID string, limit, offset i
 }
 
 // GetIssue retrieves an issue by ID.
-func (s *Service) GetIssue(ctx context.Context, id, userID string) (*model.IssueResponse, error) {
+// If targetLang is non-empty and differs from the issue's detected language,
+// the issue text is translated on the fly.
+func (s *Service) GetIssue(ctx context.Context, id, userID, targetLang string) (*model.IssueResponse, error) {
 	issue, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -135,6 +151,15 @@ func (s *Service) GetIssue(ctx context.Context, id, userID string) (*model.Issue
 
 	if userID != "" {
 		issue.HasUpvoted, _ = s.repo.HasUpvoted(ctx, issue.ID, userID)
+	}
+
+	// On-the-fly translation if a target language is requested
+	if targetLang != "" && s.translator != nil && issue.Language != "" && issue.Language != targetLang {
+		if translated, err := s.translator.TranslateIfNeeded(ctx, issue.Text, issue.Language, targetLang); err == nil {
+			issue.Text = translated
+		} else {
+			logger.Warn().Err(err).Str("issue_id", id).Str("target_lang", targetLang).Msg("on-the-fly translation failed")
+		}
 	}
 
 	return &model.IssueResponse{Issue: *issue}, nil

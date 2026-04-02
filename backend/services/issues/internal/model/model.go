@@ -55,6 +55,8 @@ type Issue struct {
 	ID           string        `json:"id"` // CIV-2026-XXXXX format
 	UserID       string        `json:"user_id"`
 	Text         string        `json:"text"`
+	TextEN       string        `json:"text_en,omitempty"`
+	Language     string        `json:"language,omitempty"`
 	PhotoURLs    []string      `json:"photo_urls,omitempty"`
 	GPSLat       float64       `json:"gps_lat"`
 	GPSLng       float64       `json:"gps_lng"`

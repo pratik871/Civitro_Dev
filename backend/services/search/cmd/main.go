@@ -16,6 +16,7 @@ import (
 	"github.com/civitro/pkg/config"
 	"github.com/civitro/pkg/logger"
 	"github.com/civitro/pkg/middleware"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/search/internal/handler"
 	"github.com/civitro/services/search/internal/model"
 	"github.com/civitro/services/search/internal/repository"
@@ -39,9 +40,13 @@ func main() {
 		opensearchURL = "http://localhost:9200"
 	}
 
+	// Initialize translation client.
+	translationEp := cfg.Services.Endpoints["translation"]
+	translator := translate.NewFromConfig(translationEp.Host, translationEp.HTTPPort)
+
 	// Initialize repository, service, and handler.
 	repo := repository.New(opensearchURL)
-	svc := service.New(repo)
+	svc := service.New(repo, translator)
 	h := handler.New(svc)
 
 	// Set up Gin router.

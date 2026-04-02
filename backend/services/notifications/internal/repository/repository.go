@@ -182,6 +182,23 @@ func (r *Repository) GetPushTokens(ctx context.Context, userID string) ([]string
 	return tokens, nil
 }
 
+// GetUserPreferredLanguage retrieves the preferred_language for a user from the users table.
+// Returns empty string if no preference is set or the user is not found.
+func (r *Repository) GetUserPreferredLanguage(ctx context.Context, userID string) (string, error) {
+	var lang *string
+	err := r.db.QueryRow(ctx,
+		`SELECT preferred_language FROM users WHERE id = $1`,
+		userID,
+	).Scan(&lang)
+	if err != nil {
+		return "", err
+	}
+	if lang == nil {
+		return "", nil
+	}
+	return *lang, nil
+}
+
 // itoa converts an int to a string (simple helper to avoid importing strconv).
 func itoa(n int) string {
 	if n < 10 {

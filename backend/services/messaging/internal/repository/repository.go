@@ -21,12 +21,12 @@ func NewMessageRepository(db *pgxpool.Pool) *MessageRepository {
 // CreateMessage inserts a new message.
 func (r *MessageRepository) CreateMessage(ctx context.Context, msg *model.Message) error {
 	query := `
-		INSERT INTO messages (id, conversation_id, sender_id, text, media_url, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)`
+		INSERT INTO messages (id, conversation_id, sender_id, text, translated_text, original_language, media_url, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	_, err := r.db.Exec(ctx, query,
 		msg.ID, msg.ConversationID, msg.SenderID,
-		msg.Text, msg.MediaURL, msg.CreatedAt,
+		msg.Text, msg.TranslatedText, msg.OriginalLanguage, msg.MediaURL, msg.CreatedAt,
 	)
 	return err
 }
@@ -43,7 +43,9 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 
 	if cursor == "" {
 		query = `
-			SELECT id, conversation_id, sender_id, text, media_url, created_at
+			SELECT id, conversation_id, sender_id, text,
+			       COALESCE(translated_text, ''), COALESCE(original_language, ''),
+			       media_url, created_at
 			FROM messages
 			WHERE conversation_id = $1
 			ORDER BY created_at DESC
@@ -51,7 +53,9 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 		args = []interface{}{conversationID, limit}
 	} else {
 		query = `
-			SELECT id, conversation_id, sender_id, text, media_url, created_at
+			SELECT id, conversation_id, sender_id, text,
+			       COALESCE(translated_text, ''), COALESCE(original_language, ''),
+			       media_url, created_at
 			FROM messages
 			WHERE conversation_id = $1 AND created_at < (
 				SELECT created_at FROM messages WHERE id = $2
@@ -72,7 +76,8 @@ func (r *MessageRepository) GetMessages(ctx context.Context, conversationID, cur
 		var m model.Message
 		if err := rows.Scan(
 			&m.ID, &m.ConversationID, &m.SenderID,
-			&m.Text, &m.MediaURL, &m.CreatedAt,
+			&m.Text, &m.TranslatedText, &m.OriginalLanguage,
+			&m.MediaURL, &m.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -225,6 +230,22 @@ func (r *MessageRepository) GetConversationByID(ctx context.Context, id string) 
 	}
 
 	return &conv, nil
+}
+
+// GetUserPreferredLanguage retrieves the preferred_language for a user from the users table.
+func (r *MessageRepository) GetUserPreferredLanguage(ctx context.Context, userID string) (string, error) {
+	var lang *string
+	err := r.db.QueryRow(ctx,
+		`SELECT preferred_language FROM users WHERE id = $1`,
+		userID,
+	).Scan(&lang)
+	if err != nil {
+		return "", err
+	}
+	if lang == nil {
+		return "", nil
+	}
+	return *lang, nil
 }
 
 // MarkAsRead updates the last_read_at timestamp for a user in a conversation,

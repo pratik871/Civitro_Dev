@@ -15,6 +15,7 @@ import (
 	"github.com/civitro/pkg/database"
 	"github.com/civitro/pkg/logger"
 	"github.com/civitro/pkg/middleware"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/messaging/internal/handler"
 	"github.com/civitro/services/messaging/internal/repository"
 	"github.com/civitro/services/messaging/internal/service"
@@ -42,9 +43,13 @@ func main() {
 	}
 	defer database.ClosePostgres()
 
+	// Initialize translation client.
+	translationEp := cfg.Services.Endpoints["translation"]
+	translator := translate.NewFromConfig(translationEp.Host, translationEp.HTTPPort)
+
 	// Build layers.
 	repo := repository.NewMessageRepository(pool)
-	svc := service.NewMessagingService(repo)
+	svc := service.NewMessagingService(repo, translator)
 	h := handler.NewMessagingHandler(svc)
 
 	// Setup Gin router.

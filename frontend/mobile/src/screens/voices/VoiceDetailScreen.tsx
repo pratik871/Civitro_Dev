@@ -19,6 +19,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
+import { TranslateButton, InlineTranslateLink, TranslatedContentBox } from '../../components/ui/TranslateButton';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
@@ -42,6 +43,13 @@ export const VoiceDetailScreen: React.FC = () => {
 
   const [commentText, setCommentText] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
+
+  // Translation state for voice text
+  const [translatedVoiceText, setTranslatedVoiceText] = useState<string | null>(null);
+  const [showTranslatedVoice, setShowTranslatedVoice] = useState(false);
+
+  // Translation state for individual comments (keyed by comment id)
+  const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
 
   // Fetch comments
   const { data: commentsData, refetch: refetchComments } = useQuery({
@@ -134,7 +142,25 @@ export const VoiceDetailScreen: React.FC = () => {
         </View>
 
         {/* Voice text */}
-        <Text style={styles.voiceText}>{text}</Text>
+        {showTranslatedVoice && translatedVoiceText ? (
+          <TranslatedContentBox>
+            <Text style={styles.voiceText}>{translatedVoiceText}</Text>
+          </TranslatedContentBox>
+        ) : (
+          <Text style={styles.voiceText}>{text}</Text>
+        )}
+        <TranslateButton
+          text={text}
+          onTranslated={(translated) => {
+            if (translated === '__toggle_back__' && translatedVoiceText) {
+              setShowTranslatedVoice(true);
+            } else {
+              setTranslatedVoiceText(translated);
+              setShowTranslatedVoice(true);
+            }
+          }}
+          onShowOriginal={() => setShowTranslatedVoice(false)}
+        />
 
         {/* Hashtags */}
         {tags.length > 0 && (
@@ -244,7 +270,22 @@ export const VoiceDetailScreen: React.FC = () => {
                     <Text style={styles.commentUserName}>{c.user_name || 'Citizen'}</Text>
                     <Text style={styles.commentTime}>{formatRelativeTime(c.created_at)}</Text>
                   </View>
-                  <Text style={styles.commentContent}>{c.content}</Text>
+                  <Text style={styles.commentContent}>
+                    {translatedComments[c.id] || c.content}
+                  </Text>
+                  <InlineTranslateLink
+                    text={c.content}
+                    onTranslated={(translated) =>
+                      setTranslatedComments(prev => ({ ...prev, [c.id]: translated }))
+                    }
+                    onShowOriginal={() =>
+                      setTranslatedComments(prev => {
+                        const next = { ...prev };
+                        delete next[c.id];
+                        return next;
+                      })
+                    }
+                  />
                   <View style={styles.commentActions}>
                     <TouchableOpacity
                       style={styles.commentActionBtn}
@@ -277,7 +318,22 @@ export const VoiceDetailScreen: React.FC = () => {
                       <Text style={styles.commentUserName}>{reply.user_name || 'Citizen'}</Text>
                       <Text style={styles.commentTime}>{formatRelativeTime(reply.created_at)}</Text>
                     </View>
-                    <Text style={styles.commentContent}>{reply.content}</Text>
+                    <Text style={styles.commentContent}>
+                      {translatedComments[reply.id] || reply.content}
+                    </Text>
+                    <InlineTranslateLink
+                      text={reply.content}
+                      onTranslated={(translated) =>
+                        setTranslatedComments(prev => ({ ...prev, [reply.id]: translated }))
+                      }
+                      onShowOriginal={() =>
+                        setTranslatedComments(prev => {
+                          const next = { ...prev };
+                          delete next[reply.id];
+                          return next;
+                        })
+                      }
+                    />
                     <View style={styles.commentActions}>
                       <TouchableOpacity
                         style={styles.commentActionBtn}

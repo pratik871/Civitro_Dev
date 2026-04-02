@@ -18,6 +18,7 @@ import type { RouteProp } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Avatar } from '../../components/ui/Avatar';
+import { InlineTranslateLink } from '../../components/ui/TranslateButton';
 import {
   useConversation,
   useSendMessage,
@@ -79,9 +80,18 @@ function formatMessageTime(dateStr: string): string {
 interface MessageBubbleProps {
   message: ChatMessage;
   isMine: boolean;
+  translatedText?: string;
+  onTranslated: (messageId: string, translated: string) => void;
+  onShowOriginal: (messageId: string) => void;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => (
+const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  isMine,
+  translatedText,
+  onTranslated,
+  onShowOriginal,
+}) => (
   <View
     style={[
       styles.bubbleRow,
@@ -102,6 +112,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => (
       >
         {message.text}
       </Text>
+      {/* Show translated text below original in a tinted box */}
+      {translatedText && !isMine && (
+        <View style={styles.translatedMsgBox}>
+          <Text style={styles.translatedMsgText}>{translatedText}</Text>
+        </View>
+      )}
       <Text
         style={[
           styles.bubbleTime,
@@ -111,6 +127,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => (
         {formatMessageTime(message.created_at)}
       </Text>
     </View>
+    {/* Inline translate link for received messages */}
+    {!isMine && (
+      <InlineTranslateLink
+        text={message.text}
+        onTranslated={(translated) => onTranslated(message.id, translated)}
+        onShowOriginal={() => onShowOriginal(message.id)}
+      />
+    )}
   </View>
 );
 
@@ -130,6 +154,21 @@ export const ChatScreen: React.FC = () => {
   );
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
+
+  // Translation state for chat messages (keyed by message id)
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+
+  const handleMessageTranslated = useCallback((messageId: string, translated: string) => {
+    setTranslatedMessages(prev => ({ ...prev, [messageId]: translated }));
+  }, []);
+
+  const handleMessageShowOriginal = useCallback((messageId: string) => {
+    setTranslatedMessages(prev => {
+      const next = { ...prev };
+      delete next[messageId];
+      return next;
+    });
+  }, []);
 
   // Hooks
   const {
@@ -216,9 +255,15 @@ export const ChatScreen: React.FC = () => {
 
   const renderMessage = useCallback(
     ({ item }: { item: ChatMessage }) => (
-      <MessageBubble message={item} isMine={item.sender_id === user?.id} />
+      <MessageBubble
+        message={item}
+        isMine={item.sender_id === user?.id}
+        translatedText={translatedMessages[item.id]}
+        onTranslated={handleMessageTranslated}
+        onShowOriginal={handleMessageShowOriginal}
+      />
     ),
-    [user?.id],
+    [user?.id, translatedMessages, handleMessageTranslated, handleMessageShowOriginal],
   );
 
   const keyExtractor = useCallback((item: ChatMessage) => item.id, []);
@@ -456,6 +501,23 @@ const styles = StyleSheet.create({
   },
   bubbleTimeReceived: {
     color: colors.textMuted,
+  },
+  translatedMsgBox: {
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#D1E3FA',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginHorizontal: -4,
+  },
+  translatedMsgText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textPrimary,
+    fontStyle: 'italic',
   },
 
   // Empty state (inverted FlatList flips content, so it appears at bottom)

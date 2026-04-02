@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import { TranslateButton, TranslatedContentBox } from '../../components/ui/TranslateButton';
 import { usePromises } from '../../hooks/usePromises';
 import type { Promise as PromiseItem, PromiseStatus } from '../../hooks/usePromises';
 import { colors } from '../../theme/colors';
@@ -48,6 +49,9 @@ export const PromisesScreen: React.FC = () => {
 
   const [filter, setFilter] = useState<'all' | PromiseStatus>('all');
   const [groupByLeader, setGroupByLeader] = useState(false);
+
+  // Translation state for promise cards — keyed by promise.id -> field
+  const [translations, setTranslations] = useState<Record<string, { title?: string; desc?: string }>>({});
 
   const { data: promises, isLoading, refetch } = usePromises(leaderIdFilter);
 
@@ -107,8 +111,49 @@ export const PromisesScreen: React.FC = () => {
           />
         </View>
 
-        <Text style={styles.promiseTitle} numberOfLines={2}>{promise.title}</Text>
-        <Text style={styles.promiseDesc} numberOfLines={3}>{promise.description}</Text>
+        {translations[promise.id]?.title ? (
+          <TranslatedContentBox>
+            <Text style={styles.promiseTitle} numberOfLines={2}>
+              {translations[promise.id].title}
+            </Text>
+          </TranslatedContentBox>
+        ) : (
+          <Text style={styles.promiseTitle} numberOfLines={2}>{promise.title}</Text>
+        )}
+        <TranslateButton
+          text={`${promise.title}\n\n${promise.description}`}
+          onTranslated={(translated) => {
+            if (translated === '__toggle_back__') {
+              // Restore previous cached translation
+              return;
+            }
+            // Split the combined translation back into title/description parts
+            const parts = translated.split('\n\n');
+            setTranslations(prev => ({
+              ...prev,
+              [promise.id]: {
+                title: parts[0] || translated,
+                desc: parts.slice(1).join('\n\n') || '',
+              },
+            }));
+          }}
+          onShowOriginal={() => {
+            setTranslations(prev => {
+              const next = { ...prev };
+              delete next[promise.id];
+              return next;
+            });
+          }}
+        />
+        {translations[promise.id]?.desc ? (
+          <TranslatedContentBox style={{ marginTop: spacing.xs }}>
+            <Text style={styles.promiseDesc} numberOfLines={3}>
+              {translations[promise.id].desc}
+            </Text>
+          </TranslatedContentBox>
+        ) : (
+          <Text style={styles.promiseDesc} numberOfLines={3}>{promise.description}</Text>
+        )}
 
         {/* Confidence bar */}
         <View style={styles.confidenceRow}>

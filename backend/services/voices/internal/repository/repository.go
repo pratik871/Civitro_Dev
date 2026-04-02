@@ -28,6 +28,7 @@ type Repository interface {
 	GetComments(ctx context.Context, voiceID string) ([]map[string]interface{}, error)
 	ToggleCommentUpvote(ctx context.Context, commentID, userID string) (bool, error)
 	AddReply(ctx context.Context, id, voiceID, parentID, userID, text string) error
+	UpdateTranslation(ctx context.Context, id string, language string, textEN string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -348,6 +349,13 @@ func (r *PostgresRepository) GetByHashtag(ctx context.Context, hashtag string, l
 	}
 
 	return voices, rows.Err()
+}
+
+// UpdateTranslation updates the detected language and English translation for a voice.
+func (r *PostgresRepository) UpdateTranslation(ctx context.Context, id string, language string, textEN string) error {
+	query := `UPDATE voices SET language = $1, text_en = $2 WHERE id = $3`
+	_, err := r.pool.Exec(ctx, query, language, textEN, id)
+	return err
 }
 
 func generateID() string {

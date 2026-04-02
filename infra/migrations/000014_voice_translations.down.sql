@@ -1,0 +1,1 @@
+ALTER TABLE voices DROP COLUMN IF EXISTS text_en;

@@ -95,7 +95,7 @@ func (h *Handler) CreateIssue(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
-// GetIssue handles GET /issues/:id.
+// GetIssue handles GET /issues/:id?lang=xx.
 func (h *Handler) GetIssue(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid, _ := userID.(string)
@@ -106,7 +106,15 @@ func (h *Handler) GetIssue(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GetIssue(c.Request.Context(), id, uid)
+	// Support ?lang=xx query param or Accept-Language header for on-the-fly translation
+	targetLang := c.Query("lang")
+	if targetLang == "" {
+		if al := c.GetHeader("Accept-Language"); len(al) >= 2 {
+			targetLang = al[:2] // Use first two chars as language code
+		}
+	}
+
+	resp, err := h.svc.GetIssue(c.Request.Context(), id, uid, targetLang)
 	if err != nil {
 		errors.HandleError(c, err)
 		return

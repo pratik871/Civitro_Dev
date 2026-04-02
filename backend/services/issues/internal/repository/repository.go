@@ -33,6 +33,7 @@ type Repository interface {
 	ListPromises(ctx context.Context) ([]model.PromiseResponse, error)
 	GetCHI(ctx context.Context) (*model.CHIResponse, error)
 	UpdateClassification(ctx context.Context, id string, category string, severity string, confidence float64) error
+	UpdateTranslation(ctx context.Context, id string, language string, textEN string) error
 }
 
 // ErrNotFound is returned when a record is not found.
@@ -725,6 +726,16 @@ func (r *PostgresRepository) UpdateClassification(ctx context.Context, id string
 		WHERE id = $4
 	`
 	_, err := r.pool.Exec(ctx, query, category, severity, confidence, id)
+	return err
+}
+
+// UpdateTranslation updates the detected language and English translation for an issue.
+func (r *PostgresRepository) UpdateTranslation(ctx context.Context, id string, language string, textEN string) error {
+	query := `
+		UPDATE issues SET language = $1, text_en = $2, updated_at = NOW()
+		WHERE id = $3
+	`
+	_, err := r.pool.Exec(ctx, query, language, textEN, id)
 	return err
 }
 

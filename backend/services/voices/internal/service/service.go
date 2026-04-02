@@ -11,21 +11,25 @@ import (
 	"unicode/utf8"
 
 	"github.com/civitro/pkg/events"
+	"github.com/civitro/pkg/logger"
+	"github.com/civitro/pkg/translate"
 	"github.com/civitro/services/voices/internal/model"
 	"github.com/civitro/services/voices/internal/repository"
 )
 
 // Service implements the business logic for the voices service.
 type Service struct {
-	repo      repository.Repository
-	producer *events.Producer
+	repo       repository.Repository
+	producer   *events.Producer
+	translator *translate.Client
 }
 
 // New creates a new voices Service.
-func New(repo repository.Repository, producer *events.Producer) *Service {
+func New(repo repository.Repository, producer *events.Producer, translator *translate.Client) *Service {
 	return &Service{
-		repo:     repo,
-		producer: producer,
+		repo:       repo,
+		producer:   producer,
+		translator: translator,
 	}
 }
 
@@ -63,6 +67,17 @@ func (s *Service) CreateVoice(ctx context.Context, userID string, req *model.Cre
 		"mentions": voice.Mentions,
 	})
 	_ = s.producer.Publish(ctx, events.TopicVoiceCreated, voice.ID, payload)
+
+	// Async: detect language and translate to English for search/admin
+	if s.translator != nil {
+		s.translator.TranslateAsync(voice.Text, "auto", "en", func(translated, detectedLang string) {
+			if err := s.repo.UpdateTranslation(context.Background(), voice.ID, detectedLang, translated); err != nil {
+				logger.Warn().Err(err).Str("voice_id", voice.ID).Msg("failed to store voice translation")
+			} else {
+				logger.Info().Str("voice_id", voice.ID).Str("language", detectedLang).Msg("voice language detected and translated")
+			}
+		})
+	}
 
 	return &model.VoiceResponse{Voice: *voice}, nil
 }
@@ -126,13 +141,24 @@ func (s *Service) GetFeed(ctx context.Context, boundaryID, cursor string, limit 
 }
 
 // GetVoice retrieves a single voice by ID.
-func (s *Service) GetVoice(ctx context.Context, id string) (*model.VoiceResponse, error) {
+// If targetLang is non-empty and differs from the voice's detected language,
+// the voice text is translated on the fly.
+func (s *Service) GetVoice(ctx context.Context, id, targetLang string) (*model.VoiceResponse, error) {
 	voice, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, errors.New("voice not found")
 		}
 		return nil, fmt.Errorf("failed to get voice: %w", err)
+	}
+
+	// On-the-fly translation if a target language is requested
+	if targetLang != "" && s.translator != nil && voice.Language != "" && voice.Language != targetLang {
+		if translated, err := s.translator.TranslateIfNeeded(ctx, voice.Text, voice.Language, targetLang); err == nil {
+			voice.Text = translated
+		} else {
+			logger.Warn().Err(err).Str("voice_id", id).Str("target_lang", targetLang).Msg("on-the-fly translation failed")
+		}
 	}
 
 	return &model.VoiceResponse{Voice: *voice}, nil

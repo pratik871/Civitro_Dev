@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -11,6 +12,12 @@ interface TranslateResponse {
 
 interface BatchTranslateResponse {
   translations: TranslateResponse[];
+}
+
+interface TranslateResult {
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
 }
 
 /**
@@ -111,4 +118,39 @@ export function useBatchTranslate(texts: string[], sourceLanguage?: string) {
     translations: query.data?.translations?.map(t => t.translated_text) || texts,
     isTranslating: query.isLoading && shouldTranslate,
   };
+}
+
+/**
+ * Imperative hook for on-demand translation (e.g. "Translate" button tap).
+ * Returns a `translate(text)` callback that POSTs to the translate API.
+ */
+export function useTranslate() {
+  const language = useSettingsStore(state => state.language);
+  const [translating, setTranslating] = useState(false);
+
+  const translate = useCallback(
+    async (text: string): Promise<TranslateResult | null> => {
+      if (!text?.trim() || language === 'en') return null;
+      setTranslating(true);
+      try {
+        const res = await api.post<TranslateResponse>('/api/v1/translate', {
+          text,
+          source_language: 'auto',
+          target_language: language,
+        });
+        return {
+          translatedText: res.translated_text,
+          sourceLanguage: res.source_language,
+          targetLanguage: res.target_language,
+        };
+      } catch {
+        return null;
+      } finally {
+        setTranslating(false);
+      }
+    },
+    [language],
+  );
+
+  return { translate, translating, userLanguage: language };
 }

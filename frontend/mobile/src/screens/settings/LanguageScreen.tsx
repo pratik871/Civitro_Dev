@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
+  Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -85,6 +86,8 @@ export const LanguageScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const language = useSettingsStore(state => state.language);
   const setLanguage = useSettingsStore(state => state.setLanguage);
+  const autoTranslate = useSettingsStore(state => state.autoTranslate);
+  const setAutoTranslate = useSettingsStore(state => state.setAutoTranslate);
 
   const currentLang = useMemo(
     () => BHASHINI_LANGUAGES.find(l => l.code === language) ?? BHASHINI_LANGUAGES[0],
@@ -135,6 +138,25 @@ export const LanguageScreen: React.FC = () => {
             <Text style={styles.checkMark}>{'\u2713'}</Text>
           </View>
         </View>
+
+        {/* Auto-translate toggle */}
+        {language !== 'en' && (
+          <View style={styles.autoTranslateRow}>
+            <View style={styles.autoTranslateInfo}>
+              <Text style={styles.autoTranslateTitle}>Auto-translate content</Text>
+              <Text style={styles.autoTranslateDesc}>
+                Automatically translate content to {currentLang.nativeName} when displayed
+              </Text>
+            </View>
+            <Switch
+              value={autoTranslate}
+              onValueChange={setAutoTranslate}
+              trackColor={{ false: colors.border, true: colors.primary + '60' }}
+              thumbColor={autoTranslate ? colors.primary : colors.white}
+              ios_backgroundColor={colors.border}
+            />
+          </View>
+        )}
 
         {/* Section title */}
         <Text style={styles.sectionTitle}>{t('settings.allLanguages')}</Text>
@@ -466,6 +488,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     textAlign: 'center',
+    lineHeight: 16,
+  },
+
+  // Auto-translate toggle
+  autoTranslateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  autoTranslateInfo: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  autoTranslateTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  autoTranslateDesc: {
+    fontSize: 12,
+    color: colors.textMuted,
     lineHeight: 16,
   },
 
