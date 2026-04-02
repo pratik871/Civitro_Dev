@@ -40,12 +40,14 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Bake models into image — no runtime downloads needed
-COPY --from=downloader --chown=appuser:appuser /models /models
+COPY --from=downloader /models /models
+RUN chown -R appuser:appuser /models
 
 COPY services/bhashini/app /app/app
 
 ENV HF_HOME=/models
 ENV TRANSFORMERS_CACHE=/models
+ENV TRANSFORMERS_DYNAMIC_MODULE_NAME=modules
 ENV HF_HUB_OFFLINE=1
 ENV TORCH_NUM_THREADS=2
 
