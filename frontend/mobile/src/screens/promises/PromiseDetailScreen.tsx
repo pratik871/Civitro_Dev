@@ -15,6 +15,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { TranslateButton, TranslatedContentBox } from '../../components/ui/TranslateButton';
+import { useTranslation } from 'react-i18next';
 import { usePromiseDetail } from '../../hooks/usePromises';
 import type { PromiseStatus } from '../../hooks/usePromises';
 import { colors } from '../../theme/colors';
@@ -25,27 +26,39 @@ import type { RootStackParamList } from '../../navigation/types';
 type DetailRouteProp = RouteProp<RootStackParamList, 'PromiseDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const STATUS_CONFIG: Record<PromiseStatus, { color: string; label: string; icon: string }> = {
-  detected: { color: colors.textMuted, label: 'Detected', icon: '\uD83D\uDD0D' },
-  on_track: { color: colors.warning, label: 'On Track', icon: '\uD83C\uDFD7' },
-  delayed: { color: '#EA580C', label: 'Delayed', icon: '\u26A0\uFE0F' },
-  fulfilled: { color: colors.success, label: 'Fulfilled', icon: '\u2705' },
-  broken: { color: colors.error, label: 'Broken', icon: '\u274C' },
+const STATUS_CONFIG_BASE: Record<PromiseStatus, { color: string; labelKey: string; labelDefault: string; icon: string }> = {
+  detected: { color: colors.textMuted, labelKey: 'promises.detected', labelDefault: 'Detected', icon: '\uD83D\uDD0D' },
+  on_track: { color: colors.warning, labelKey: 'promises.onTrack', labelDefault: 'On Track', icon: '\uD83C\uDFD7' },
+  delayed: { color: '#EA580C', labelKey: 'promises.delayed', labelDefault: 'Delayed', icon: '\u26A0\uFE0F' },
+  fulfilled: { color: colors.success, labelKey: 'promises.fulfilled', labelDefault: 'Fulfilled', icon: '\u2705' },
+  broken: { color: colors.error, labelKey: 'promises.broken', labelDefault: 'Broken', icon: '\u274C' },
 };
 
-const SOURCE_LABELS: Record<string, string> = {
-  speech: 'Speech',
-  interview: 'Interview',
-  manifesto: 'Manifesto',
-  social_media: 'Social Media',
-  news: 'News',
+const SOURCE_LABELS_BASE: Record<string, { key: string; default: string }> = {
+  speech: { key: 'promises.speech', default: 'Speech' },
+  interview: { key: 'promises.interview', default: 'Interview' },
+  manifesto: { key: 'promises.manifesto', default: 'Manifesto' },
+  social_media: { key: 'promises.socialMedia', default: 'Social Media' },
+  news: { key: 'promises.news', default: 'News' },
 };
 
 export const PromiseDetailScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<DetailRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { promiseId } = route.params;
   const { data: promise, isLoading } = usePromiseDetail(promiseId);
+
+  const STATUS_CONFIG = Object.fromEntries(
+    Object.entries(STATUS_CONFIG_BASE).map(([key, val]) => [
+      key,
+      { color: val.color, label: t(val.labelKey, val.labelDefault), icon: val.icon },
+    ]),
+  ) as Record<PromiseStatus, { color: string; label: string; icon: string }>;
+
+  const SOURCE_LABELS = Object.fromEntries(
+    Object.entries(SOURCE_LABELS_BASE).map(([key, val]) => [key, t(val.key, val.default)]),
+  ) as Record<string, string>;
 
   // Translation state
   const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
@@ -64,7 +77,7 @@ export const PromiseDetailScreen: React.FC = () => {
   if (!promise) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.emptyText}>Promise not found</Text>
+        <Text style={styles.emptyText}>{t('promises.promiseNotFound', 'Promise not found')}</Text>
       </View>
     );
   }
@@ -131,7 +144,7 @@ export const PromiseDetailScreen: React.FC = () => {
             <Text style={styles.leaderName}>
               {promise.leader_name || 'Unknown Leader'}
             </Text>
-            <Text style={styles.leaderSubtext}>Tap to view profile</Text>
+            <Text style={styles.leaderSubtext}>{t('promises.tapToViewProfile', 'Tap to view profile')}</Text>
           </View>
           <Text style={styles.chevron}>{'\u203A'}</Text>
         </TouchableOpacity>
@@ -139,7 +152,7 @@ export const PromiseDetailScreen: React.FC = () => {
 
       {/* Description */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.sectionTitle}>{t('promises.description', 'Description')}</Text>
         {showTranslatedDesc && translatedDesc ? (
           <TranslatedContentBox>
             <Text style={styles.descriptionText}>{translatedDesc}</Text>
@@ -163,9 +176,9 @@ export const PromiseDetailScreen: React.FC = () => {
 
       {/* Source & detection info */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Source Information</Text>
+        <Text style={styles.sectionTitle}>{t('promises.sourceInformation', 'Source Information')}</Text>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Source Type</Text>
+          <Text style={styles.infoLabel}>{t('promises.sourceType', 'Source Type')}</Text>
           <Badge
             text={SOURCE_LABELS[promise.source_type] || promise.source_type}
             backgroundColor={colors.navy + '10'}
@@ -175,9 +188,9 @@ export const PromiseDetailScreen: React.FC = () => {
         </View>
         {isAIExtracted && (
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Detection</Text>
+            <Text style={styles.infoLabel}>{t('promises.detection', 'Detection')}</Text>
             <Badge
-              text="AI Extracted"
+              text={t('promises.aiExtracted', 'AI Extracted')}
               backgroundColor={colors.info + '15'}
               color={colors.info}
               size="sm"
@@ -185,11 +198,11 @@ export const PromiseDetailScreen: React.FC = () => {
           </View>
         )}
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>First Detected</Text>
+          <Text style={styles.infoLabel}>{t('promises.firstDetected', 'First Detected')}</Text>
           <Text style={styles.infoValue}>{formatDate(promise.created_at)}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Last Updated</Text>
+          <Text style={styles.infoLabel}>{t('promises.lastUpdated', 'Last Updated')}</Text>
           <Text style={styles.infoValue}>
             {formatRelativeTime(promise.updated_at || promise.created_at)}
           </Text>
@@ -198,7 +211,7 @@ export const PromiseDetailScreen: React.FC = () => {
 
       {/* Confidence */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Confidence Score</Text>
+        <Text style={styles.sectionTitle}>{t('promises.confidenceScore', 'Confidence Score')}</Text>
         <View style={styles.confidenceContainer}>
           <View style={styles.confidenceBarBg}>
             <View
@@ -220,17 +233,17 @@ export const PromiseDetailScreen: React.FC = () => {
         </View>
         <Text style={styles.confidenceHint}>
           {confidencePct >= 75
-            ? 'High confidence — strong evidence supports this promise attribution.'
+            ? t('promises.highConfidence', 'High confidence — strong evidence supports this promise attribution.')
             : confidencePct >= 50
-            ? 'Moderate confidence — some evidence supports this attribution.'
-            : 'Low confidence — limited evidence; this may need verification.'}
+            ? t('promises.moderateConfidence', 'Moderate confidence — some evidence supports this attribution.')
+            : t('promises.lowConfidence', 'Low confidence — limited evidence; this may need verification.')}
         </Text>
       </Card>
 
       {/* Evidence link */}
       {promise.evidence_url ? (
         <Card style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Evidence</Text>
+          <Text style={styles.sectionTitle}>{t('promises.evidence', 'Evidence')}</Text>
           <TouchableOpacity
             style={styles.evidenceBtn}
             onPress={() => Linking.openURL(promise.evidence_url!)}
@@ -247,7 +260,7 @@ export const PromiseDetailScreen: React.FC = () => {
       {/* Status timeline */}
       {promise.status_history && promise.status_history.length > 0 ? (
         <Card style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Status Timeline</Text>
+          <Text style={styles.sectionTitle}>{t('promises.statusTimeline', 'Status Timeline')}</Text>
           {promise.status_history.map((entry, idx) => {
             const entryConfig = STATUS_CONFIG[entry.status] ?? STATUS_CONFIG.detected;
             const isLast = idx === promise.status_history!.length - 1;
@@ -289,9 +302,7 @@ export const PromiseDetailScreen: React.FC = () => {
       <Card style={styles.disclaimerCard}>
         <Text style={styles.disclaimerIcon}>{'\uD83E\uDD16'}</Text>
         <Text style={styles.disclaimerText}>
-          Promise tracking is powered by AI analysis of public speeches, media reports,
-          and official documents. Confidence scores reflect the strength of source
-          attribution. Community verification helps improve accuracy.
+          {t('promises.disclaimerText', 'Promise tracking is powered by AI analysis of public speeches, media reports, and official documents. Confidence scores reflect the strength of source attribution. Community verification helps improve accuracy.')}
         </Text>
       </Card>
     </ScrollView>

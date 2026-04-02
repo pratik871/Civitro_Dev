@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -24,30 +25,31 @@ import type { RootStackParamList } from '../../navigation/types';
 type DashboardRouteProp = RouteProp<RootStackParamList, 'LeaderDashboard'>;
 type DashboardNavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  reported: { color: colors.warning, label: 'Reported' },
-  acknowledged: { color: colors.info, label: 'Acknowledged' },
-  in_progress: { color: '#7C3AED', label: 'In Progress' },
-  resolved: { color: colors.success, label: 'Resolved' },
-  closed: { color: colors.textMuted, label: 'Closed' },
+const STATUS_CONFIG_KEYS: Record<string, { color: string; labelKey: string; fallback: string }> = {
+  reported: { color: colors.warning, labelKey: 'leaderDashboard.statusReported', fallback: 'Reported' },
+  acknowledged: { color: colors.info, labelKey: 'leaderDashboard.statusAcknowledged', fallback: 'Acknowledged' },
+  in_progress: { color: '#7C3AED', labelKey: 'leaderDashboard.statusInProgress', fallback: 'In Progress' },
+  resolved: { color: colors.success, labelKey: 'leaderDashboard.statusResolved', fallback: 'Resolved' },
+  closed: { color: colors.textMuted, labelKey: 'leaderDashboard.statusClosed', fallback: 'Closed' },
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  pothole: 'Pothole',
-  garbage: 'Garbage',
-  streetlight: 'Streetlight',
-  water_supply: 'Water Supply',
-  road_damage: 'Road Damage',
-  construction: 'Construction',
-  drainage: 'Drainage',
-  traffic: 'Traffic',
-  healthcare: 'Healthcare',
-  education: 'Education',
-  public_safety: 'Public Safety',
-  other: 'Other',
+const CATEGORY_LABEL_KEYS: Record<string, { key: string; fallback: string }> = {
+  pothole: { key: 'leaderDashboard.catPothole', fallback: 'Pothole' },
+  garbage: { key: 'leaderDashboard.catGarbage', fallback: 'Garbage' },
+  streetlight: { key: 'leaderDashboard.catStreetlight', fallback: 'Streetlight' },
+  water_supply: { key: 'leaderDashboard.catWaterSupply', fallback: 'Water Supply' },
+  road_damage: { key: 'leaderDashboard.catRoadDamage', fallback: 'Road Damage' },
+  construction: { key: 'leaderDashboard.catConstruction', fallback: 'Construction' },
+  drainage: { key: 'leaderDashboard.catDrainage', fallback: 'Drainage' },
+  traffic: { key: 'leaderDashboard.catTraffic', fallback: 'Traffic' },
+  healthcare: { key: 'leaderDashboard.catHealthcare', fallback: 'Healthcare' },
+  education: { key: 'leaderDashboard.catEducation', fallback: 'Education' },
+  public_safety: { key: 'leaderDashboard.catPublicSafety', fallback: 'Public Safety' },
+  other: { key: 'leaderDashboard.catOther', fallback: 'Other' },
 };
 
 export const LeaderDashboardScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<DashboardRouteProp>();
   const navigation = useNavigation<DashboardNavProp>();
   const { leaderId } = route.params;
@@ -65,7 +67,7 @@ export const LeaderDashboardScreen: React.FC = () => {
   if (!dashboard) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.notFoundText}>Dashboard data unavailable</Text>
+        <Text style={styles.notFoundText}>{t('leaderDashboard.dataUnavailable', 'Dashboard data unavailable')}</Text>
       </View>
     );
   }
@@ -131,25 +133,25 @@ export const LeaderDashboardScreen: React.FC = () => {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{dashboard.issues_in_ward}</Text>
-            <Text style={styles.statLabel}>Total Issues</Text>
+            <Text style={styles.statLabel}>{t('leaderDashboard.totalIssues', 'Total Issues')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>
               {dashboard.resolved_count}
             </Text>
-            <Text style={styles.statLabel}>Resolved</Text>
+            <Text style={styles.statLabel}>{t('leaderDashboard.resolved', 'Resolved')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]}>
               {dashboard.pending_count}
             </Text>
-            <Text style={styles.statLabel}>Pending</Text>
+            <Text style={styles.statLabel}>{t('leaderDashboard.pending', 'Pending')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.info }]}>
               {formatResponseTime(dashboard.avg_response_days)}
             </Text>
-            <Text style={styles.statLabel}>Avg Response</Text>
+            <Text style={styles.statLabel}>{t('leaderDashboard.avgResponse', 'Avg Response')}</Text>
           </View>
         </View>
 
@@ -160,7 +162,7 @@ export const LeaderDashboardScreen: React.FC = () => {
               <View style={styles.progressRing}>
                 <Text style={styles.progressValue}>{resolutionRate}%</Text>
               </View>
-              <Text style={styles.metricLabel}>Resolution Rate</Text>
+              <Text style={styles.metricLabel}>{t('leaderDashboard.resolutionRate', 'Resolution Rate')}</Text>
             </View>
           </Card>
           <Card style={styles.metricCard}>
@@ -171,10 +173,9 @@ export const LeaderDashboardScreen: React.FC = () => {
                   : '--'}
               </Text>
               <Text style={styles.satisfactionUnit}>/5</Text>
-              <Text style={styles.metricLabel}>Citizen Satisfaction</Text>
+              <Text style={styles.metricLabel}>{t('leaderDashboard.citizenSatisfaction', 'Citizen Satisfaction')}</Text>
               <Text style={styles.ratingCount}>
-                {dashboard.total_ratings} rating
-                {dashboard.total_ratings !== 1 ? 's' : ''}
+                {dashboard.total_ratings} {t('leaderDashboard.ratings', 'ratings')}
               </Text>
             </View>
           </Card>
@@ -189,11 +190,10 @@ export const LeaderDashboardScreen: React.FC = () => {
               </View>
               <View style={styles.pendingInfo}>
                 <Text style={styles.pendingTitle}>
-                  {dashboard.pending_actions} Issue
-                  {dashboard.pending_actions !== 1 ? 's' : ''} Need Attention
+                  {t('leaderDashboard.issuesNeedAttention', '{{count}} Issues Need Attention', { count: dashboard.pending_actions })}
                 </Text>
                 <Text style={styles.pendingDesc}>
-                  Newly reported issues awaiting acknowledgement
+                  {t('leaderDashboard.newlyReported', 'Newly reported issues awaiting acknowledgement')}
                 </Text>
               </View>
             </View>
@@ -203,13 +203,13 @@ export const LeaderDashboardScreen: React.FC = () => {
         {/* Recent Issues */}
         <Card style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Issues</Text>
+            <Text style={styles.sectionTitle}>{t('leaderDashboard.recentIssues', 'Recent Issues')}</Text>
             {dashboard.boundary_id ? (
               <TouchableOpacity
                 onPress={() => navigation.navigate('IssuesList')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.viewAllLink}>View All</Text>
+                <Text style={styles.viewAllLink}>{t('leaderDashboard.viewAll', 'View All')}</Text>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -217,13 +217,14 @@ export const LeaderDashboardScreen: React.FC = () => {
           {dashboard.recent_issues.length === 0 ? (
             <View style={styles.emptyIssues}>
               <Text style={styles.emptyIssuesText}>
-                No issues reported in this constituency yet
+                {t('leaderDashboard.noIssues', 'No issues reported in this constituency yet')}
               </Text>
             </View>
           ) : (
             dashboard.recent_issues.map((issue) => {
               const statusConf =
-                STATUS_CONFIG[issue.status] ?? STATUS_CONFIG.reported;
+                STATUS_CONFIG_KEYS[issue.status] ?? STATUS_CONFIG_KEYS.reported;
+              const catConf = CATEGORY_LABEL_KEYS[issue.category];
               return (
                 <TouchableOpacity
                   key={issue.id}
@@ -235,7 +236,7 @@ export const LeaderDashboardScreen: React.FC = () => {
                 >
                   <View style={styles.issueItemHeader}>
                     <Text style={styles.issueCategory}>
-                      {CATEGORY_LABELS[issue.category] || issue.category}
+                      {catConf ? t(catConf.key, catConf.fallback) : issue.category}
                     </Text>
                     <View
                       style={[
@@ -249,7 +250,7 @@ export const LeaderDashboardScreen: React.FC = () => {
                           { color: statusConf.color },
                         ]}
                       >
-                        {statusConf.label}
+                        {t(statusConf.labelKey, statusConf.fallback)}
                       </Text>
                     </View>
                   </View>
@@ -271,17 +272,17 @@ export const LeaderDashboardScreen: React.FC = () => {
 
         {/* Quick Actions */}
         <Card style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>{t('leaderDashboard.quickActions', 'Quick Actions')}</Text>
           <View style={styles.actionsRow}>
             <Button
-              title="View All Issues"
+              title={t('leaderDashboard.viewAllIssues', 'View All Issues')}
               onPress={() => navigation.navigate('IssuesList')}
               variant="outline"
               size="sm"
               style={styles.actionBtn}
             />
             <Button
-              title="View Profile"
+              title={t('leaderDashboard.viewProfile', 'View Profile')}
               onPress={() =>
                 navigation.navigate('LeaderProfile', { leaderId })
               }

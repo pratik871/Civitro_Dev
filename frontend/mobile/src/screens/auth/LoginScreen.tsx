@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -22,6 +23,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<LoginNavProp>();
   const { sendOTP, isLoading } = useAuth();
   const [phone, setPhone] = useState('');
@@ -29,7 +31,7 @@ export const LoginScreen: React.FC = () => {
 
   const handleSendOTP = async () => {
     if (phone.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number');
+      setError(t('auth.invalidPhone', 'Please enter a valid 10-digit mobile number'));
       return;
     }
     setError('');
@@ -37,7 +39,7 @@ export const LoginScreen: React.FC = () => {
     if (result.success) {
       navigation.navigate('OTPVerify', { phone, isRegistering: false });
     } else {
-      setError(result.error || 'Failed to send OTP');
+      setError(result.error || t('auth.failedSendOTP', 'Failed to send OTP'));
     }
   };
 
@@ -84,14 +86,14 @@ export const LoginScreen: React.FC = () => {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.title}>{t('auth.welcomeBack', 'Welcome back')}</Text>
           <Text style={styles.subtitle}>
-            Enter your mobile number to continue
+            {t('auth.enterMobileToContine', 'Enter your mobile number to continue')}
           </Text>
 
           <Input
-            label="Mobile Number"
-            placeholder="Enter 10-digit mobile number"
+            label={t('auth.mobileNumber', 'Mobile Number')}
+            placeholder={t('auth.enterMobileNumber', 'Enter 10-digit mobile number')}
             value={phone}
             onChangeText={text => {
               setPhone(text.replace(/[^0-9]/g, '').slice(0, 10));
@@ -106,7 +108,7 @@ export const LoginScreen: React.FC = () => {
           />
 
           <Button
-            title="Send OTP"
+            title={t('auth.sendOTP', 'Send OTP')}
             onPress={handleSendOTP}
             fullWidth
             size="lg"
@@ -114,9 +116,9 @@ export const LoginScreen: React.FC = () => {
           />
 
           <View style={styles.registerRow}>
-            <Text style={styles.registerText}>New to Civitro? </Text>
+            <Text style={styles.registerText}>{t('auth.newToCivitro', 'New to Civitro?')} </Text>
             <Button
-              title="Register"
+              title={t('auth.register', 'Register')}
               onPress={() => navigation.navigate('Register', { phone })}
               variant="ghost"
               size="sm"
@@ -126,7 +128,7 @@ export const LoginScreen: React.FC = () => {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            {t('auth.termsAgreement', 'By continuing, you agree to our Terms of Service and Privacy Policy')}
           </Text>
         </View>
       </ScrollView>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { colors } from '../../theme/colors';
@@ -21,11 +22,11 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const ORG_TYPE_LABELS: Record<OrgType, string> = {
-  political_party: 'Political Party',
-  ngo: 'NGO',
-  rwa: 'RWA',
-  club: 'Club',
+const ORG_TYPE_LABEL_KEYS: Record<OrgType, { key: string; fallback: string }> = {
+  political_party: { key: 'organizations.politicalParty', fallback: 'Political Party' },
+  ngo: { key: 'organizations.ngo', fallback: 'NGO' },
+  rwa: { key: 'organizations.rwa', fallback: 'RWA' },
+  club: { key: 'organizations.club', fallback: 'Club' },
 };
 
 const ORG_TYPE_COLORS: Record<OrgType, string> = {
@@ -43,6 +44,7 @@ const ORG_TYPE_ICONS: Record<OrgType, string> = {
 };
 
 export const OrganizationsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const { data: organizations, isLoading, refetch } = useMyOrganizations();
 
@@ -66,7 +68,7 @@ export const OrganizationsScreen: React.FC = () => {
                 {item.name}
               </Text>
               <Badge
-                text={ORG_TYPE_LABELS[item.type] || item.type}
+                text={ORG_TYPE_LABEL_KEYS[item.type] ? t(ORG_TYPE_LABEL_KEYS[item.type].key, ORG_TYPE_LABEL_KEYS[item.type].fallback) : item.type}
                 backgroundColor={typeColor + '15'}
                 color={typeColor}
                 size="sm"
@@ -131,16 +133,15 @@ export const OrganizationsScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F3E2}'}</Text>
-            <Text style={styles.emptyTitle}>No organizations yet</Text>
+            <Text style={styles.emptyTitle}>{t('organizations.noOrgsYet', 'No organizations yet')}</Text>
             <Text style={styles.emptyText}>
-              Create or join a political party, NGO, RWA, or club to coordinate
-              with your community.
+              {t('organizations.createOrJoin', 'Create or join a political party, NGO, RWA, or club to coordinate with your community.')}
             </Text>
             <TouchableOpacity
               style={styles.createButton}
               onPress={() => navigation.navigate('CreateOrg')}
             >
-              <Text style={styles.createButtonText}>Create Organization</Text>
+              <Text style={styles.createButtonText}>{t('organizations.createOrganization', 'Create Organization')}</Text>
             </TouchableOpacity>
           </View>
         }

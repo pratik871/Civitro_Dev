@@ -11,6 +11,7 @@ import {
 import { Swipeable } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { useNotifications, useMarkAllRead } from '../../hooks/useNotifications';
 import { useAuthStore } from '../../stores/authStore';
 import api from '../../lib/api';
@@ -42,6 +43,7 @@ const NOTIFICATION_ICONS: Record<string, { emoji: string; bg: string }> = {
 type NotifNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const NotificationsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NotifNavProp>();
   const userId = useAuthStore(s => s.user?.id);
   const { data: notifications, isLoading, refetch } = useNotifications();
@@ -96,12 +98,12 @@ export const NotificationsScreen: React.FC = () => {
     <Swipeable
       renderRightActions={() => (
         <TouchableOpacity style={styles.swipeBtn} onPress={() => deleteNotification(item.id)}>
-          <Text style={styles.swipeBtnText}>Delete</Text>
+          <Text style={styles.swipeBtnText}>{t('notifications.delete', 'Delete')}</Text>
         </TouchableOpacity>
       )}
       renderLeftActions={() => (
         <TouchableOpacity style={styles.swipeBtn} onPress={() => deleteNotification(item.id)}>
-          <Text style={styles.swipeBtnText}>Delete</Text>
+          <Text style={styles.swipeBtnText}>{t('notifications.delete', 'Delete')}</Text>
         </TouchableOpacity>
       )}
     >
@@ -139,18 +141,18 @@ export const NotificationsScreen: React.FC = () => {
       {(notifications ?? []).length > 0 && (
         <View style={styles.unreadBar}>
           <Text style={styles.unreadBarText}>
-            {unreadCount > 0 ? `${unreadCount} unread` : `${(notifications ?? []).length} notifications`}
+            {unreadCount > 0 ? `${unreadCount} ${t('notifications.unread', 'unread')}` : `${(notifications ?? []).length} ${t('notifications.notifications', 'notifications')}`}
           </Text>
           <View style={styles.unreadActions}>
             {unreadCount > 0 && (
               <TouchableOpacity onPress={() => markAllRead.mutate()}>
-                <Text style={styles.markAllRead}>Mark all read</Text>
+                <Text style={styles.markAllRead}>{t('notifications.markAllRead', 'Mark all read')}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={() => {
               api.delete(`/api/v1/notifications/users/${userId}/clear`).then(() => refetch()).catch(() => {});
             }}>
-              <Text style={[styles.markAllRead, { color: '#EF4444' }]}>Clear all</Text>
+              <Text style={[styles.markAllRead, { color: '#EF4444' }]}>{t('notifications.clearAll', 'Clear all')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -166,7 +168,7 @@ export const NotificationsScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
-            <Text style={styles.emptyText}>No notifications yet</Text>
+            <Text style={styles.emptyText}>{t('notifications.noNotificationsYet', 'No notifications yet')}</Text>
           </View>
         }
       />

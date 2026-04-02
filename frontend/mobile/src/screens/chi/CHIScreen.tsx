@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { ScoreRing } from '../../components/ui/ScoreRing';
 import api from '../../lib/api';
@@ -44,6 +45,7 @@ const TREND_COLORS = {
 };
 
 export const CHIScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList>>();
   const constituencyId = (route.params as { constituencyId?: string } | undefined)?.constituencyId;
 
@@ -64,7 +66,7 @@ export const CHIScreen: React.FC = () => {
   if (!chiData) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.emptyText}>CHI data not available yet</Text>
+        <Text style={styles.emptyText}>{t('chi.noData', 'CHI data not available yet')}</Text>
       </View>
     );
   }
@@ -72,7 +74,7 @@ export const CHIScreen: React.FC = () => {
   const overallScore = chiData.overallScore;
   const categories = chiData.categories ?? [];
   const trendChange = chiData.trend?.change ?? 0;
-  const trendPeriod = chiData.trend?.period ?? 'vs last month';
+  const trendPeriod = chiData.trend?.period ?? t('chi.vsLastMonth', 'vs last month');
   const trendColor = trendChange >= 0 ? colors.success : colors.error;
   const trendArrow = trendChange >= 0 ? '\u2191' : '\u2193';
 
@@ -95,14 +97,13 @@ export const CHIScreen: React.FC = () => {
           />
           <View style={styles.overallInfo}>
             <Text style={styles.overallTitle}>
-              Constituency Health Index
+              {t('chi.constituencyHealthIndex', 'Constituency Health Index')}
             </Text>
             <Text style={styles.overallSubtitle}>
               {chiData.constituency ?? ''}
             </Text>
             <Text style={styles.overallDesc}>
-              Composite score measuring the overall health and governance quality
-              of your constituency.
+              {t('chi.compositeScoreDesc', 'Composite score measuring the overall health and governance quality of your constituency.')}
             </Text>
             <View style={styles.trendRow}>
               <Text style={[styles.trendText, { color: trendColor }]}>
@@ -115,9 +116,9 @@ export const CHIScreen: React.FC = () => {
       </Card>
 
       {/* Score Breakdown */}
-      <Text style={styles.sectionTitle}>Score Breakdown</Text>
+      <Text style={styles.sectionTitle}>{t('chi.scoreBreakdown', 'Score Breakdown')}</Text>
       <Text style={styles.sectionSubtitle}>
-        {categories.length} key areas that determine your constituency health
+        {t('chi.keyAreas', '{{count}} key areas that determine your constituency health', { count: categories.length })}
       </Text>
 
       {categories.map(category => {
@@ -169,11 +170,9 @@ export const CHIScreen: React.FC = () => {
 
       {/* Methodology */}
       <Card style={styles.methodCard}>
-        <Text style={styles.methodTitle}>{'\u{2139}\uFE0F'} How CHI is Calculated</Text>
+        <Text style={styles.methodTitle}>{'\u{2139}\uFE0F'} {t('chi.howCalculated', 'How CHI is Calculated')}</Text>
         <Text style={styles.methodText}>
-          The Constituency Health Index (CHI) is a composite score from 0-100 computed
-          from 10 key governance areas. Data sources include citizen reports, government
-          data, survey responses, and real-time issue tracking. Scores are updated monthly.
+          {t('chi.methodologyText', 'The Constituency Health Index (CHI) is a composite score from 0-100 computed from 10 key governance areas. Data sources include citizen reports, government data, survey responses, and real-time issue tracking. Scores are updated monthly.')}
         </Text>
       </Card>
 

@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { colors } from '../../theme/colors';
@@ -22,6 +23,7 @@ type RegisterNavProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>
 type RegisterRouteProp = RouteProp<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen: React.FC = () => {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<RegisterNavProp>();
   const route = useRoute<RegisterRouteProp>();
@@ -36,8 +38,8 @@ export const RegisterScreen: React.FC = () => {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = 'Name is required';
-    if (phone.length !== 10) newErrors.phone = 'Enter a valid 10-digit number';
+    if (!name.trim()) newErrors.name = t('auth.nameRequired', 'Name is required');
+    if (phone.length !== 10) newErrors.phone = t('auth.invalidPhone', 'Enter a valid 10-digit number');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -48,7 +50,7 @@ export const RegisterScreen: React.FC = () => {
     if (result.success) {
       navigation.navigate('OTPVerify', { phone, isRegistering: true });
     } else {
-      setErrors({ phone: result.error || 'Registration failed' });
+      setErrors({ phone: result.error || t('auth.registrationFailed', 'Registration failed') });
     }
   };
 
@@ -63,16 +65,16 @@ export const RegisterScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-          <Text style={styles.title}>Create your account</Text>
+          <Text style={styles.title}>{t('auth.createAccount', 'Create your account')}</Text>
           <Text style={styles.subtitle}>
-            Join the civic revolution. Your voice matters.
+            {t('auth.joinCivicRevolution', 'Join the civic revolution. Your voice matters.')}
           </Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="Full Name"
-            placeholder="Enter your full name"
+            label={t('auth.fullName', 'Full Name')}
+            placeholder={t('auth.enterFullName', 'Enter your full name')}
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
@@ -80,8 +82,8 @@ export const RegisterScreen: React.FC = () => {
           />
 
           <Input
-            label="Mobile Number"
-            placeholder="10-digit mobile number"
+            label={t('auth.mobileNumber', 'Mobile Number')}
+            placeholder={t('auth.tenDigitMobile', '10-digit mobile number')}
             value={phone}
             onChangeText={text => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
             keyboardType="phone-pad"
@@ -91,8 +93,8 @@ export const RegisterScreen: React.FC = () => {
           />
 
           <Input
-            label="Email (Optional)"
-            placeholder="your@email.com"
+            label={t('auth.emailOptional', 'Email (Optional)')}
+            placeholder={t('auth.emailPlaceholder', 'your@email.com')}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -100,25 +102,25 @@ export const RegisterScreen: React.FC = () => {
           />
 
           <Input
-            label="Ward"
-            placeholder="e.g., Ward 15"
+            label={t('auth.ward', 'Ward')}
+            placeholder={t('auth.wardPlaceholder', 'e.g., Ward 15')}
             value={ward}
             onChangeText={setWard}
             error={errors.ward}
-            helper="Your municipal ward for local governance"
+            helper={t('auth.wardHelper', 'Your municipal ward for local governance')}
           />
 
           <Input
-            label="Constituency"
-            placeholder="e.g., South Delhi"
+            label={t('auth.constituency', 'Constituency')}
+            placeholder={t('auth.constituencyPlaceholder', 'e.g., South Delhi')}
             value={constituency}
             onChangeText={setConstituency}
             error={errors.constituency}
-            helper="Your parliamentary/assembly constituency"
+            helper={t('auth.constituencyHelper', 'Your parliamentary/assembly constituency')}
           />
 
           <Button
-            title="Continue"
+            title={t('auth.continue', 'Continue')}
             onPress={handleRegister}
             fullWidth
             size="lg"
@@ -127,9 +129,9 @@ export const RegisterScreen: React.FC = () => {
           />
 
           <View style={styles.loginRow}>
-            <Text style={styles.loginText}>Already have an account? </Text>
+            <Text style={styles.loginText}>{t('auth.alreadyHaveAccount', 'Already have an account?')} </Text>
             <Button
-              title="Login"
+              title={t('auth.login', 'Login')}
               onPress={() => navigation.navigate('Login')}
               variant="ghost"
               size="sm"

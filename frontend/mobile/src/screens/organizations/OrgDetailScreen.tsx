@@ -12,6 +12,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
@@ -30,11 +31,11 @@ import type { RootStackParamList } from '../../navigation/types';
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteType = RouteProp<RootStackParamList, 'OrgDetail'>;
 
-const ORG_TYPE_LABELS: Record<OrgType, string> = {
-  political_party: 'Political Party',
-  ngo: 'NGO',
-  rwa: 'RWA',
-  club: 'Club',
+const ORG_TYPE_LABEL_KEYS: Record<OrgType, { key: string; fallback: string }> = {
+  political_party: { key: 'organizations.politicalParty', fallback: 'Political Party' },
+  ngo: { key: 'organizations.ngo', fallback: 'NGO' },
+  rwa: { key: 'organizations.rwa', fallback: 'RWA' },
+  club: { key: 'organizations.club', fallback: 'Club' },
 };
 
 const ORG_TYPE_COLORS: Record<OrgType, string> = {
@@ -51,6 +52,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export const OrgDetailScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const route = useRoute<RouteType>();
   const { orgId } = route.params;
@@ -109,7 +111,7 @@ export const OrgDetailScreen: React.FC = () => {
             <View style={styles.headerInfo}>
               <Text style={styles.orgName}>{org.name}</Text>
               <Badge
-                text={ORG_TYPE_LABELS[org.type] || org.type}
+                text={ORG_TYPE_LABEL_KEYS[org.type] ? t(ORG_TYPE_LABEL_KEYS[org.type].key, ORG_TYPE_LABEL_KEYS[org.type].fallback) : org.type}
                 backgroundColor={typeColor + '15'}
                 color={typeColor}
                 size="sm"
@@ -125,13 +127,13 @@ export const OrgDetailScreen: React.FC = () => {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{formatNumber(totalMembers)}</Text>
-            <Text style={styles.statLabel}>Members</Text>
+            <Text style={styles.statLabel}>{t('organizations.members', 'Members')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.saffron }]}>
               {formatNumber(totalBroadcasts)}
             </Text>
-            <Text style={styles.statLabel}>Broadcasts</Text>
+            <Text style={styles.statLabel}>{t('organizations.broadcasts', 'Broadcasts')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>
@@ -139,7 +141,7 @@ export const OrgDetailScreen: React.FC = () => {
                 ? toPercentage(analytics.avgReadRate * 100, 100)
                 : '--'}
             </Text>
-            <Text style={styles.statLabel}>Read Rate</Text>
+            <Text style={styles.statLabel}>{t('organizations.readRate', 'Read Rate')}</Text>
           </View>
         </View>
 
@@ -152,7 +154,7 @@ export const OrgDetailScreen: React.FC = () => {
             }
           >
             <Text style={styles.actionIcon}>{'\u{1F465}'}</Text>
-            <Text style={styles.actionLabel}>Members</Text>
+            <Text style={styles.actionLabel}>{t('organizations.members', 'Members')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionButton}
@@ -161,7 +163,7 @@ export const OrgDetailScreen: React.FC = () => {
             }
           >
             <Text style={styles.actionIcon}>{'\u{1F4E2}'}</Text>
-            <Text style={styles.actionLabel}>Broadcasts</Text>
+            <Text style={styles.actionLabel}>{t('organizations.broadcasts', 'Broadcasts')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, styles.actionButtonMuted]}
@@ -170,7 +172,7 @@ export const OrgDetailScreen: React.FC = () => {
             }}
           >
             <Text style={styles.actionIcon}>{'\u{1F4CA}'}</Text>
-            <Text style={styles.actionLabel}>Analytics</Text>
+            <Text style={styles.actionLabel}>{t('organizations.analytics', 'Analytics')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -178,14 +180,14 @@ export const OrgDetailScreen: React.FC = () => {
         {members.length > 0 && (
           <Card style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Members</Text>
+              <Text style={styles.sectionTitle}>{t('organizations.members', 'Members')}</Text>
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate('OrgMembers', { orgId: org.id })
                 }
               >
                 <Text style={styles.seeAllLink}>
-                  See All ({totalMembers})
+                  {t('organizations.seeAll', 'See All')} ({totalMembers})
                 </Text>
               </TouchableOpacity>
             </View>
@@ -201,7 +203,7 @@ export const OrgDetailScreen: React.FC = () => {
                     {member.userName || member.userId}
                   </Text>
                   <Text style={styles.memberJoined}>
-                    Joined {formatRelativeTime(member.joinedAt)}
+                    {t('organizations.joined', 'Joined')} {formatRelativeTime(member.joinedAt)}
                   </Text>
                 </View>
                 <Badge
@@ -219,14 +221,14 @@ export const OrgDetailScreen: React.FC = () => {
         {broadcasts.length > 0 && (
           <Card style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Broadcasts</Text>
+              <Text style={styles.sectionTitle}>{t('organizations.recentBroadcasts', 'Recent Broadcasts')}</Text>
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate('Broadcasts', { orgId: org.id })
                 }
               >
                 <Text style={styles.seeAllLink}>
-                  See All ({totalBroadcasts})
+                  {t('organizations.seeAll', 'See All')} ({totalBroadcasts})
                 </Text>
               </TouchableOpacity>
             </View>
@@ -241,7 +243,7 @@ export const OrgDetailScreen: React.FC = () => {
                       {formatRelativeTime(broadcast.createdAt)}
                     </Text>
                     <Text style={styles.broadcastReach}>
-                      {'\u{1F4E8}'} {broadcast.readCount}/{broadcast.totalCount} read
+                      {'\u{1F4E8}'} {broadcast.readCount}/{broadcast.totalCount} {t('organizations.read', 'read')}
                     </Text>
                   </View>
                 </View>

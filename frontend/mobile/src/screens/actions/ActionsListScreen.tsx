@@ -15,6 +15,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { TranslatedText } from '../../components/ui/TranslatedText';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
@@ -28,15 +29,16 @@ type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 type FilterTab = 'all' | 'trending' | 'my_actions' | 'acknowledged';
 
-const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'trending', label: 'Trending' },
-  { key: 'my_actions', label: 'My Actions' },
-  { key: 'acknowledged', label: 'Acknowledged' },
-];
-
 export const ActionsListScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
+  const FILTER_TABS: { key: FilterTab; label: string }[] = [
+    { key: 'all', label: t('actions.all', 'All') },
+    { key: 'trending', label: t('actions.trending', 'Trending') },
+    { key: 'my_actions', label: t('actions.myActions', 'My Actions') },
+    { key: 'acknowledged', label: t('actions.acknowledged', 'Acknowledged') },
+  ];
+
   const currentUser = useAuthStore(s => s.user);
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
@@ -84,21 +86,21 @@ export const ActionsListScreen: React.FC = () => {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statLabel}>{t('actions.total', 'Total')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.saffron }]}>{stats.active}</Text>
-          <Text style={styles.statLabel}>Active</Text>
+          <Text style={styles.statLabel}>{t('actions.active', 'Active')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.success }]}>{stats.resolved}</Text>
-          <Text style={styles.statLabel}>Resolved</Text>
+          <Text style={styles.statLabel}>{t('actions.resolved', 'Resolved')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.primary }]}>
             {formatNumber(stats.supporters)}
           </Text>
-          <Text style={styles.statLabel}>Supporters</Text>
+          <Text style={styles.statLabel}>{t('actions.supporters', 'Supporters')}</Text>
         </View>
       </View>
 
@@ -127,7 +129,7 @@ export const ActionsListScreen: React.FC = () => {
           <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
         </View>
         <Text style={styles.progressText}>
-          {formatNumber(current)} / {formatNumber(goal)} supporters
+          {formatNumber(current)} / {formatNumber(goal)} {t('actions.supporters', 'supporters')}
         </Text>
       </View>
     );
@@ -170,7 +172,7 @@ export const ActionsListScreen: React.FC = () => {
             <View style={styles.evidenceChip}>
               <Text style={styles.evidenceIcon}>{'\u{1F4CB}'}</Text>
               <Text style={styles.evidenceText}>
-                {item.evidenceCount} issue{item.evidenceCount !== 1 ? 's' : ''} linked
+                {item.evidenceCount} {t('actions.issuesLinked', 'issues linked')}
               </Text>
             </View>
 
@@ -186,7 +188,7 @@ export const ActionsListScreen: React.FC = () => {
                 {item.hasSupported ? '\u2714' : '\u270B'}
               </Text>
               <Text style={[styles.supportButtonText, item.hasSupported && styles.supportButtonTextActive]}>
-                {item.hasSupported ? 'Supported' : 'Support'}
+                {item.hasSupported ? t('actions.supported', 'Supported') : t('actions.support', 'Support')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -224,15 +226,15 @@ export const ActionsListScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{270A}'}</Text>
-            <Text style={styles.emptyTitle}>No community actions yet</Text>
+            <Text style={styles.emptyTitle}>{t('actions.noActionsYet', 'No community actions yet')}</Text>
             <Text style={styles.emptyText}>
-              Community actions help drive systemic change. Start one to rally your ward around an issue that matters.
+              {t('actions.noActionsDesc', 'Community actions help drive systemic change. Start one to rally your ward around an issue that matters.')}
             </Text>
             <TouchableOpacity
               style={styles.createButton}
               onPress={() => navigation.navigate('CreateAction')}
             >
-              <Text style={styles.createButtonText}>Start a Community Action</Text>
+              <Text style={styles.createButtonText}>{t('actions.startCommunityAction', 'Start a Community Action')}</Text>
             </TouchableOpacity>
           </View>
         }

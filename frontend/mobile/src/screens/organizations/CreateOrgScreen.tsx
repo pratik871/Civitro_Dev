@@ -16,6 +16,7 @@ import {
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/Button';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -25,30 +26,38 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const ORG_TYPES: { key: OrgType; label: string; icon: string; description: string }[] = [
+const ORG_TYPES: { key: OrgType; labelKey: string; labelFallback: string; icon: string; descKey: string; descFallback: string }[] = [
   {
     key: 'political_party',
-    label: 'Political Party',
+    labelKey: 'organizations.politicalParty',
+    labelFallback: 'Political Party',
     icon: '\u{1F3DB}',
-    description: 'A registered political organization',
+    descKey: 'organizations.politicalPartyDesc',
+    descFallback: 'A registered political organization',
   },
   {
     key: 'ngo',
-    label: 'NGO',
+    labelKey: 'organizations.ngo',
+    labelFallback: 'NGO',
     icon: '\u{1F91D}',
-    description: 'Non-governmental organization',
+    descKey: 'organizations.ngoDesc',
+    descFallback: 'Non-governmental organization',
   },
   {
     key: 'rwa',
-    label: 'RWA',
+    labelKey: 'organizations.rwa',
+    labelFallback: 'RWA',
     icon: '\u{1F3E0}',
-    description: 'Resident Welfare Association',
+    descKey: 'organizations.rwaDesc',
+    descFallback: 'Resident Welfare Association',
   },
   {
     key: 'club',
-    label: 'Club',
+    labelKey: 'organizations.club',
+    labelFallback: 'Club',
     icon: '\u{1F465}',
-    description: 'Community club or group',
+    descKey: 'organizations.clubDesc',
+    descFallback: 'Community club or group',
   },
 ];
 
@@ -63,6 +72,7 @@ const NAME_MAX = 100;
 const DESC_MAX = 500;
 
 export const CreateOrgScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const createMutation = useCreateOrg();
 
@@ -86,7 +96,7 @@ export const CreateOrgScreen: React.FC = () => {
           setShowSuccess(true);
         },
         onError: (err: any) => {
-          Alert.alert('Error', err.message || 'Could not create organization.');
+          Alert.alert(t('common.error', 'Error'), err.message || t('organizations.couldNotCreate', 'Could not create organization.'));
         },
       },
     );
@@ -106,15 +116,15 @@ export const CreateOrgScreen: React.FC = () => {
           <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Create Organization</Text>
+            <Text style={styles.headerTitle}>{t('organizations.createOrganization', 'Create Organization')}</Text>
             <Text style={styles.headerSubtitle}>
-              Set up a political party, NGO, RWA, or community club
+              {t('organizations.setupSubtitle', 'Set up a political party, NGO, RWA, or community club')}
             </Text>
           </View>
 
           {/* Organization Type */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Type</Text>
+            <Text style={styles.fieldLabel}>{t('organizations.type', 'Type')}</Text>
             <View style={styles.typeGrid}>
               {ORG_TYPES.map(orgType => {
                 const isSelected = selectedType === orgType.key;
@@ -139,10 +149,10 @@ export const CreateOrgScreen: React.FC = () => {
                         isSelected && { color: typeColor },
                       ]}
                     >
-                      {orgType.label}
+                      {t(orgType.labelKey, orgType.labelFallback)}
                     </Text>
                     <Text style={styles.typeDescription} numberOfLines={1}>
-                      {orgType.description}
+                      {t(orgType.descKey, orgType.descFallback)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -152,10 +162,10 @@ export const CreateOrgScreen: React.FC = () => {
 
           {/* Name */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Name</Text>
+            <Text style={styles.fieldLabel}>{t('organizations.name', 'Name')}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Organization name"
+              placeholder={t('organizations.orgNamePlaceholder', 'Organization name')}
               placeholderTextColor={colors.textMuted}
               value={name}
               onChangeText={t => setName(t.slice(0, NAME_MAX))}
@@ -168,10 +178,10 @@ export const CreateOrgScreen: React.FC = () => {
 
           {/* Description */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Description (Optional)</Text>
+            <Text style={styles.fieldLabel}>{t('organizations.descriptionOptional', 'Description (Optional)')}</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
-              placeholder="What does your organization do?"
+              placeholder={t('organizations.descPlaceholder', 'What does your organization do?')}
               placeholderTextColor={colors.textMuted}
               value={description}
               onChangeText={t => setDescription(t.slice(0, DESC_MAX))}
@@ -187,7 +197,7 @@ export const CreateOrgScreen: React.FC = () => {
           {/* Submit */}
           <View style={styles.submitRow}>
             <Button
-              title="Create Organization"
+              title={t('organizations.createOrganization', 'Create Organization')}
               onPress={handleSubmit}
               variant="primary"
               size="lg"
@@ -201,7 +211,7 @@ export const CreateOrgScreen: React.FC = () => {
             />
             {!canSubmit && (
               <Text style={styles.submitHint}>
-                Select a type and enter a name to continue.
+                {t('organizations.submitHint', 'Select a type and enter a name to continue.')}
               </Text>
             )}
           </View>
@@ -232,10 +242,9 @@ export const CreateOrgScreen: React.FC = () => {
                 />
               </Svg>
             </View>
-            <Text style={styles.successTitle}>Organization Created!</Text>
+            <Text style={styles.successTitle}>{t('organizations.orgCreated', 'Organization Created!')}</Text>
             <Text style={styles.successSubtitle}>
-              Your organization is now live. Start adding members and sending
-              broadcasts.
+              {t('organizations.orgCreatedDesc', 'Your organization is now live. Start adding members and sending broadcasts.')}
             </Text>
             <TouchableOpacity
               style={styles.successButton}
@@ -245,7 +254,7 @@ export const CreateOrgScreen: React.FC = () => {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.successButtonText}>Done</Text>
+              <Text style={styles.successButtonText}>{t('organizations.done', 'Done')}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>

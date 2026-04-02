@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import api from '../../lib/api';
@@ -30,14 +31,23 @@ interface TrendingTopic {
   relatedIssues: number;
 }
 
-const SENTIMENT_CONFIG = {
-  positive: { color: colors.success, label: 'Positive', icon: '\u{1F44D}' },
-  negative: { color: colors.error, label: 'Negative', icon: '\u{1F44E}' },
-  neutral: { color: colors.info, label: 'Neutral', icon: '\u2796' },
-  mixed: { color: colors.warning, label: 'Mixed', icon: '\u{1F914}' },
+const SENTIMENT_CONFIG_BASE = {
+  positive: { color: colors.success, labelKey: 'trending.positive', labelDefault: 'Positive', icon: '\u{1F44D}' },
+  negative: { color: colors.error, labelKey: 'trending.negative', labelDefault: 'Negative', icon: '\u{1F44E}' },
+  neutral: { color: colors.info, labelKey: 'trending.neutral', labelDefault: 'Neutral', icon: '\u2796' },
+  mixed: { color: colors.warning, labelKey: 'trending.mixed', labelDefault: 'Mixed', icon: '\u{1F914}' },
 };
 
 export const TrendingScreen: React.FC = () => {
+  const { t } = useTranslation();
+
+  const SENTIMENT_CONFIG = Object.fromEntries(
+    Object.entries(SENTIMENT_CONFIG_BASE).map(([key, val]) => [
+      key,
+      { color: val.color, label: t(val.labelKey, val.labelDefault), icon: val.icon },
+    ]),
+  ) as Record<string, { color: string; label: string; icon: string }>;
+
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [filter, setFilter] = useState<string>('all');
@@ -93,9 +103,9 @@ export const TrendingScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-        <Text style={styles.headerTitle}>Trending Topics</Text>
+        <Text style={styles.headerTitle}>{t('trending.trendingTopics', 'Trending Topics')}</Text>
         <Text style={styles.headerSubtitle}>
-          What your community is talking about
+          {t('trending.communityTalking', 'What your community is talking about')}
         </Text>
       </View>
 
@@ -121,8 +131,8 @@ export const TrendingScreen: React.FC = () => {
           <View style={styles.voicesLeft}>
             <Text style={styles.voicesIcon}>{'\u{1F399}'}</Text>
             <View>
-              <Text style={styles.voicesTitle}>Community Voices</Text>
-              <Text style={styles.voicesSubtitle}>See what citizens are saying</Text>
+              <Text style={styles.voicesTitle}>{t('trending.communityVoices', 'Community Voices')}</Text>
+              <Text style={styles.voicesSubtitle}>{t('trending.seeWhatCitizens', 'See what citizens are saying')}</Text>
             </View>
           </View>
           <Text style={styles.voicesArrow}>{'\u203A'}</Text>
@@ -131,7 +141,7 @@ export const TrendingScreen: React.FC = () => {
         {/* Sentiment Overview — only shown when data is available */}
         {sentimentSummary && (
           <Card style={styles.sentimentOverview}>
-            <Text style={styles.overviewTitle}>Community Sentiment</Text>
+            <Text style={styles.overviewTitle}>{t('trending.communitySentiment', 'Community Sentiment')}</Text>
             <View style={styles.sentimentBar}>
               {Object.entries(sentimentSummary).map(([key, value]) => (
                 <View
@@ -189,7 +199,7 @@ export const TrendingScreen: React.FC = () => {
                   filter === f && styles.filterChipTextActive,
                 ]}
               >
-                {f === 'all' ? 'All Topics' : SENTIMENT_CONFIG[f as keyof typeof SENTIMENT_CONFIG].label}
+                {f === 'all' ? t('trending.allTopics', 'All Topics') : SENTIMENT_CONFIG[f as keyof typeof SENTIMENT_CONFIG].label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -199,7 +209,7 @@ export const TrendingScreen: React.FC = () => {
         {filteredTopics.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F4CA}'}</Text>
-            <Text style={styles.emptyText}>No trending topics yet</Text>
+            <Text style={styles.emptyText}>{t('trending.noTrendingTopics', 'No trending topics yet')}</Text>
           </View>
         ) : (
           filteredTopics.map((topic, index) => {
@@ -220,7 +230,7 @@ export const TrendingScreen: React.FC = () => {
                         size="sm"
                       />
                       <Text style={styles.mentionCount}>
-                        {formatNumber(topic.mentions)} mentions
+                        {formatNumber(topic.mentions)} {t('trending.mentions', 'mentions')}
                       </Text>
                     </View>
                   </View>
@@ -255,7 +265,7 @@ export const TrendingScreen: React.FC = () => {
                   </Text>
 
                   <Text style={styles.relatedText}>
-                    {topic.relatedIssues} issues
+                    {topic.relatedIssues} {t('trending.issues', 'issues')}
                   </Text>
                 </View>
 

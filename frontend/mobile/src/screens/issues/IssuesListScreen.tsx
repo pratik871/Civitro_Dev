@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { IssueCard } from '../../components/issues/IssueCard';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -18,6 +19,7 @@ import type { RootStackParamList } from '../../navigation/types';
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const IssuesListScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const route = useRoute();
   const categoryFilter = (route.params as any)?.category as string | undefined;
@@ -56,7 +58,7 @@ export const IssuesListScreen: React.FC = () => {
       onRefresh={refetch}
       ListEmptyComponent={
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No issues reported yet</Text>
+          <Text style={styles.emptyText}>{t('issues.noIssuesReported', 'No issues reported yet')}</Text>
         </View>
       }
     />

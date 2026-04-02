@@ -17,6 +17,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 import { Avatar } from '../../components/ui/Avatar';
 import { InlineTranslateLink } from '../../components/ui/TranslateButton';
 import {
@@ -66,7 +68,7 @@ function formatMessageTime(dateStr: string): string {
     date.getMonth() === yesterday.getMonth() &&
     date.getFullYear() === yesterday.getFullYear();
 
-  if (isYesterday) return `Yesterday ${time}`;
+  if (isYesterday) return `${i18next.t('messages.yesterday', 'Yesterday')} ${time}`;
 
   return `${date.toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -142,6 +144,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 // Main ChatScreen
 // ---------------------------------------------------------------------------
 export const ChatScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<ChatNavProp>();
   const route = useRoute<ChatRouteProp>();
   const insets = useSafeAreaInsets();
@@ -309,7 +312,7 @@ export const ChatScreen: React.FC = () => {
           <Text style={styles.headerName} numberOfLines={1}>
             {recipientName || 'Conversation'}
           </Text>
-          <Text style={styles.headerSubtitle}>Ward Corporator</Text>
+          <Text style={styles.headerSubtitle}>{t('messages.wardCorporator', 'Ward Corporator')}</Text>
         </View>
       </View>
 
@@ -319,7 +322,7 @@ export const ChatScreen: React.FC = () => {
       {isInitializing || messagesLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading conversation...</Text>
+          <Text style={styles.loadingText}>{t('messages.loadingConversation', 'Loading conversation...')}</Text>
         </View>
       ) : (
         <FlatList
@@ -333,8 +336,7 @@ export const ChatScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                Start the conversation {'\u2014'} your representative will see
-                your message
+                {t('messages.startConversation', 'Start the conversation \u2014 your representative will see your message')}
               </Text>
             </View>
           }
@@ -355,7 +357,7 @@ export const ChatScreen: React.FC = () => {
             style={styles.textInput}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Type a message..."
+            placeholder={t('messages.typeMessage', 'Type a message...')}
             placeholderTextColor={colors.textMuted}
             multiline
             maxLength={2000}

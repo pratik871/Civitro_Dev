@@ -15,6 +15,8 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { TranslateButton, TranslatedContentBox } from '../../components/ui/TranslateButton';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 import { usePromises } from '../../hooks/usePromises';
 import type { Promise as PromiseItem, PromiseStatus } from '../../hooks/usePromises';
 import { colors } from '../../theme/colors';
@@ -24,25 +26,38 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const STATUS_CONFIG: Record<PromiseStatus, { color: string; label: string; icon: string }> = {
-  detected: { color: colors.textMuted, label: 'Detected', icon: '\uD83D\uDD0D' },
-  on_track: { color: colors.warning, label: 'On Track', icon: '\uD83C\uDFD7' },
-  delayed: { color: '#EA580C', label: 'Delayed', icon: '\u26A0\uFE0F' },
-  fulfilled: { color: colors.success, label: 'Fulfilled', icon: '\u2705' },
-  broken: { color: colors.error, label: 'Broken', icon: '\u274C' },
+const STATUS_CONFIG_BASE: Record<PromiseStatus, { color: string; labelKey: string; labelDefault: string; icon: string }> = {
+  detected: { color: colors.textMuted, labelKey: 'promises.detected', labelDefault: 'Detected', icon: '\uD83D\uDD0D' },
+  on_track: { color: colors.warning, labelKey: 'promises.onTrack', labelDefault: 'On Track', icon: '\uD83C\uDFD7' },
+  delayed: { color: '#EA580C', labelKey: 'promises.delayed', labelDefault: 'Delayed', icon: '\u26A0\uFE0F' },
+  fulfilled: { color: colors.success, labelKey: 'promises.fulfilled', labelDefault: 'Fulfilled', icon: '\u2705' },
+  broken: { color: colors.error, labelKey: 'promises.broken', labelDefault: 'Broken', icon: '\u274C' },
 };
 
 const ALL_STATUSES: Array<'all' | PromiseStatus> = ['all', 'detected', 'on_track', 'delayed', 'fulfilled', 'broken'];
 
-const SOURCE_LABELS: Record<string, string> = {
-  speech: 'Speech',
-  interview: 'Interview',
-  manifesto: 'Manifesto',
-  social_media: 'Social Media',
-  news: 'News',
+const SOURCE_LABELS_BASE: Record<string, { key: string; default: string }> = {
+  speech: { key: 'promises.speech', default: 'Speech' },
+  interview: { key: 'promises.interview', default: 'Interview' },
+  manifesto: { key: 'promises.manifesto', default: 'Manifesto' },
+  social_media: { key: 'promises.socialMedia', default: 'Social Media' },
+  news: { key: 'promises.news', default: 'News' },
 };
 
 export const PromisesScreen: React.FC = () => {
+  const { t } = useTranslation();
+
+  const STATUS_CONFIG = Object.fromEntries(
+    Object.entries(STATUS_CONFIG_BASE).map(([key, val]) => [
+      key,
+      { color: val.color, label: t(val.labelKey, val.labelDefault), icon: val.icon },
+    ]),
+  ) as Record<PromiseStatus, { color: string; label: string; icon: string }>;
+
+  const SOURCE_LABELS = Object.fromEntries(
+    Object.entries(SOURCE_LABELS_BASE).map(([key, val]) => [key, t(val.key, val.default)]),
+  ) as Record<string, string>;
+
   const route = useRoute();
   const navigation = useNavigation<NavigationProp>();
   const leaderIdFilter = (route.params as any)?.leaderId as string | undefined;
@@ -157,7 +172,7 @@ export const PromisesScreen: React.FC = () => {
 
         {/* Confidence bar */}
         <View style={styles.confidenceRow}>
-          <Text style={styles.confidenceLabel}>Confidence</Text>
+          <Text style={styles.confidenceLabel}>{t('promises.confidence', 'Confidence')}</Text>
           <View style={styles.confidenceBarBg}>
             <View
               style={[
@@ -180,7 +195,7 @@ export const PromisesScreen: React.FC = () => {
           <View style={styles.footerBadges}>
             {isAIDetected && (
               <Badge
-                text="AI Detected"
+                text={t('promises.aiDetected', 'AI Detected')}
                 backgroundColor={colors.info + '15'}
                 color={colors.info}
                 size="sm"
@@ -213,9 +228,9 @@ export const PromisesScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.emptyIcon}>{'\uD83D\uDD0D'}</Text>
-        <Text style={styles.emptyText}>No promises tracked yet</Text>
+        <Text style={styles.emptyText}>{t('promises.noPromisesYet', 'No promises tracked yet')}</Text>
         <Text style={styles.emptySubtext}>
-          Promises made by leaders will appear here as they are detected.
+          {t('promises.promisesWillAppear', 'Promises made by leaders will appear here as they are detected.')}
         </Text>
       </View>
     );
@@ -272,37 +287,37 @@ function renderSummary(
 ) {
   return (
     <Card style={styles.summaryCard}>
-      <Text style={styles.summaryTitle}>Promise Tracker</Text>
+      <Text style={styles.summaryTitle}>{i18next.t('promises.promiseTracker', 'Promise Tracker')}</Text>
       <View style={styles.summaryRow}>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
             {total}
           </Text>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={styles.summaryLabel}>{i18next.t('promises.total', 'Total')}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: colors.success }]}>
             {fulfilled}
           </Text>
-          <Text style={styles.summaryLabel}>Fulfilled</Text>
+          <Text style={styles.summaryLabel}>{i18next.t('promises.fulfilled', 'Fulfilled')}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: colors.error }]}>
             {broken}
           </Text>
-          <Text style={styles.summaryLabel}>Broken</Text>
+          <Text style={styles.summaryLabel}>{i18next.t('promises.broken', 'Broken')}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: colors.warning }]}>
             {onTrack}
           </Text>
-          <Text style={styles.summaryLabel}>On Track</Text>
+          <Text style={styles.summaryLabel}>{i18next.t('promises.onTrack', 'On Track')}</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: colors.primary }]}>
             {fulfillmentRate}%
           </Text>
-          <Text style={styles.summaryLabel}>Rate</Text>
+          <Text style={styles.summaryLabel}>{i18next.t('promises.rate', 'Rate')}</Text>
         </View>
       </View>
     </Card>
@@ -324,7 +339,7 @@ function renderControls(
           onPress={() => setGroupByLeader(false)}
         >
           <Text style={[styles.toggleText, !groupByLeader && styles.toggleTextActive]}>
-            All
+            {i18next.t('promises.all', 'All')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -332,7 +347,7 @@ function renderControls(
           onPress={() => setGroupByLeader(true)}
         >
           <Text style={[styles.toggleText, groupByLeader && styles.toggleTextActive]}>
-            By Leader
+            {i18next.t('promises.byLeader', 'By Leader')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -344,7 +359,8 @@ function renderControls(
         contentContainerStyle={styles.filterRow}
       >
         {ALL_STATUSES.map(f => {
-          const config = f === 'all' ? null : STATUS_CONFIG[f];
+          const config = f === 'all' ? null : STATUS_CONFIG_BASE[f];
+          const label = config ? i18next.t(config.labelKey, config.labelDefault) : null;
           return (
             <TouchableOpacity
               key={f}
@@ -360,7 +376,7 @@ function renderControls(
                   filter === f && styles.filterChipTextActive,
                 ]}
               >
-                {f === 'all' ? 'All' : `${config?.icon} ${config?.label}`}
+                {f === 'all' ? i18next.t('promises.all', 'All') : `${config?.icon} ${label}`}
               </Text>
             </TouchableOpacity>
           );

@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -32,6 +33,7 @@ type RouteType = RouteProp<RootStackParamList, 'Broadcasts'>;
 const TEXT_MAX = 2000;
 
 export const BroadcastsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<RouteType>();
   const { orgId } = route.params;
 
@@ -47,7 +49,7 @@ export const BroadcastsScreen: React.FC = () => {
 
   const handleSend = () => {
     if (!newText.trim()) {
-      Alert.alert('Error', 'Please enter a message.');
+      Alert.alert(t('common.error', 'Error'), t('organizations.enterMessage', 'Please enter a message.'));
       return;
     }
     sendMutation.mutate(
@@ -59,7 +61,7 @@ export const BroadcastsScreen: React.FC = () => {
           refetch();
         },
         onError: (err: any) => {
-          Alert.alert('Error', err.message || 'Could not send broadcast.');
+          Alert.alert(t('common.error', 'Error'), err.message || t('organizations.couldNotSendBroadcast', 'Could not send broadcast.'));
         },
       },
     );
@@ -81,7 +83,7 @@ export const BroadcastsScreen: React.FC = () => {
               {formatRelativeTime(item.createdAt)}
             </Text>
             <Badge
-              text={`${readPercent}% read`}
+              text={`${readPercent}% ${t('organizations.read', 'read')}`}
               backgroundColor={
                 readPercent >= 50
                   ? colors.success + '15'
@@ -101,7 +103,7 @@ export const BroadcastsScreen: React.FC = () => {
               <Text style={styles.reachIcon}>{'\u{1F4E8}'}</Text>
               <Text style={styles.reachText}>
                 {formatNumber(item.readCount)} / {formatNumber(item.totalCount)}{' '}
-                reached
+                {t('organizations.reached', 'reached')}
               </Text>
             </View>
             {item.targetLevel > 0 && (
@@ -133,13 +135,13 @@ export const BroadcastsScreen: React.FC = () => {
     <View>
       <View style={styles.headerRow}>
         <Text style={styles.headerCount}>
-          {totalCount} broadcast{totalCount !== 1 ? 's' : ''}
+          {totalCount} {t('organizations.broadcasts', 'broadcasts')}
         </Text>
         <TouchableOpacity
           style={styles.composeButton}
           onPress={() => setShowCompose(true)}
         >
-          <Text style={styles.composeButtonText}>+ New Broadcast</Text>
+          <Text style={styles.composeButtonText}>+ {t('organizations.newBroadcast', 'New Broadcast')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -175,16 +177,15 @@ export const BroadcastsScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F4E2}'}</Text>
-            <Text style={styles.emptyTitle}>No broadcasts yet</Text>
+            <Text style={styles.emptyTitle}>{t('organizations.noBroadcastsYet', 'No broadcasts yet')}</Text>
             <Text style={styles.emptyText}>
-              Send your first broadcast to communicate with all organization
-              members.
+              {t('organizations.sendFirstBroadcast', 'Send your first broadcast to communicate with all organization members.')}
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
               onPress={() => setShowCompose(true)}
             >
-              <Text style={styles.emptyButtonText}>Send Broadcast</Text>
+              <Text style={styles.emptyButtonText}>{t('organizations.sendBroadcast', 'Send Broadcast')}</Text>
             </TouchableOpacity>
           </View>
         }
@@ -205,7 +206,7 @@ export const BroadcastsScreen: React.FC = () => {
               onStartShouldSetResponder={() => true}
             >
               <View style={styles.composeHeader}>
-                <Text style={styles.composeTitle}>New Broadcast</Text>
+                <Text style={styles.composeTitle}>{t('organizations.newBroadcast', 'New Broadcast')}</Text>
                 <TouchableOpacity onPress={() => setShowCompose(false)}>
                   <Text style={styles.composeClose}>{'\u2715'}</Text>
                 </TouchableOpacity>
@@ -213,7 +214,7 @@ export const BroadcastsScreen: React.FC = () => {
 
               <TextInput
                 style={styles.composeInput}
-                placeholder="Write your message to all members..."
+                placeholder={t('organizations.writeMessagePlaceholder', 'Write your message to all members...')}
                 placeholderTextColor={colors.textMuted}
                 value={newText}
                 onChangeText={t => setNewText(t.slice(0, TEXT_MAX))}
@@ -228,7 +229,7 @@ export const BroadcastsScreen: React.FC = () => {
 
               <View style={styles.composeActions}>
                 <Button
-                  title="Send Broadcast"
+                  title={t('organizations.sendBroadcast', 'Send Broadcast')}
                   onPress={handleSend}
                   variant="primary"
                   size="lg"
@@ -291,13 +292,13 @@ export const BroadcastsScreen: React.FC = () => {
                     <Text style={styles.detailStatValue}>
                       {formatNumber(selectedBroadcast.readCount)}
                     </Text>
-                    <Text style={styles.detailStatLabel}>Read</Text>
+                    <Text style={styles.detailStatLabel}>{t('organizations.read', 'Read')}</Text>
                   </View>
                   <View style={styles.detailStatItem}>
                     <Text style={styles.detailStatValue}>
                       {formatNumber(selectedBroadcast.totalCount)}
                     </Text>
-                    <Text style={styles.detailStatLabel}>Total</Text>
+                    <Text style={styles.detailStatLabel}>{t('organizations.total', 'Total')}</Text>
                   </View>
                   <View style={styles.detailStatItem}>
                     <Text style={styles.detailStatValue}>
@@ -308,13 +309,13 @@ export const BroadcastsScreen: React.FC = () => {
                           )
                         : '0%'}
                     </Text>
-                    <Text style={styles.detailStatLabel}>Read Rate</Text>
+                    <Text style={styles.detailStatLabel}>{t('organizations.readRate', 'Read Rate')}</Text>
                   </View>
                 </View>
 
                 {selectedBroadcast.targetLevel > 0 && (
                   <Text style={styles.detailMeta}>
-                    Targeted at level {selectedBroadcast.targetLevel} members
+                    {t('organizations.targetedAtLevel', 'Targeted at level {{level}} members', { level: selectedBroadcast.targetLevel })}
                   </Text>
                 )}
               </>

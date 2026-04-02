@@ -20,6 +20,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { TranslatedText } from '../../components/ui/TranslatedText';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useCreateAction } from '../../hooks/useCommunityActions';
@@ -34,6 +35,7 @@ const TITLE_MAX = 200;
 const MIN_LINKED_ISSUES = 3;
 
 export const CreateActionScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const route = useRoute<any>();
   const createMutation = useCreateAction();
@@ -171,9 +173,9 @@ export const CreateActionScreen: React.FC = () => {
         <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
         <View style={styles.previewHeader}>
-          <Text style={styles.previewLabel}>PREVIEW</Text>
+          <Text style={styles.previewLabel}>{t('actions.preview', 'PREVIEW')}</Text>
           <TouchableOpacity onPress={() => setShowPreview(false)}>
-            <Text style={styles.editLink}>Edit</Text>
+            <Text style={styles.editLink}>{t('actions.edit', 'Edit')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -182,13 +184,13 @@ export const CreateActionScreen: React.FC = () => {
           <Text style={styles.previewDescription}>{description}</Text>
 
           <View style={styles.outcomeBox}>
-            <Text style={styles.outcomeLabel}>DESIRED OUTCOME</Text>
+            <Text style={styles.outcomeLabel}>{t('actions.desiredOutcome', 'DESIRED OUTCOME')}</Text>
             <Text style={styles.outcomeText}>{desiredOutcome}</Text>
           </View>
 
           {detectedCategory && (
             <View style={styles.categoryRow}>
-              <Text style={styles.fieldLabel}>Auto-detected category:</Text>
+              <Text style={styles.fieldLabel}>{t('actions.autoDetectedCategory', 'Auto-detected category:')}</Text>
               <Badge
                 text={detectedCategory.replace('_', ' ')}
                 backgroundColor={colors.saffron + '15'}
@@ -199,7 +201,7 @@ export const CreateActionScreen: React.FC = () => {
           )}
 
           <Text style={styles.fieldLabel}>
-            Linked Evidence: {linkedIssues.length} issue{linkedIssues.length !== 1 ? 's' : ''}
+            {t('actions.linkedEvidence', 'Linked Evidence')}: {linkedIssues.length} {t('actions.issuesCount', 'issues')}
           </Text>
           {linkedIssues.map(issue => (
             <View key={issue.id} style={styles.linkedIssueMini}>
@@ -213,7 +215,7 @@ export const CreateActionScreen: React.FC = () => {
 
         <View style={styles.submitRow}>
           <Button
-            title="Publish Action"
+            title={t('actions.publishAction', 'Publish Action')}
             onPress={handleSubmit}
             variant="primary"
             size="lg"
@@ -231,10 +233,10 @@ export const CreateActionScreen: React.FC = () => {
                 <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
               </Svg>
             </View>
-            <Text style={successStyles.title}>Action Published!</Text>
-            <Text style={successStyles.subtitle}>Your community action is now live. Citizens in your ward can support it.</Text>
+            <Text style={successStyles.title}>{t('actions.actionPublished', 'Action Published!')}</Text>
+            <Text style={successStyles.subtitle}>{t('actions.actionPublishedDesc', 'Your community action is now live. Citizens in your ward can support it.')}</Text>
             <TouchableOpacity style={successStyles.btnPrimary} onPress={() => { setShowSuccess(false); navigation.goBack(); }} activeOpacity={0.7}>
-              <Text style={successStyles.btnPrimaryText}>Done</Text>
+              <Text style={successStyles.btnPrimaryText}>{t('actions.done', 'Done')}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -257,18 +259,18 @@ export const CreateActionScreen: React.FC = () => {
         <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Start a Community Action</Text>
+          <Text style={styles.headerTitle}>{t('actions.startCommunityAction', 'Start a Community Action')}</Text>
           <Text style={styles.headerSubtitle}>
-            Rally your ward around systemic change
+            {t('actions.rallyYourWard', 'Rally your ward around systemic change')}
           </Text>
         </View>
 
         {/* Title */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Title</Text>
+          <Text style={styles.fieldLabel}>{t('actions.title', 'Title')}</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="What change do you want to see?"
+            placeholder={t('actions.titlePlaceholder', 'What change do you want to see?')}
             placeholderTextColor={colors.textMuted}
             value={title}
             onChangeText={t => setTitle(t.slice(0, TITLE_MAX))}
@@ -281,10 +283,10 @@ export const CreateActionScreen: React.FC = () => {
 
         {/* Description */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Impact Statement</Text>
+          <Text style={styles.fieldLabel}>{t('actions.impactStatement', 'Impact Statement')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
-            placeholder="Describe the impact this issue has on your community..."
+            placeholder={t('actions.impactPlaceholder', 'Describe the impact this issue has on your community...')}
             placeholderTextColor={colors.textMuted}
             value={description}
             onChangeText={setDescription}
@@ -295,10 +297,10 @@ export const CreateActionScreen: React.FC = () => {
 
         {/* Desired Outcome */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Desired Outcome</Text>
+          <Text style={styles.fieldLabel}>{t('actions.desiredOutcomeLabel', 'Desired Outcome')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
-            placeholder="What specific result are you seeking?"
+            placeholder={t('actions.outcomePlaceholder', 'What specific result are you seeking?')}
             placeholderTextColor={colors.textMuted}
             value={desiredOutcome}
             onChangeText={setDesiredOutcome}
@@ -309,10 +311,10 @@ export const CreateActionScreen: React.FC = () => {
 
         {/* Target Authority */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Target Authority (Optional)</Text>
+          <Text style={styles.fieldLabel}>{t('actions.targetAuthority', 'Target Authority (Optional)')}</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="Search for a ward officer or leader..."
+            placeholder={t('actions.searchAuthority', 'Search for a ward officer or leader...')}
             placeholderTextColor={colors.textMuted}
             value={targetAuthorityId}
             onChangeText={setTargetAuthorityId}
@@ -321,13 +323,13 @@ export const CreateActionScreen: React.FC = () => {
 
         {/* Link Evidence */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Link Evidence (Issues)</Text>
+          <Text style={styles.fieldLabel}>{t('actions.linkEvidence', 'Link Evidence (Issues)')}</Text>
           {linkedIssueIds.length < MIN_LINKED_ISSUES && (
             <View style={styles.warningBox}>
               <Text style={styles.warningIcon}>{'\u26A0'}</Text>
               <Text style={styles.warningText}>
-                Minimum {MIN_LINKED_ISSUES} linked issues required.{' '}
-                {MIN_LINKED_ISSUES - linkedIssueIds.length} more needed.
+                {t('actions.minIssuesRequired', 'Minimum {{count}} linked issues required.', { count: MIN_LINKED_ISSUES })}{' '}
+                {t('actions.moreNeeded', '{{count}} more needed.', { count: MIN_LINKED_ISSUES - linkedIssueIds.length })}
               </Text>
             </View>
           )}
@@ -355,7 +357,7 @@ export const CreateActionScreen: React.FC = () => {
           {/* Search issues */}
           <TextInput
             style={[styles.textInput, { marginTop: spacing.sm }]}
-            placeholder="Search issues to link..."
+            placeholder={t('actions.searchIssuesToLink', 'Search issues to link...')}
             placeholderTextColor={colors.textMuted}
             value={issueSearchQuery}
             onChangeText={setIssueSearchQuery}
@@ -384,7 +386,7 @@ export const CreateActionScreen: React.FC = () => {
         {/* Auto-detected category */}
         {detectedCategory && (
           <View style={styles.detectedRow}>
-            <Text style={styles.detectedLabel}>Auto-detected category:</Text>
+            <Text style={styles.detectedLabel}>{t('actions.autoDetectedCategory', 'Auto-detected category:')}</Text>
             <Badge
               text={detectedCategory.replace('_', ' ')}
               backgroundColor={colors.saffron + '15'}
@@ -397,7 +399,7 @@ export const CreateActionScreen: React.FC = () => {
         {/* Preview button */}
         <View style={styles.submitRow}>
           <Button
-            title="Preview Action"
+            title={t('actions.previewAction', 'Preview Action')}
             onPress={() => setShowPreview(true)}
             variant="primary"
             size="lg"
@@ -406,7 +408,7 @@ export const CreateActionScreen: React.FC = () => {
           />
           {!canSubmit && (
             <Text style={styles.submitHint}>
-              Fill all fields and link at least {MIN_LINKED_ISSUES} issues to continue.
+              {t('actions.fillAllFields', 'Fill all fields and link at least {{count}} issues to continue.', { count: MIN_LINKED_ISSUES })}
             </Text>
           )}
         </View>
@@ -426,10 +428,10 @@ export const CreateActionScreen: React.FC = () => {
               <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
             </Svg>
           </View>
-          <Text style={successStyles.title}>Action Published!</Text>
-          <Text style={successStyles.subtitle}>Your community action is now live. Citizens in your ward can support it and rally for change.</Text>
+          <Text style={successStyles.title}>{t('actions.actionPublished', 'Action Published!')}</Text>
+          <Text style={successStyles.subtitle}>{t('actions.actionPublishedDescFull', 'Your community action is now live. Citizens in your ward can support it and rally for change.')}</Text>
           <TouchableOpacity style={successStyles.btnPrimary} onPress={() => { setShowSuccess(false); navigation.goBack(); }} activeOpacity={0.7}>
-            <Text style={successStyles.btnPrimaryText}>Done</Text>
+            <Text style={successStyles.btnPrimaryText}>{t('actions.done', 'Done')}</Text>
           </TouchableOpacity>
         </View>
       </Pressable>

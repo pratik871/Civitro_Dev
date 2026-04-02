@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -39,7 +40,14 @@ const ROLE_COLORS: Record<string, string> = {
 
 const ROLE_ORDER: MemberRole[] = ['admin', 'functionary', 'member'];
 
+const ROLE_LABEL_KEYS: Record<string, { key: string; fallback: string }> = {
+  admin: { key: 'organizations.roleAdmin', fallback: 'Admin' },
+  functionary: { key: 'organizations.roleFunctionary', fallback: 'Functionary' },
+  member: { key: 'organizations.roleMember', fallback: 'Member' },
+};
+
 export const OrgMembersScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<RouteType>();
   const { orgId } = route.params;
 
@@ -78,7 +86,7 @@ export const OrgMembersScreen: React.FC = () => {
 
   const handleAddMember = () => {
     if (!newUserId.trim()) {
-      Alert.alert('Error', 'Please enter a user ID.');
+      Alert.alert(t('common.error', 'Error'), t('organizations.enterUserId', 'Please enter a user ID.'));
       return;
     }
     addMemberMutation.mutate(
@@ -91,7 +99,7 @@ export const OrgMembersScreen: React.FC = () => {
           refetch();
         },
         onError: (err: any) => {
-          Alert.alert('Error', err.message || 'Could not add member.');
+          Alert.alert(t('common.error', 'Error'), err.message || t('organizations.couldNotAddMember', 'Could not add member.'));
         },
       },
     );
@@ -99,12 +107,12 @@ export const OrgMembersScreen: React.FC = () => {
 
   const handleRemoveMember = (member: OrgMember) => {
     Alert.alert(
-      'Remove Member',
-      `Remove ${member.userName || member.userId} from this organization?`,
+      t('organizations.removeMember', 'Remove Member'),
+      t('organizations.removeMemberConfirm', 'Remove {{name}} from this organization?', { name: member.userName || member.userId }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('organizations.remove', 'Remove'),
           style: 'destructive',
           onPress: () => {
             removeMemberMutation.mutate(
@@ -112,7 +120,7 @@ export const OrgMembersScreen: React.FC = () => {
               {
                 onSuccess: () => refetch(),
                 onError: (err: any) => {
-                  Alert.alert('Error', err.message || 'Could not remove member.');
+                  Alert.alert(t('common.error', 'Error'), err.message || t('organizations.couldNotRemoveMember', 'Could not remove member.'));
                 },
               },
             );
@@ -162,7 +170,7 @@ export const OrgMembersScreen: React.FC = () => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search members..."
+          placeholder={t('organizations.searchMembers', 'Search members...')}
           placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -172,13 +180,13 @@ export const OrgMembersScreen: React.FC = () => {
       {/* Member count */}
       <View style={styles.countRow}>
         <Text style={styles.countText}>
-          {filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}
+          {filteredMembers.length} {t('organizations.members', 'members')}
         </Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowAddModal(true)}
         >
-          <Text style={styles.addButtonText}>+ Add Member</Text>
+          <Text style={styles.addButtonText}>+ {t('organizations.addMember', 'Add Member')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -186,7 +194,7 @@ export const OrgMembersScreen: React.FC = () => {
       {Object.entries(groupedMembers).map(([role, roleMembers]) => (
         <View key={role} style={styles.roleSection}>
           <Text style={styles.roleSectionTitle}>
-            {role.charAt(0).toUpperCase() + role.slice(1)}s ({roleMembers.length})
+            {ROLE_LABEL_KEYS[role] ? t(ROLE_LABEL_KEYS[role].key, ROLE_LABEL_KEYS[role].fallback) : role}s ({roleMembers.length})
           </Text>
           {roleMembers.map(renderMember)}
         </View>
@@ -196,12 +204,12 @@ export const OrgMembersScreen: React.FC = () => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>{'\u{1F465}'}</Text>
           <Text style={styles.emptyTitle}>
-            {searchQuery ? 'No members found' : 'No members yet'}
+            {searchQuery ? t('organizations.noMembersFound', 'No members found') : t('organizations.noMembersYet', 'No members yet')}
           </Text>
           <Text style={styles.emptyText}>
             {searchQuery
-              ? 'Try a different search term.'
-              : 'Add members to your organization to get started.'}
+              ? t('organizations.tryDifferentSearch', 'Try a different search term.')
+              : t('organizations.addMembersToStart', 'Add members to your organization to get started.')}
           </Text>
         </View>
       )}
@@ -243,19 +251,19 @@ export const OrgMembersScreen: React.FC = () => {
           onPress={() => setShowAddModal(false)}
         >
           <View style={styles.modalCard} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>Add Member</Text>
+            <Text style={styles.modalTitle}>{t('organizations.addMember', 'Add Member')}</Text>
 
-            <Text style={styles.fieldLabel}>User ID</Text>
+            <Text style={styles.fieldLabel}>{t('organizations.userId', 'User ID')}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Enter user ID..."
+              placeholder={t('organizations.enterUserIdPlaceholder', 'Enter user ID...')}
               placeholderTextColor={colors.textMuted}
               value={newUserId}
               onChangeText={setNewUserId}
               autoCapitalize="none"
             />
 
-            <Text style={styles.fieldLabel}>Role</Text>
+            <Text style={styles.fieldLabel}>{t('organizations.role', 'Role')}</Text>
             <View style={styles.rolePickerRow}>
               {(['member', 'functionary', 'admin'] as MemberRole[]).map(role => (
                 <TouchableOpacity
@@ -272,7 +280,7 @@ export const OrgMembersScreen: React.FC = () => {
                       newRole === role && styles.rolePickerTextActive,
                     ]}
                   >
-                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                    {ROLE_LABEL_KEYS[role] ? t(ROLE_LABEL_KEYS[role].key, ROLE_LABEL_KEYS[role].fallback) : role}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -280,14 +288,14 @@ export const OrgMembersScreen: React.FC = () => {
 
             <View style={styles.modalButtons}>
               <Button
-                title="Cancel"
+                title={t('common.cancel', 'Cancel')}
                 variant="outline"
                 size="md"
                 onPress={() => setShowAddModal(false)}
                 style={{ flex: 1 }}
               />
               <Button
-                title="Add"
+                title={t('organizations.add', 'Add')}
                 variant="primary"
                 size="md"
                 onPress={handleAddMember}

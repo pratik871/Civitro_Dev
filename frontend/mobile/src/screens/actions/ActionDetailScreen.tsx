@@ -17,6 +17,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { TranslatedText } from '../../components/ui/TranslatedText';
 import { Button } from '../../components/ui/Button';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
@@ -34,6 +35,7 @@ type DetailRouteProp = RouteProp<RootStackParamList, 'ActionDetail'>;
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const ActionDetailScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<DetailRouteProp>();
   const navigation = useNavigation<NavProp>();
   const { data, isLoading, error } = useAction(route.params.actionId);
@@ -46,9 +48,9 @@ export const ActionDetailScreen: React.FC = () => {
   if (error) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Failed to load action</Text>
+        <Text style={styles.loadingText}>{t('actions.failedToLoad', 'Failed to load action')}</Text>
         <Text style={[styles.loadingText, { fontSize: 13, marginTop: 8 }]}>
-          {error instanceof Error ? error.message : 'Network error'}
+          {error instanceof Error ? error.message : t('common.networkError', 'Network error')}
         </Text>
       </View>
     );
@@ -57,7 +59,7 @@ export const ActionDetailScreen: React.FC = () => {
   if (isLoading || !data) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading action...</Text>
+        <Text style={styles.loadingText}>{t('actions.loadingAction', 'Loading action...')}</Text>
       </View>
     );
   }
@@ -139,7 +141,7 @@ export const ActionDetailScreen: React.FC = () => {
 
         {action.desiredOutcome ? (
           <View style={styles.outcomeBox}>
-            <Text style={styles.outcomeLabel}>DESIRED OUTCOME</Text>
+            <Text style={styles.outcomeLabel}>{t('actions.desiredOutcome', 'DESIRED OUTCOME')}</Text>
             <TranslatedText text={action.desiredOutcome} style={styles.outcomeText} />
           </View>
         ) : null}
@@ -147,7 +149,7 @@ export const ActionDetailScreen: React.FC = () => {
         <View style={styles.creatorRow}>
           <Avatar name={action.creatorName} size={28} />
           <Text style={styles.creatorText}>
-            Started by <Text style={styles.creatorName}>{action.creatorName}</Text>
+            {t('actions.startedBy', 'Started by')} <Text style={styles.creatorName}>{action.creatorName}</Text>
           </Text>
           <Text style={styles.timeText}>{formatRelativeTime(action.createdAt)}</Text>
         </View>
@@ -156,7 +158,7 @@ export const ActionDetailScreen: React.FC = () => {
       {/* Support Progress */}
       <Card style={styles.supportCard}>
         <View style={styles.supportHeader}>
-          <Text style={styles.sectionTitle}>Community Support</Text>
+          <Text style={styles.sectionTitle}>{t('actions.communitySupport', 'Community Support')}</Text>
           <Text style={styles.supportCount}>
             {formatNumber(action.supportCount)} / {formatNumber(action.supportGoal)}
           </Text>
@@ -165,7 +167,7 @@ export const ActionDetailScreen: React.FC = () => {
           <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
         </View>
         <Text style={styles.progressPercent}>
-          {Math.round(progress * 100)}% of goal reached
+          {Math.round(progress * 100)}% {t('actions.ofGoalReached', 'of goal reached')}
         </Text>
 
         {/* Support button */}
@@ -179,7 +181,7 @@ export const ActionDetailScreen: React.FC = () => {
             {supported ? '\u2714' : '\u270B'}
           </Text>
           <Text style={[styles.supportButtonText, supported && styles.supportButtonTextActive]}>
-            {supported ? 'You Support This' : 'Support This Action'}
+            {supported ? t('actions.youSupportThis', 'You Support This') : t('actions.supportThisAction', 'Support This Action')}
           </Text>
         </TouchableOpacity>
       </Card>
@@ -188,22 +190,22 @@ export const ActionDetailScreen: React.FC = () => {
       <View style={styles.actionsRow}>
         <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
           <Text style={styles.actionIcon}>{'\u{1F4E4}'}</Text>
-          <Text style={styles.actionText}>Share</Text>
+          <Text style={styles.actionText}>{t('actions.share', 'Share')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => navigation.navigate('ActionTimeline', { actionId: action.id })}
         >
           <Text style={styles.actionIcon}>{'\u{1F4C5}'}</Text>
-          <Text style={styles.actionText}>Timeline</Text>
+          <Text style={styles.actionText}>{t('actions.timeline', 'Timeline')}</Text>
         </TouchableOpacity>
       </View>
 
       {/* Evidence Section */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Evidence Package</Text>
+        <Text style={styles.sectionTitle}>{t('actions.evidencePackage', 'Evidence Package')}</Text>
         <Text style={styles.sectionSubtitle}>
-          {evidence.length} linked issue{evidence.length !== 1 ? 's' : ''}
+          {evidence.length} {t('actions.linkedIssues', 'linked issues')}
         </Text>
 
         {evidence.length > 0 ? (
@@ -232,33 +234,33 @@ export const ActionDetailScreen: React.FC = () => {
             </TouchableOpacity>
           ))
         ) : (
-          <Text style={styles.noContent}>No evidence linked yet.</Text>
+          <Text style={styles.noContent}>{t('actions.noEvidenceYet', 'No evidence linked yet.')}</Text>
         )}
       </Card>
 
       {/* Economic Impact */}
       {action.economicImpact && (
         <Card style={styles.economicCard}>
-          <Text style={styles.sectionTitle}>Economic Impact</Text>
+          <Text style={styles.sectionTitle}>{t('actions.economicImpact', 'Economic Impact')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Auto-calculated from linked evidence
+            {t('actions.autoCalculated', 'Auto-calculated from linked evidence')}
           </Text>
 
           <View style={styles.impactGrid}>
             <View style={styles.impactItem}>
-              <Text style={styles.impactLabel}>Cost of Inaction</Text>
+              <Text style={styles.impactLabel}>{t('actions.costOfInaction', 'Cost of Inaction')}</Text>
               <Text style={[styles.impactValue, { color: colors.error }]}>
                 {'\u20B9'} {formatNumber(action.economicImpact.costOfInaction)}
               </Text>
             </View>
             <View style={styles.impactItem}>
-              <Text style={styles.impactLabel}>Cost to Resolve</Text>
+              <Text style={styles.impactLabel}>{t('actions.costToResolve', 'Cost to Resolve')}</Text>
               <Text style={[styles.impactValue, { color: colors.success }]}>
                 {'\u20B9'} {formatNumber(action.economicImpact.costOfResolution)}
               </Text>
             </View>
             <View style={styles.impactItemFull}>
-              <Text style={styles.impactLabel}>ROI Ratio</Text>
+              <Text style={styles.impactLabel}>{t('actions.roiRatio', 'ROI Ratio')}</Text>
               <Text style={[styles.impactValue, { color: colors.saffron }]}>
                 {action.economicImpact.roiRatio.toFixed(1)}:1
               </Text>
@@ -279,9 +281,9 @@ export const ActionDetailScreen: React.FC = () => {
 
       {/* Stakeholder Responses */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Stakeholder Responses</Text>
+        <Text style={styles.sectionTitle}>{t('actions.stakeholderResponses', 'Stakeholder Responses')}</Text>
         <Text style={styles.sectionSubtitle}>
-          Directed to: {action.targetAuthorityName}
+          {t('actions.directedTo', 'Directed to')}: {action.targetAuthorityName}
         </Text>
 
         {responses.length > 0 ? (
@@ -319,7 +321,7 @@ export const ActionDetailScreen: React.FC = () => {
         ) : (
           <View style={styles.noResponseBox}>
             <Text style={styles.noResponseIcon}>{'\u23F3'}</Text>
-            <Text style={styles.noResponseText}>Awaiting stakeholder response</Text>
+            <Text style={styles.noResponseText}>{t('actions.awaitingResponse', 'Awaiting stakeholder response')}</Text>
           </View>
         )}
       </Card>
@@ -327,11 +329,11 @@ export const ActionDetailScreen: React.FC = () => {
       {/* Recent Timeline */}
       <Card style={styles.sectionCard}>
         <View style={styles.timelineHeader}>
-          <Text style={styles.sectionTitle}>Timeline</Text>
+          <Text style={styles.sectionTitle}>{t('actions.timeline', 'Timeline')}</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('ActionTimeline', { actionId: action.id })}
           >
-            <Text style={styles.viewAllText}>View All</Text>
+            <Text style={styles.viewAllText}>{t('common.seeAll', 'View All')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -357,20 +359,20 @@ export const ActionDetailScreen: React.FC = () => {
             );
           })
         ) : (
-          <Text style={styles.noContent}>No timeline entries yet.</Text>
+          <Text style={styles.noContent}>{t('actions.noTimelineYet', 'No timeline entries yet.')}</Text>
         )}
       </Card>
 
       {/* Verification section for resolved actions */}
       {action.status === 'resolved' && (
         <Card style={styles.verifyCard}>
-          <Text style={styles.verifyTitle}>Verify Resolution</Text>
+          <Text style={styles.verifyTitle}>{t('actions.verifyResolution', 'Verify Resolution')}</Text>
           <Text style={styles.verifyDesc}>
-            Has this community action been truly resolved? Your verification helps maintain accountability.
+            {t('actions.verifyResolutionDesc', 'Has this community action been truly resolved? Your verification helps maintain accountability.')}
           </Text>
           <View style={styles.verifyButtons}>
             <Button
-              title="Yes, Verified"
+              title={t('actions.yesVerified', 'Yes, Verified')}
               onPress={() => handleVerify(true)}
               variant="primary"
               size="md"
@@ -378,7 +380,7 @@ export const ActionDetailScreen: React.FC = () => {
               style={styles.verifyButtonItem}
             />
             <Button
-              title="Not Resolved"
+              title={t('actions.notResolved', 'Not Resolved')}
               onPress={() => handleVerify(false)}
               variant="outline"
               size="md"
@@ -390,8 +392,7 @@ export const ActionDetailScreen: React.FC = () => {
           {verifications.length > 0 && (
             <View style={styles.verificationsCount}>
               <Text style={styles.verificationsText}>
-                {verifications.filter(v => v.verified).length} of{' '}
-                {verifications.length} verifiers confirmed resolution
+                {t('actions.verifiersConfirmed', '{{verified}} of {{total}} verifiers confirmed resolution', { verified: verifications.filter(v => v.verified).length, total: verifications.length })}
               </Text>
             </View>
           )}

@@ -12,6 +12,7 @@ import {
 import Svg, { Rect } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -132,6 +133,7 @@ const barStyles = StyleSheet.create({
 });
 
 export const ExitPollScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<ExitPollNavProp>();
   const { data: polls, isLoading, refetch } = useExitPolls();
   const voteMutation = useVotePoll();
@@ -146,23 +148,23 @@ export const ExitPollScreen: React.FC = () => {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{(polls ?? []).length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statLabel}>{t('polls.total', 'Total')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.success }]}>
             {activeCount}
           </Text>
-          <Text style={styles.statLabel}>Active</Text>
+          <Text style={styles.statLabel}>{t('polls.active', 'Active')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.primary }]}>
             {totalVotes.toLocaleString()}
           </Text>
-          <Text style={styles.statLabel}>Votes</Text>
+          <Text style={styles.statLabel}>{t('polls.votesLabel', 'Votes')}</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Exit Polls</Text>
+      <Text style={styles.sectionTitle}>{t('polls.exitPolls', 'Exit Polls')}</Text>
     </View>
   );
 
@@ -179,7 +181,7 @@ export const ExitPollScreen: React.FC = () => {
               {item.title}
             </Text>
             <Badge
-              text={time.ended ? 'Ended' : 'Active'}
+              text={time.ended ? t('polls.ended', 'Ended') : t('polls.active', 'Active')}
               backgroundColor={
                 time.ended ? colors.textMuted + '15' : colors.success + '15'
               }
@@ -221,7 +223,7 @@ export const ExitPollScreen: React.FC = () => {
                 onPress={() => retractMutation.mutate(item.id)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.retractBtnText}>Retract Vote</Text>
+                <Text style={styles.retractBtnText}>{t('polls.retractVote', 'Retract Vote')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -240,7 +242,7 @@ export const ExitPollScreen: React.FC = () => {
                 <Text style={styles.voteOptionText}>{opt.text}</Text>
               </TouchableOpacity>
             ))}
-            <Text style={styles.voteHint}>Tap an option to vote</Text>
+            <Text style={styles.voteHint}>{t('polls.tapToVote', 'Tap an option to vote')}</Text>
           </View>
         )}
 
@@ -252,7 +254,7 @@ export const ExitPollScreen: React.FC = () => {
           }
           activeOpacity={0.7}
         >
-          <Text style={styles.detailBtnText}>View Details</Text>
+          <Text style={styles.detailBtnText}>{t('polls.viewDetails', 'View Details')}</Text>
         </TouchableOpacity>
       </Card>
     );
@@ -287,10 +289,9 @@ export const ExitPollScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F5F3}'}</Text>
-            <Text style={styles.emptyTitle}>No exit polls yet</Text>
+            <Text style={styles.emptyTitle}>{t('polls.noExitPollsYet', 'No exit polls yet')}</Text>
             <Text style={styles.emptyText}>
-              Exit polls will appear here when they become available for your
-              constituency.
+              {t('polls.exitPollsWillAppear', 'Exit polls will appear here when they become available for your constituency.')}
             </Text>
           </View>
         }

@@ -12,6 +12,7 @@ import {
 import Svg, { Rect, Line, Text as SvgText, G } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -210,6 +211,7 @@ const HorizontalBarChart: React.FC<HBarChartProps> = ({ data, width }) => {
 // ---------- Main Screen ----------
 
 export const DatamineScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
   const user = useAuthStore((s) => s.user);
   const boundaryId = user?.ward || user?.constituency;
@@ -282,7 +284,7 @@ export const DatamineScreen: React.FC = () => {
 
   const handleGenerateReport = async () => {
     if (!boundaryId) {
-      Alert.alert('No ward', 'Ward information is required to generate a report.');
+      Alert.alert(t('datamine.noWard', 'No ward'), t('datamine.wardRequired', 'Ward information is required to generate a report.'));
       return;
     }
     try {
@@ -292,7 +294,7 @@ export const DatamineScreen: React.FC = () => {
       });
       setActiveReportId(report.id);
     } catch {
-      Alert.alert('Error', 'Failed to start report generation.');
+      Alert.alert(t('common.error', 'Error'), t('datamine.failedReport', 'Failed to start report generation.'));
     }
   };
 
@@ -302,7 +304,7 @@ export const DatamineScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading analytics...</Text>
+        <Text style={styles.loadingText}>{t('datamine.loadingAnalytics', 'Loading analytics...')}</Text>
       </View>
     );
   }
@@ -312,7 +314,7 @@ export const DatamineScreen: React.FC = () => {
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.emptyIcon}>{'\u{1F4CA}'}</Text>
         <Text style={styles.emptyText}>
-          Ward information not available. Update your profile to view analytics.
+          {t('datamine.wardNotAvailable', 'Ward information not available. Update your profile to view analytics.')}
         </Text>
       </View>
     );
@@ -329,26 +331,26 @@ export const DatamineScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
-      <Text style={styles.title}>Datamine Analytics</Text>
+      <Text style={styles.title}>{t('datamine.title', 'Datamine Analytics')}</Text>
       <Text style={styles.subtitle}>
-        Ward-level insights for {boundaryId}
+        {t('datamine.wardInsights', 'Ward-level insights for {{ward}}', { ward: boundaryId })}
       </Text>
 
       {/* Stats Cards */}
       <StatsBar
         stats={[
           {
-            label: 'Total Issues',
+            label: t('datamine.totalIssues', 'Total Issues'),
             value: totalIssues,
             color: colors.primary,
           },
           {
-            label: 'Resolved %',
+            label: t('datamine.resolvedPct', 'Resolved %'),
             value: `${avgResolution}%`,
             color: colors.success,
           },
           {
-            label: 'Active Users',
+            label: t('datamine.activeUsers', 'Active Users'),
             value: demoData?.activity_metrics?.avg_daily_active_users ?? '--',
             color: colors.info,
           },
@@ -359,7 +361,7 @@ export const DatamineScreen: React.FC = () => {
       {/* Issue Trends Bar Chart */}
       <Card style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Issue Trends</Text>
+          <Text style={styles.sectionTitle}>{t('datamine.issueTrends', 'Issue Trends')}</Text>
           <Badge
             text={`${trendsData?.period_days ?? 30}d`}
             backgroundColor={colors.primary + '15'}
@@ -370,47 +372,47 @@ export const DatamineScreen: React.FC = () => {
         {monthlyBars.length > 0 ? (
           <BarChart data={monthlyBars} width={chartWidth} height={200} />
         ) : (
-          <Text style={styles.noData}>No trend data available</Text>
+          <Text style={styles.noData}>{t('datamine.noTrendData', 'No trend data available')}</Text>
         )}
       </Card>
 
       {/* Top Categories Horizontal Bars */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Top Categories</Text>
+        <Text style={styles.sectionTitle}>{t('datamine.topCategories', 'Top Categories')}</Text>
         {topCategories.length > 0 ? (
           <HorizontalBarChart data={topCategories} width={chartWidth} />
         ) : (
-          <Text style={styles.noData}>No category data available</Text>
+          <Text style={styles.noData}>{t('datamine.noCategoryData', 'No category data available')}</Text>
         )}
       </Card>
 
       {/* Demographics Section */}
       {demoData && (
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Demographics</Text>
+          <Text style={styles.sectionTitle}>{t('datamine.demographics', 'Demographics')}</Text>
 
           <View style={styles.demoRow}>
             <View style={styles.demoItem}>
               <Text style={styles.demoValue}>{demoData.total_users}</Text>
-              <Text style={styles.demoLabel}>Total Users</Text>
+              <Text style={styles.demoLabel}>{t('datamine.totalUsers', 'Total Users')}</Text>
             </View>
             <View style={styles.demoItem}>
               <Text style={styles.demoValue}>
                 {demoData.verification_breakdown.aadhaar_verified}
               </Text>
-              <Text style={styles.demoLabel}>Aadhaar Verified</Text>
+              <Text style={styles.demoLabel}>{t('datamine.aadhaarVerified', 'Aadhaar Verified')}</Text>
             </View>
             <View style={styles.demoItem}>
               <Text style={styles.demoValue}>
                 {demoData.verification_breakdown.phone_verified}
               </Text>
-              <Text style={styles.demoLabel}>Phone Verified</Text>
+              <Text style={styles.demoLabel}>{t('datamine.phoneVerified', 'Phone Verified')}</Text>
             </View>
           </View>
 
           {/* Verification breakdown bar */}
           <View style={styles.verBarContainer}>
-            <Text style={styles.verBarLabel}>Verification Breakdown</Text>
+            <Text style={styles.verBarLabel}>{t('datamine.verificationBreakdown', 'Verification Breakdown')}</Text>
             <View style={styles.verBar}>
               {demoData.total_users > 0 && (
                 <>
@@ -449,45 +451,45 @@ export const DatamineScreen: React.FC = () => {
                 <View
                   style={[styles.verDot, { backgroundColor: colors.success }]}
                 />
-                <Text style={styles.verLegendText}>Aadhaar</Text>
+                <Text style={styles.verLegendText}>{t('datamine.aadhaar', 'Aadhaar')}</Text>
               </View>
               <View style={styles.verLegendItem}>
                 <View
                   style={[styles.verDot, { backgroundColor: colors.info }]}
                 />
-                <Text style={styles.verLegendText}>Phone</Text>
+                <Text style={styles.verLegendText}>{t('datamine.phone', 'Phone')}</Text>
               </View>
               <View style={styles.verLegendItem}>
                 <View
                   style={[styles.verDot, { backgroundColor: colors.border }]}
                 />
-                <Text style={styles.verLegendText}>Unverified</Text>
+                <Text style={styles.verLegendText}>{t('datamine.unverified', 'Unverified')}</Text>
               </View>
             </View>
           </View>
 
           {/* Activity Metrics */}
           <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>
-            Activity (Last 30 Days)
+            {t('datamine.activityLast30', 'Activity (Last 30 Days)')}
           </Text>
           <View style={styles.demoRow}>
             <View style={styles.demoItem}>
               <Text style={[styles.demoValue, { color: colors.primary }]}>
                 {demoData.activity_metrics.issues_last_30d}
               </Text>
-              <Text style={styles.demoLabel}>Issues</Text>
+              <Text style={styles.demoLabel}>{t('datamine.issues', 'Issues')}</Text>
             </View>
             <View style={styles.demoItem}>
               <Text style={[styles.demoValue, { color: colors.info }]}>
                 {demoData.activity_metrics.voices_last_30d}
               </Text>
-              <Text style={styles.demoLabel}>Voices</Text>
+              <Text style={styles.demoLabel}>{t('datamine.voices', 'Voices')}</Text>
             </View>
             <View style={styles.demoItem}>
               <Text style={[styles.demoValue, { color: colors.success }]}>
                 {demoData.activity_metrics.polls_participated_last_30d}
               </Text>
-              <Text style={styles.demoLabel}>Poll Votes</Text>
+              <Text style={styles.demoLabel}>{t('datamine.pollVotes', 'Poll Votes')}</Text>
             </View>
           </View>
         </Card>
@@ -502,9 +504,9 @@ export const DatamineScreen: React.FC = () => {
       >
         <View style={styles.heatmapCtaRow}>
           <View style={styles.heatmapCtaInfo}>
-            <Text style={styles.heatmapCtaTitle}>Issue Heatmap</Text>
+            <Text style={styles.heatmapCtaTitle}>{t('datamine.issueHeatmap', 'Issue Heatmap')}</Text>
             <Text style={styles.heatmapCtaDesc}>
-              View geographic distribution of issues in your ward
+              {t('datamine.heatmapDesc', 'View geographic distribution of issues in your ward')}
             </Text>
           </View>
           <Text style={styles.heatmapCtaArrow}>{'\u2192'}</Text>
@@ -513,18 +515,17 @@ export const DatamineScreen: React.FC = () => {
 
       {/* Generate Report */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Generate Report</Text>
+        <Text style={styles.sectionTitle}>{t('datamine.generateReport', 'Generate Report')}</Text>
         <Text style={styles.reportDesc}>
-          Create a detailed analytics report for your ward. This may take a few
-          moments to process.
+          {t('datamine.reportDesc', 'Create a detailed analytics report for your ward. This may take a few moments to process.')}
         </Text>
         <Button
           title={
             createReport.isPending
-              ? 'Starting...'
+              ? t('datamine.starting', 'Starting...')
               : activeReportId
-              ? 'Generate Another Report'
-              : 'Generate Report'
+              ? t('datamine.generateAnother', 'Generate Another Report')
+              : t('datamine.generateReport', 'Generate Report')
           }
           onPress={handleGenerateReport}
           loading={createReport.isPending}
@@ -538,7 +539,7 @@ export const DatamineScreen: React.FC = () => {
         {reportData && (
           <View style={styles.reportStatus}>
             <View style={styles.reportStatusRow}>
-              <Text style={styles.reportStatusLabel}>Status:</Text>
+              <Text style={styles.reportStatusLabel}>{t('datamine.status', 'Status')}:</Text>
               <Badge
                 text={reportData.status}
                 backgroundColor={
@@ -562,7 +563,7 @@ export const DatamineScreen: React.FC = () => {
               <View style={styles.reportProcessing}>
                 <ActivityIndicator size="small" color={colors.primary} />
                 <Text style={styles.reportProcessingText}>
-                  Processing report...
+                  {t('datamine.processingReport', 'Processing report...')}
                 </Text>
               </View>
             )}
@@ -570,14 +571,14 @@ export const DatamineScreen: React.FC = () => {
               <View style={styles.reportProcessing}>
                 <ActivityIndicator size="small" color={colors.warning} />
                 <Text style={styles.reportProcessingText}>
-                  Queued for processing...
+                  {t('datamine.queuedProcessing', 'Queued for processing...')}
                 </Text>
               </View>
             )}
             {reportData.status === 'completed' && reportData.result_url && (
               <TouchableOpacity style={styles.downloadBtn}>
                 <Text style={styles.downloadBtnText}>
-                  Download Report
+                  {t('datamine.downloadReport', 'Download Report')}
                 </Text>
               </TouchableOpacity>
             )}

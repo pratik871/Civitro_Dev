@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { PollCard } from '../../components/polls/PollCard';
 import { Card } from '../../components/ui/Card';
 import { usePoll, useVotePoll, useRetractVote } from '../../hooks/usePolls';
@@ -12,6 +13,7 @@ import type { RootStackParamList } from '../../navigation/types';
 type PollDetailRouteProp = RouteProp<RootStackParamList, 'PollDetail'>;
 
 export const PollDetailScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<PollDetailRouteProp>();
   const { pollId } = route.params;
   const { data: poll, isLoading } = usePoll(pollId);
@@ -37,7 +39,7 @@ export const PollDetailScreen: React.FC = () => {
   if (!poll) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.emptyText}>Poll not found</Text>
+        <Text style={styles.emptyText}>{t('polls.pollNotFound', 'Poll not found')}</Text>
       </View>
     );
   }
@@ -58,34 +60,33 @@ export const PollDetailScreen: React.FC = () => {
       />
 
       <Card style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Poll Information</Text>
+        <Text style={styles.infoTitle}>{t('polls.pollInformation', 'Poll Information')}</Text>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Created By</Text>
+          <Text style={styles.infoLabel}>{t('polls.createdBy', 'Created By')}</Text>
           <Text style={styles.infoValue}>{poll.createdByName}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Created On</Text>
+          <Text style={styles.infoLabel}>{t('polls.createdOn', 'Created On')}</Text>
           <Text style={styles.infoValue}>{formatDate(poll.createdAt)}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Expires On</Text>
+          <Text style={styles.infoLabel}>{t('polls.expiresOn', 'Expires On')}</Text>
           <Text style={styles.infoValue}>{formatDate(poll.expiresAt)}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Total Votes</Text>
+          <Text style={styles.infoLabel}>{t('polls.totalVotes', 'Total Votes')}</Text>
           <Text style={styles.infoValue}>{formatNumber(poll.totalVotes)}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Ward</Text>
-          <Text style={styles.infoValue}>{poll.ward || 'All wards'}</Text>
+          <Text style={styles.infoLabel}>{t('polls.ward', 'Ward')}</Text>
+          <Text style={styles.infoValue}>{poll.ward || t('polls.allWards', 'All wards')}</Text>
         </View>
       </Card>
 
       <Card style={styles.disclaimerCard}>
         <Text style={styles.disclaimerIcon}>{'\u{1F512}'}</Text>
         <Text style={styles.disclaimerText}>
-          All votes are anonymous and cannot be traced back to individual users.
-          Results are verified on-chain for transparency.
+          {t('polls.disclaimerText', 'All votes are anonymous and cannot be traced back to individual users. Results are verified on-chain for transparency.')}
         </Text>
       </Card>
     </ScrollView>

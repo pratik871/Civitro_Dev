@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/ui/Avatar';
 import {
   useConversations,
@@ -24,6 +25,7 @@ import type { RootStackParamList } from '../../navigation/types';
 type MessagesNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const MessagesScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<MessagesNavProp>();
   const { data: conversations, isLoading } = useConversations();
 
@@ -72,7 +74,7 @@ export const MessagesScreen: React.FC = () => {
             style={[styles.preview, hasUnread && styles.unreadText]}
             numberOfLines={2}
           >
-            {item.last_message || 'No messages yet'}
+            {item.last_message || t('messages.noMessagesYet', 'No messages yet')}
           </Text>
         </View>
 
@@ -108,9 +110,9 @@ export const MessagesScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F4EC}'}</Text>
-            <Text style={styles.emptyTitle}>No conversations yet</Text>
+            <Text style={styles.emptyTitle}>{t('messages.noConversationsYet', 'No conversations yet')}</Text>
             <Text style={styles.emptySubtitle}>
-              Message your ward representative from the dashboard to get started
+              {t('messages.messageYourRep', 'Message your ward representative from the dashboard to get started')}
             </Text>
           </View>
         }

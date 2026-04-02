@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/Button';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -19,6 +20,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 type AadhaarRouteProp = RouteProp<AuthStackParamList, 'AadhaarVerify'>;
 
 export const AadhaarVerifyScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<AadhaarRouteProp>();
   const navigation = useNavigation();
   const { userId } = route.params;
@@ -35,22 +37,22 @@ export const AadhaarVerifyScreen: React.FC = () => {
       // react-native-document-picker would be used here
       // For now, show instructions
       Alert.alert(
-        'Select Aadhaar XML',
-        'Please select the password-protected ZIP file downloaded from myaadhaar.uidai.gov.in',
+        t('auth.selectAadhaarXML', 'Select Aadhaar XML'),
+        t('auth.selectAadhaarXMLDesc', 'Please select the password-protected ZIP file downloaded from myaadhaar.uidai.gov.in'),
       );
     } catch (err) {
-      setError('Failed to pick file');
+      setError(t('auth.failedPickFile', 'Failed to pick file'));
     }
   };
 
   const handleVerify = async () => {
     if (shareCode.length !== 4) {
-      setError('Share code must be exactly 4 digits');
+      setError(t('auth.shareCode4Digits', 'Share code must be exactly 4 digits'));
       return;
     }
 
     if (!fileName) {
-      setError('Please select an Aadhaar XML zip file');
+      setError(t('auth.selectAadhaarFile', 'Please select an Aadhaar XML zip file'));
       return;
     }
 
@@ -67,7 +69,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
 
       setVerifiedName('Verification pending — file picker integration required');
     } catch (err: any) {
-      setError(err?.message || 'Verification failed');
+      setError(err?.message || t('auth.verificationFailed', 'Verification failed'));
     } finally {
       setIsUploading(false);
     }
@@ -83,14 +85,13 @@ export const AadhaarVerifyScreen: React.FC = () => {
         <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
         <View style={styles.successContent}>
           <Text style={styles.successIcon}>&#10003;</Text>
-          <Text style={styles.successTitle}>Aadhaar Verified</Text>
+          <Text style={styles.successTitle}>{t('auth.aadhaarVerified', 'Aadhaar Verified')}</Text>
           <Text style={styles.successName}>{verifiedName}</Text>
           <Text style={styles.successSubtitle}>
-            Your identity has been verified. You now have enhanced trust on the
-            platform.
+            {t('auth.identityVerified', 'Your identity has been verified. You now have enhanced trust on the platform.')}
           </Text>
           <Button
-            title="Continue to App"
+            title={t('auth.continueToApp', 'Continue to App')}
             onPress={() => navigation.getParent()?.reset({
               index: 0,
               routes: [{ name: 'Main' as never }],
@@ -112,31 +113,30 @@ export const AadhaarVerifyScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Verify Aadhaar</Text>
+        <Text style={styles.title}>{t('auth.verifyAadhaar', 'Verify Aadhaar')}</Text>
         <Text style={styles.subtitle}>
-          Upload your offline Aadhaar XML to verify your identity. This is
-          optional but unlocks higher trust features.
+          {t('auth.aadhaarSubtitle', 'Upload your offline Aadhaar XML to verify your identity. This is optional but unlocks higher trust features.')}
         </Text>
 
         <View style={styles.instructionsCard}>
-          <Text style={styles.instructionsTitle}>How to get your Aadhaar XML:</Text>
+          <Text style={styles.instructionsTitle}>{t('auth.howToGetXML', 'How to get your Aadhaar XML:')}</Text>
           <Text style={styles.instructionStep}>
-            1. Visit myaadhaar.uidai.gov.in
+            {t('auth.step1', '1. Visit myaadhaar.uidai.gov.in')}
           </Text>
           <Text style={styles.instructionStep}>
-            2. Log in with your Aadhaar number
+            {t('auth.step2', '2. Log in with your Aadhaar number')}
           </Text>
           <Text style={styles.instructionStep}>
-            3. Go to "Offline eKYC" section
+            {t('auth.step3', '3. Go to "Offline eKYC" section')}
           </Text>
           <Text style={styles.instructionStep}>
-            4. Create a 4-digit share code
+            {t('auth.step4', '4. Create a 4-digit share code')}
           </Text>
           <Text style={styles.instructionStep}>
-            5. Download the ZIP file
+            {t('auth.step5', '5. Download the ZIP file')}
           </Text>
           <Button
-            title="Open myAadhaar Portal"
+            title={t('auth.openMyAadhaarPortal', 'Open myAadhaar Portal')}
             onPress={handleOpenUIDAI}
             variant="outline"
             size="sm"
@@ -145,9 +145,9 @@ export const AadhaarVerifyScreen: React.FC = () => {
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Aadhaar XML File</Text>
+          <Text style={styles.label}>{t('auth.aadhaarXMLFile', 'Aadhaar XML File')}</Text>
           <Button
-            title={fileName || 'Select ZIP File'}
+            title={fileName || t('auth.selectZIPFile', 'Select ZIP File')}
             onPress={handlePickFile}
             variant="outline"
             fullWidth
@@ -156,7 +156,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.label}>4-Digit Share Code</Text>
+          <Text style={styles.label}>{t('auth.shareCodeLabel', '4-Digit Share Code')}</Text>
           <TextInput
             style={styles.shareCodeInput}
             value={shareCode}
@@ -166,7 +166,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
             }}
             keyboardType="number-pad"
             maxLength={4}
-            placeholder="Enter share code"
+            placeholder={t('auth.enterShareCode', 'Enter share code')}
             placeholderTextColor={colors.textMuted}
           />
         </View>
@@ -174,7 +174,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <Button
-          title="Verify Aadhaar"
+          title={t('auth.verifyAadhaar', 'Verify Aadhaar')}
           onPress={handleVerify}
           fullWidth
           size="lg"
@@ -183,7 +183,7 @@ export const AadhaarVerifyScreen: React.FC = () => {
         />
 
         <Button
-          title="Skip for Now"
+          title={t('auth.skipForNow', 'Skip for Now')}
           onPress={() => navigation.getParent()?.reset({
             index: 0,
             routes: [{ name: 'Main' as never }],

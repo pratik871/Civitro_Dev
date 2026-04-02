@@ -10,6 +10,7 @@ import {
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime } from '../../lib/utils';
@@ -54,6 +55,7 @@ function getEntryTypeLabel(type: TimelineEntryType): string {
 }
 
 export const ActionTimelineScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<TimelineRouteProp>();
   const { data: timeline, isLoading } = useActionTimeline(route.params.actionId);
 
@@ -132,19 +134,19 @@ export const ActionTimelineScreen: React.FC = () => {
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.saffron }]} />
-          <Text style={styles.legendText}>Citizen Actions</Text>
+          <Text style={styles.legendText}>{t('actions.citizenActions', 'Citizen Actions')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.navy }]} />
-          <Text style={styles.legendText}>Stakeholder</Text>
+          <Text style={styles.legendText}>{t('actions.stakeholder', 'Stakeholder')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.textMuted }]} />
-          <Text style={styles.legendText}>System</Text>
+          <Text style={styles.legendText}>{t('actions.system', 'System')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.error }]} />
-          <Text style={styles.legendText}>Escalation</Text>
+          <Text style={styles.legendText}>{t('actions.escalation', 'Escalation')}</Text>
         </View>
       </View>
 
@@ -157,9 +159,9 @@ export const ActionTimelineScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F4C5}'}</Text>
-            <Text style={styles.emptyTitle}>No timeline entries</Text>
+            <Text style={styles.emptyTitle}>{t('actions.noTimelineEntries', 'No timeline entries')}</Text>
             <Text style={styles.emptyText}>
-              Timeline events will appear here as the action progresses.
+              {t('actions.timelineEventsWillAppear', 'Timeline events will appear here as the action progresses.')}
             </Text>
           </View>
         }

@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { useIssues } from '../../hooks/useIssues';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -58,6 +59,7 @@ const DEFAULT_REGION: Region = {
 type ViewMode = 'clusters' | 'heatmap';
 
 export const MapScreen: React.FC = () => {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const mapRef = useRef<MapView>(null);
@@ -174,11 +176,11 @@ export const MapScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-        <Text style={styles.headerTitle}>Issue Map</Text>
+        <Text style={styles.headerTitle}>{t('map.issueMap', 'Issue Map')}</Text>
         <Text style={styles.headerSubtitle}>
           {issuesList.length > 0
-            ? `${issuesList.length} issue${issuesList.length !== 1 ? 's' : ''} in your area`
-            : 'No issues reported nearby'}
+            ? t('map.issuesInArea', '{{count}} issues in your area', { count: issuesList.length })
+            : t('map.noIssuesNearby', 'No issues reported nearby')}
         </Text>
       </View>
 
@@ -197,7 +199,7 @@ export const MapScreen: React.FC = () => {
               viewMode === 'clusters' && styles.toggleTextActive,
             ]}
           >
-            {'\u{1F4CD}'} Clusters
+            {'\u{1F4CD}'} {t('map.clusters', 'Clusters')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -213,7 +215,7 @@ export const MapScreen: React.FC = () => {
               viewMode === 'heatmap' && styles.toggleTextActive,
             ]}
           >
-            {'\u{1F525}'} Heatmap
+            {'\u{1F525}'} {t('map.heatmap', 'Heatmap')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -308,7 +310,7 @@ export const MapScreen: React.FC = () => {
                   { backgroundColor: PIN_COLORS.critical },
                 ]}
               />
-              <Text style={styles.legendText}>Critical/High</Text>
+              <Text style={styles.legendText}>{t('map.criticalHigh', 'Critical/High')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View
@@ -317,7 +319,7 @@ export const MapScreen: React.FC = () => {
                   { backgroundColor: PIN_COLORS.medium },
                 ]}
               />
-              <Text style={styles.legendText}>Medium</Text>
+              <Text style={styles.legendText}>{t('map.medium', 'Medium')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View
@@ -326,22 +328,22 @@ export const MapScreen: React.FC = () => {
                   { backgroundColor: PIN_COLORS.low },
                 ]}
               />
-              <Text style={styles.legendText}>Low</Text>
+              <Text style={styles.legendText}>{t('map.low', 'Low')}</Text>
             </View>
           </>
         ) : (
           <>
             <View style={styles.legendItem}>
               <View style={[styles.legendBar, { backgroundColor: '#059669' }]} />
-              <Text style={styles.legendText}>Low density</Text>
+              <Text style={styles.legendText}>{t('map.lowDensity', 'Low density')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendBar, { backgroundColor: '#D97706' }]} />
-              <Text style={styles.legendText}>Medium</Text>
+              <Text style={styles.legendText}>{t('map.medium', 'Medium')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendBar, { backgroundColor: '#DC2626' }]} />
-              <Text style={styles.legendText}>High density</Text>
+              <Text style={styles.legendText}>{t('map.highDensity', 'High density')}</Text>
             </View>
           </>
         )}
@@ -355,7 +357,7 @@ export const MapScreen: React.FC = () => {
       >
         {categoryGroups.length > 0 ? (
           <>
-            <Text style={styles.zoneListTitle}>Issues by Category</Text>
+            <Text style={styles.zoneListTitle}>{t('map.issuesByCategory', 'Issues by Category')}</Text>
             {categoryGroups.map(group => (
               <TouchableOpacity
                 key={group.category}
@@ -399,7 +401,7 @@ export const MapScreen: React.FC = () => {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F5FA}'}</Text>
             <Text style={styles.emptyText}>
-              No issues reported in this area yet
+              {t('map.noIssuesInArea', 'No issues reported in this area yet')}
             </Text>
           </View>
         )}

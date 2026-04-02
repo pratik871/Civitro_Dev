@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { useSearch } from '../../hooks/useSearch';
 import { Badge } from '../../components/ui/Badge';
 import { colors } from '../../theme/colors';
@@ -34,6 +35,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 export const SearchScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<SearchNavProp>();
   const [query, setQuery] = useState('');
   const { data: results, isLoading } = useSearch(query);
@@ -80,7 +82,7 @@ export const SearchScreen: React.FC = () => {
         <Text style={styles.searchIcon}>{'\u{1F50D}'}</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search issues, leaders, polls..."
+          placeholder={t('search.searchPlaceholder', 'Search issues, leaders, polls...')}
           placeholderTextColor={colors.textMuted}
           value={query}
           onChangeText={setQuery}
@@ -97,16 +99,21 @@ export const SearchScreen: React.FC = () => {
       {query.length === 0 ? (
         <View style={styles.recentSection}>
           <Text style={[styles.recentTitle, styles.categoriesTitle]}>
-            Browse Categories
+            {t('search.browseCategories', 'Browse Categories')}
           </Text>
           <View style={styles.categoryChips}>
-            {['Issues', 'Leaders', 'Polls', 'Voices'].map(cat => (
+            {[
+              { key: 'issues', label: t('search.issues', 'Issues') },
+              { key: 'leaders', label: t('search.leaders', 'Leaders') },
+              { key: 'polls', label: t('search.polls', 'Polls') },
+              { key: 'voices', label: t('search.voices', 'Voices') },
+            ].map(cat => (
               <TouchableOpacity
-                key={cat}
+                key={cat.key}
                 style={styles.categoryChip}
-                onPress={() => setQuery(cat.toLowerCase())}
+                onPress={() => setQuery(cat.key)}
               >
-                <Text style={styles.categoryChipText}>{cat}</Text>
+                <Text style={styles.categoryChipText}>{cat.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -126,10 +133,10 @@ export const SearchScreen: React.FC = () => {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>{'\u{1F50E}'}</Text>
               <Text style={styles.emptyText}>
-                No results found
+                {t('search.noResultsFound', 'No results found')}
               </Text>
               <Text style={styles.emptyHint}>
-                Try different keywords or browse categories
+                {t('search.tryDifferentKeywords', 'Try different keywords or browse categories')}
               </Text>
             </View>
           }

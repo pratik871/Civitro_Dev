@@ -5,6 +5,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/ui/Avatar';
 import { StarRating } from '../../components/ui/StarRating';
 import { ScoreRing } from '../../components/ui/ScoreRing';
@@ -30,18 +31,19 @@ const ACTIVITY_ICONS: Record<string, string> = {
   meeting: '\u{1F91D}',
 };
 
-const PROMISE_STATUS: Record<string, { color: string; label: string; icon: string }> = {
-  detected: { color: colors.info, label: 'Detected', icon: '\u{1F50D}' },
-  pending: { color: colors.textMuted, label: 'Pending', icon: '\u23F3' },
-  on_track: { color: colors.warning, label: 'On Track', icon: '\u{1F3D7}' },
-  in_progress: { color: colors.warning, label: 'In Progress', icon: '\u{1F3D7}' },
-  fulfilled: { color: colors.success, label: 'Fulfilled', icon: '\u2705' },
-  broken: { color: colors.error, label: 'Broken', icon: '\u274C' },
+const PROMISE_STATUS_KEYS: Record<string, { color: string; labelKey: string; fallback: string; icon: string }> = {
+  detected: { color: colors.info, labelKey: 'leaderProfile.promiseDetected', fallback: 'Detected', icon: '\u{1F50D}' },
+  pending: { color: colors.textMuted, labelKey: 'leaderProfile.promisePending', fallback: 'Pending', icon: '\u23F3' },
+  on_track: { color: colors.warning, labelKey: 'leaderProfile.promiseOnTrack', fallback: 'On Track', icon: '\u{1F3D7}' },
+  in_progress: { color: colors.warning, labelKey: 'leaderProfile.promiseInProgress', fallback: 'In Progress', icon: '\u{1F3D7}' },
+  fulfilled: { color: colors.success, labelKey: 'leaderProfile.promiseFulfilled', fallback: 'Fulfilled', icon: '\u2705' },
+  broken: { color: colors.error, labelKey: 'leaderProfile.promiseBroken', fallback: 'Broken', icon: '\u274C' },
 };
 
 type LeaderProfileNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const LeaderProfileScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<ProfileRouteProp>();
   const navigation = useNavigation<LeaderProfileNavProp>();
   const { leaderId } = route.params;
@@ -61,11 +63,11 @@ export const LeaderProfileScreen: React.FC = () => {
   });
 
   const RATING_QUESTIONS = [
-    { key: 'responsiveness', label: 'Responsiveness', question: 'How quickly do they respond to issues?' },
-    { key: 'transparency', label: 'Transparency', question: 'How open are they about decisions?' },
-    { key: 'deliveryOnPromises', label: 'Delivery on Promises', question: 'Do they keep their promises?' },
-    { key: 'accessibility', label: 'Accessibility', question: 'How easy is it to reach them?' },
-    { key: 'overallImpact', label: 'Overall Impact', question: 'How much positive change have they brought?' },
+    { key: 'responsiveness', label: t('leaderProfile.responsiveness', 'Responsiveness'), question: t('leaderProfile.responsivenessQ', 'How quickly do they respond to issues?') },
+    { key: 'transparency', label: t('leaderProfile.transparency', 'Transparency'), question: t('leaderProfile.transparencyQ', 'How open are they about decisions?') },
+    { key: 'deliveryOnPromises', label: t('leaderProfile.deliveryOnPromises', 'Delivery on Promises'), question: t('leaderProfile.deliveryOnPromisesQ', 'Do they keep their promises?') },
+    { key: 'accessibility', label: t('leaderProfile.accessibility', 'Accessibility'), question: t('leaderProfile.accessibilityQ', 'How easy is it to reach them?') },
+    { key: 'overallImpact', label: t('leaderProfile.overallImpact', 'Overall Impact'), question: t('leaderProfile.overallImpactQ', 'How much positive change have they brought?') },
   ] as const;
 
   // Fetch user's existing rating for this leader
@@ -123,7 +125,7 @@ export const LeaderProfileScreen: React.FC = () => {
   if (!leader) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.notFoundText}>Leader not found</Text>
+        <Text style={styles.notFoundText}>{t('leaderProfile.notFound', 'Leader not found')}</Text>
       </View>
     );
   }
@@ -156,7 +158,7 @@ export const LeaderProfileScreen: React.FC = () => {
         <View style={styles.ratingHeader}>
           <StarRating rating={leader.overallRating} size={20} />
           <Text style={styles.ratingCount}>
-            {(totalRatings || leader.totalRatings).toLocaleString()} rating{(totalRatings || leader.totalRatings) !== 1 ? 's' : ''}
+            {(totalRatings || leader.totalRatings).toLocaleString()} {t('leaderProfile.ratings', 'ratings')}
           </Text>
         </View>
       </View>
@@ -171,12 +173,12 @@ export const LeaderProfileScreen: React.FC = () => {
             label="CHI"
           />
           <View style={styles.chiInfo}>
-            <Text style={styles.chiTitle}>Constituency Health Index</Text>
+            <Text style={styles.chiTitle}>{t('leaderProfile.constituencyHealthIndex', 'Constituency Health Index')}</Text>
             <Text style={styles.chiDesc}>
-              Overall health score for {leader.ward || leader.constituency}
+              {t('leaderProfile.overallHealthScore', 'Overall health score for {{area}}', { area: leader.ward || leader.constituency })}
             </Text>
             <Button
-              title="View Full CHI"
+              title={t('leaderProfile.viewFullCHI', 'View Full CHI')}
               onPress={() => navigation.navigate('CHI', { constituencyId: leader.constituency })}
               variant="ghost"
               size="sm"
@@ -187,10 +189,10 @@ export const LeaderProfileScreen: React.FC = () => {
 
       {/* Rating Breakdown */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Rating Breakdown</Text>
+        <Text style={styles.sectionTitle}>{t('leaderProfile.ratingBreakdown', 'Rating Breakdown')}</Text>
         <RatingBreakdown breakdown={leader.ratingBreakdown} />
         <Button
-          title={ratingSubmitted ? 'Update Rating' : 'Rate This Leader'}
+          title={ratingSubmitted ? t('leaderProfile.updateRating', 'Update Rating') : t('leaderProfile.rateThisLeader', 'Rate This Leader')}
           onPress={() => {
             setRatingStep(0);
             setDimensions({ responsiveness: 0, transparency: 0, deliveryOnPromises: 0, accessibility: 0, overallImpact: 0 });
@@ -208,23 +210,23 @@ export const LeaderProfileScreen: React.FC = () => {
       {/* Promise Tracker */}
       <Card style={styles.sectionCard}>
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Promise Tracker</Text>
+          <Text style={styles.sectionTitle}>{t('leaderProfile.promiseTracker', 'Promise Tracker')}</Text>
           <Text style={styles.promiseCount}>
-            {promises.filter(p => p.status === 'fulfilled').length}/{promises.length} kept
+            {promises.filter(p => p.status === 'fulfilled').length}/{promises.length} {t('leaderProfile.kept', 'kept')}
           </Text>
         </View>
         {promises.length === 0 ? (
-          <Text style={styles.noPromisesText}>No promises tracked yet</Text>
+          <Text style={styles.noPromisesText}>{t('leaderProfile.noPromises', 'No promises tracked yet')}</Text>
         ) : (
           <View style={{ gap: spacing.sm }}>
             {promises.slice(0, 5).map((p: any) => {
-              const sc = PROMISE_STATUS[p.status] ?? PROMISE_STATUS.pending;
+              const sc = PROMISE_STATUS_KEYS[p.status] ?? PROMISE_STATUS_KEYS.pending;
               return (
                 <View key={p.id} style={styles.promiseItem}>
                   <View style={styles.promiseItemHeader}>
                     <Text style={styles.promiseItemTitle} numberOfLines={2}>{p.title}</Text>
                     <View style={[styles.promiseStatusBadge, { backgroundColor: sc.color + '15' }]}>
-                      <Text style={[styles.promiseStatusText, { color: sc.color }]}>{sc.icon} {sc.label}</Text>
+                      <Text style={[styles.promiseStatusText, { color: sc.color }]}>{sc.icon} {t(sc.labelKey, sc.fallback)}</Text>
                     </View>
                   </View>
                   <View style={styles.promiseProgressRow}>
@@ -237,7 +239,7 @@ export const LeaderProfileScreen: React.FC = () => {
                     <View style={styles.promiseCategoryBadge}>
                       <Text style={styles.promiseCategoryText}>{p.category}</Text>
                     </View>
-                    <Text style={styles.promiseDeadline}>Deadline: {p.deadline}</Text>
+                    <Text style={styles.promiseDeadline}>{t('leaderProfile.deadline', 'Deadline')}: {p.deadline}</Text>
                   </View>
                 </View>
               );
@@ -248,7 +250,7 @@ export const LeaderProfileScreen: React.FC = () => {
                 onPress={() => navigation.navigate('Promises', { leaderId })}
                 activeOpacity={0.7}
               >
-                <Text style={styles.viewPromisesBtnText}>View All {promises.length} Promises</Text>
+                <Text style={styles.viewPromisesBtnText}>{t('leaderProfile.viewAllPromises', 'View All {{count}} Promises', { count: promises.length })}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -257,62 +259,62 @@ export const LeaderProfileScreen: React.FC = () => {
 
       {/* Performance Stats */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Performance Stats</Text>
+        <Text style={styles.sectionTitle}>{t('leaderProfile.performanceStats', 'Performance Stats')}</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: colors.success }]}>
               {leader.issuesTotal > 0 ? Math.round((leader.issuesResolved / leader.issuesTotal) * 100) : 0}%
             </Text>
-            <Text style={styles.statLabel}>Resolution Rate</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.resolutionRate', 'Resolution Rate')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: colors.primary }]}>
               {leader.avgResponseDays > 0 ? leader.avgResponseDays.toFixed(1) : '\u2014'}
             </Text>
-            <Text style={styles.statLabel}>Avg Response (days)</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.avgResponse', 'Avg Response (days)')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: '#D97706' }]}>
               {leader.citizenSatisfaction > 0 ? leader.citizenSatisfaction.toFixed(1) : '\u2014'}/5
             </Text>
-            <Text style={styles.statLabel}>Citizen Satisfaction</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.citizenSatisfaction', 'Citizen Satisfaction')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: '#7C3AED' }]}>
               {leader.promiseCompletionRate > 0 ? Math.round(leader.promiseCompletionRate * 100) : 0}%
             </Text>
-            <Text style={styles.statLabel}>Promises Kept</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.promisesKept', 'Promises Kept')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>
               {leader.issuesResolved}
             </Text>
-            <Text style={styles.statLabel}>Issues Resolved</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.issuesResolved', 'Issues Resolved')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: colors.textSecondary }]}>
               {leader.issuesTotal}
             </Text>
-            <Text style={styles.statLabel}>Total Issues</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.totalIssues', 'Total Issues')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { color: '#059669' }]}>
               {leader.totalRatings}
             </Text>
-            <Text style={styles.statLabel}>Total Ratings</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.totalRatings', 'Total Ratings')}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={[styles.statValue, { fontSize: 14, color: colors.textPrimary }]}>
               {leader.activeSince ? new Date(leader.activeSince).getFullYear().toString() : '\u2014'}
             </Text>
-            <Text style={styles.statLabel}>Active Since</Text>
+            <Text style={styles.statLabel}>{t('leaderProfile.activeSince', 'Active Since')}</Text>
           </View>
         </View>
       </Card>
 
       {/* Recent Activity */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <Text style={styles.sectionTitle}>{t('leaderProfile.recentActivity', 'Recent Activity')}</Text>
         {leader.recentActivity.map(activity => (
           <View key={activity.id} style={styles.activityRow}>
             <Text style={styles.activityIcon}>
@@ -338,8 +340,8 @@ export const LeaderProfileScreen: React.FC = () => {
         <View style={ratingStyles.card}>
           {!showThankYou ? (
             <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }}>
-              <Text style={ratingStyles.title}>Rate {leader?.name}</Text>
-              <Text style={ratingStyles.subtitle}>Tap stars for each dimension</Text>
+              <Text style={ratingStyles.title}>{t('leaderProfile.rateLeader', 'Rate {{name}}', { name: leader?.name })}</Text>
+              <Text style={ratingStyles.subtitle}>{t('leaderProfile.tapStars', 'Tap stars for each dimension')}</Text>
 
               {RATING_QUESTIONS.map(q => (
                 <View key={q.key} style={ratingStyles.dimensionRow}>
@@ -363,7 +365,7 @@ export const LeaderProfileScreen: React.FC = () => {
 
               <View style={ratingStyles.btnRow}>
                 <TouchableOpacity style={ratingStyles.cancelBtn} onPress={() => setShowRatingModal(false)} activeOpacity={0.7}>
-                  <Text style={ratingStyles.cancelBtnText}>Cancel</Text>
+                  <Text style={ratingStyles.cancelBtnText}>{t('common.cancel', 'Cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[ratingStyles.submitBtn, Object.values(dimensions).some(v => v === 0) && ratingStyles.submitBtnDisabled]}
@@ -383,7 +385,7 @@ export const LeaderProfileScreen: React.FC = () => {
                   disabled={rateMutation.isPending}
                 >
                   <Text style={ratingStyles.submitBtnText}>
-                    {rateMutation.isPending ? 'Submitting...' : 'Submit'}
+                    {rateMutation.isPending ? t('leaderProfile.submitting', 'Submitting...') : t('common.submit', 'Submit')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -395,12 +397,12 @@ export const LeaderProfileScreen: React.FC = () => {
                   <Path d="M20 6L9 17l-5-5" stroke="#10B981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
                 </Svg>
               </View>
-              <Text style={ratingStyles.title}>Thank You!</Text>
+              <Text style={ratingStyles.title}>{t('leaderProfile.thankYou', 'Thank You!')}</Text>
               <Text style={ratingStyles.subtitle}>
-                Your rating for {leader?.name} has been recorded.
+                {t('leaderProfile.ratingRecorded', 'Your rating for {{name}} has been recorded.', { name: leader?.name })}
               </Text>
               <TouchableOpacity style={ratingStyles.doneBtn} onPress={() => setShowRatingModal(false)} activeOpacity={0.7}>
-                <Text style={ratingStyles.submitBtnText}>Done</Text>
+                <Text style={ratingStyles.submitBtnText}>{t('leaderProfile.done', 'Done')}</Text>
               </TouchableOpacity>
             </>
           )}

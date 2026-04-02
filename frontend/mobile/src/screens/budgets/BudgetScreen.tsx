@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import {
   useBudgetProposals,
   useBudgetResults,
@@ -24,14 +25,14 @@ import { spacing, borderRadius } from '../../theme/spacing';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Format paisa amount as INR with Lakh/Cr suffixes. */
-function formatINR(paisa: number): string {
+/** Format paisa amount as INR with Lakh/Cr suffixes. Uses t() for translated suffixes. */
+function formatINR(paisa: number, t: (key: string, fallback: string) => string): string {
   const rupees = paisa / 100;
   if (rupees >= 1_00_00_000) {
-    return `\u20B9${(rupees / 1_00_00_000).toFixed(2)} Cr`;
+    return `\u20B9${(rupees / 1_00_00_000).toFixed(2)} ${t('budget.crore', 'Cr')}`;
   }
   if (rupees >= 1_00_000) {
-    return `\u20B9${(rupees / 1_00_000).toFixed(2)} Lakh`;
+    return `\u20B9${(rupees / 1_00_000).toFixed(2)} ${t('budget.lakh', 'Lakh')}`;
   }
   if (rupees >= 1_000) {
     return `\u20B9${(rupees / 1_000).toFixed(1)}K`;
@@ -166,6 +167,7 @@ interface ProposalCardProps {
   onAllocationChange: (val: number) => void;
   showResults: boolean;
   result?: BudgetProposalResult;
+  t: (key: string, fallback: string, opts?: Record<string, unknown>) => string;
 }
 
 const ProposalCard: React.FC<ProposalCardProps> = ({
@@ -174,6 +176,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   onAllocationChange,
   showResults,
   result,
+  t,
 }) => {
   const catColor = CATEGORY_COLORS[proposal.category] ?? CATEGORY_COLORS.other;
   const catIcon = CATEGORY_ICONS[proposal.category] ?? CATEGORY_ICONS.other;
@@ -194,7 +197,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
               </Text>
             </View>
             <Text style={cardStyles.amount}>
-              {formatINR(proposal.requestedAmount)}
+              {formatINR(proposal.requestedAmount, t)}
             </Text>
           </View>
         </View>
@@ -227,7 +230,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
             />
           </View>
           <Text style={cardStyles.resultText}>
-            {result.avg_allocation.toFixed(1)}% avg ({result.total_voters} voters)
+            {result.avg_allocation.toFixed(1)}% {t('budget.avg', 'avg')} ({result.total_voters} {t('budget.voters', 'voters')})
           </Text>
         </View>
       )}
@@ -318,6 +321,7 @@ const cardStyles = StyleSheet.create({
 type RouteParams = { boundaryId: string };
 
 export const BudgetScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute();
   const { boundaryId } = (route.params as RouteParams) ?? {};
 
@@ -358,8 +362,8 @@ export const BudgetScreen: React.FC = () => {
   const handleSubmit = useCallback(() => {
     if (totalAllocation !== 100) {
       Alert.alert(
-        'Invalid Total',
-        `Your allocations must add up to 100%. Currently: ${totalAllocation}%`,
+        t('budget.invalidTotal', 'Invalid Total'),
+        t('budget.mustAddUp', 'Your allocations must add up to 100%. Currently: {{pct}}%', { pct: totalAllocation }),
       );
       return;
     }
@@ -375,11 +379,11 @@ export const BudgetScreen: React.FC = () => {
       { boundaryId, allocations: allocs },
       {
         onSuccess: () => {
-          Alert.alert('Vote Submitted', 'Your budget allocation has been recorded.');
+          Alert.alert(t('budget.voteSubmitted', 'Vote Submitted'), t('budget.allocationRecorded', 'Your budget allocation has been recorded.'));
           setShowResults(true);
         },
         onError: (err: any) => {
-          Alert.alert('Error', err?.message ?? 'Failed to submit vote.');
+          Alert.alert(t('common.error', 'Error'), err?.message ?? t('budget.failedSubmit', 'Failed to submit vote.'));
         },
       },
     );
@@ -413,7 +417,7 @@ export const BudgetScreen: React.FC = () => {
       {/* Total bar */}
       <View style={styles.totalCard}>
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Your Allocation</Text>
+          <Text style={styles.totalLabel}>{t('budget.yourAllocation', 'Your Allocation')}</Text>
           <Text
             style={[
               styles.totalValue,
@@ -442,8 +446,8 @@ export const BudgetScreen: React.FC = () => {
         </View>
         <Text style={styles.totalHint}>
           {totalAllocation === 100
-            ? 'You have allocated 100% -- ready to submit!'
-            : `Allocate ${100 - totalAllocation}% more to reach 100%.`}
+            ? t('budget.readyToSubmit', 'You have allocated 100% -- ready to submit!')
+            : t('budget.allocateMore', 'Allocate {{pct}}% more to reach 100%.', { pct: 100 - totalAllocation })}
         </Text>
       </View>
 
@@ -454,7 +458,7 @@ export const BudgetScreen: React.FC = () => {
           onPress={() => setShowResults(false)}
         >
           <Text style={[styles.toggleText, !showResults && styles.toggleTextActive]}>
-            Vote
+            {t('budget.vote', 'Vote')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -462,7 +466,7 @@ export const BudgetScreen: React.FC = () => {
           onPress={() => setShowResults(true)}
         >
           <Text style={[styles.toggleText, showResults && styles.toggleTextActive]}>
-            Results
+            {t('budget.results', 'Results')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -472,25 +476,25 @@ export const BudgetScreen: React.FC = () => {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{results.total_voters}</Text>
-            <Text style={styles.statLabel}>Voters</Text>
+            <Text style={styles.statLabel}>{t('budget.voters', 'Voters')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.primary }]}>
               {allProposals.length}
             </Text>
-            <Text style={styles.statLabel}>Proposals</Text>
+            <Text style={styles.statLabel}>{t('budget.proposals', 'Proposals')}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>
               {results.fiscal_year}
             </Text>
-            <Text style={styles.statLabel}>Fiscal Year</Text>
+            <Text style={styles.statLabel}>{t('budget.fiscalYear', 'Fiscal Year')}</Text>
           </View>
         </View>
       )}
 
       <Text style={styles.sectionTitle}>
-        {showResults ? 'Community Results' : 'Budget Proposals'}
+        {showResults ? t('budget.communityResults', 'Community Results') : t('budget.budgetProposals', 'Budget Proposals')}
       </Text>
     </View>
   );
@@ -502,6 +506,7 @@ export const BudgetScreen: React.FC = () => {
       onAllocationChange={(val) => handleAllocationChange(item.id, val)}
       showResults={showResults}
       result={resultsMap[item.id]}
+      t={t}
     />
   );
 
@@ -519,7 +524,7 @@ export const BudgetScreen: React.FC = () => {
         {voteMutation.isPending ? (
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
-          <Text style={styles.submitText}>Submit Vote</Text>
+          <Text style={styles.submitText}>{t('budget.submitVote', 'Submit Vote')}</Text>
         )}
       </TouchableOpacity>
     );
@@ -547,10 +552,9 @@ export const BudgetScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F4B0}'}</Text>
-            <Text style={styles.emptyTitle}>No budget proposals</Text>
+            <Text style={styles.emptyTitle}>{t('budget.noProposals', 'No budget proposals')}</Text>
             <Text style={styles.emptyText}>
-              Participatory budgeting proposals will appear here when your ward
-              has an active budget cycle.
+              {t('budget.proposalsWillAppear', 'Participatory budgeting proposals will appear here when your ward has an active budget cycle.')}
             </Text>
           </View>
         }

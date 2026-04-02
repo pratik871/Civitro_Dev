@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { PollCard } from '../../components/polls/PollCard';
 import { usePolls, useVotePoll, useRetractVote } from '../../hooks/usePolls';
 import { colors } from '../../theme/colors';
@@ -20,6 +21,7 @@ import type { RootStackParamList } from '../../navigation/types';
 type PollsNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const PollsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<PollsNavProp>();
   const route = useRoute();
   const myVoted = (route.params as any)?.myVoted as boolean | undefined;
@@ -67,19 +69,19 @@ export const PollsScreen: React.FC = () => {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{allPolls.length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statLabel}>{t('polls.total', 'Total')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.success }]}>{activeCount}</Text>
-          <Text style={styles.statLabel}>Active</Text>
+          <Text style={styles.statLabel}>{t('polls.active', 'Active')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statValue, { color: colors.primary }]}>{totalVotes}</Text>
-          <Text style={styles.statLabel}>Votes</Text>
+          <Text style={styles.statLabel}>{t('polls.votesLabel', 'Votes')}</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Community Polls</Text>
+      <Text style={styles.sectionTitle}>{t('polls.communityPolls', 'Community Polls')}</Text>
     </View>
   );
 
@@ -122,9 +124,9 @@ export const PollsScreen: React.FC = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F5F3}'}</Text>
-            <Text style={styles.emptyTitle}>No polls yet</Text>
+            <Text style={styles.emptyTitle}>{t('polls.noPollsYet', 'No polls yet')}</Text>
             <Text style={styles.emptyText}>
-              Community polls will appear here when they become available.
+              {t('polls.pollsWillAppear', 'Community polls will appear here when they become available.')}
             </Text>
           </View>
         }

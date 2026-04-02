@@ -11,6 +11,7 @@ import {
 import MapView, { Circle, Region } from 'react-native-maps';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useHeatmap, type HeatmapPoint } from '../../hooks/useDatamine';
 import { Badge } from '../../components/ui/Badge';
 import { colors } from '../../theme/colors';
@@ -47,6 +48,7 @@ function intensityToStroke(intensity: number): string {
 }
 
 export const HeatmapScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'Heatmap'>>();
   const { boundaryId } = route.params;
   const insets = useSafeAreaInsets();
@@ -102,7 +104,7 @@ export const HeatmapScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading heatmap...</Text>
+        <Text style={styles.loadingText}>{t('datamine.loadingHeatmap', 'Loading heatmap...')}</Text>
       </View>
     );
   }
@@ -131,7 +133,7 @@ export const HeatmapScreen: React.FC = () => {
                 !selectedCategory && styles.filterChipTextActive,
               ]}
             >
-              All
+              {t('datamine.all', 'All')}
             </Text>
           </TouchableOpacity>
           {categories.map((cat) => (
@@ -183,14 +185,13 @@ export const HeatmapScreen: React.FC = () => {
         {/* Point count badge */}
         <View style={styles.countBadge}>
           <Text style={styles.countBadgeText}>
-            {filteredPoints.length} point
-            {filteredPoints.length !== 1 ? 's' : ''}
+            {filteredPoints.length} {t('datamine.points', 'points')}
           </Text>
         </View>
 
         {/* Legend */}
         <View style={styles.legend}>
-          <Text style={styles.legendTitle}>Intensity</Text>
+          <Text style={styles.legendTitle}>{t('datamine.intensity', 'Intensity')}</Text>
           <View style={styles.legendScale}>
             <View style={styles.legendGradient}>
               <View
@@ -219,8 +220,8 @@ export const HeatmapScreen: React.FC = () => {
               />
             </View>
             <View style={styles.legendLabels}>
-              <Text style={styles.legendLabel}>Low</Text>
-              <Text style={styles.legendLabel}>High</Text>
+              <Text style={styles.legendLabel}>{t('datamine.low', 'Low')}</Text>
+              <Text style={styles.legendLabel}>{t('datamine.high', 'High')}</Text>
             </View>
           </View>
         </View>
@@ -232,11 +233,11 @@ export const HeatmapScreen: React.FC = () => {
           <Text style={styles.footerValue}>
             {heatmapData?.total_points ?? 0}
           </Text>
-          <Text style={styles.footerLabel}>Total Points</Text>
+          <Text style={styles.footerLabel}>{t('datamine.totalPoints', 'Total Points')}</Text>
         </View>
         <View style={styles.footerStat}>
           <Text style={styles.footerValue}>{categories.length}</Text>
-          <Text style={styles.footerLabel}>Categories</Text>
+          <Text style={styles.footerLabel}>{t('datamine.categories', 'Categories')}</Text>
         </View>
         <View style={styles.footerStat}>
           <Badge
@@ -245,7 +246,7 @@ export const HeatmapScreen: React.FC = () => {
             color={colors.primary}
             size="sm"
           />
-          <Text style={styles.footerLabel}>Ward</Text>
+          <Text style={styles.footerLabel}>{t('datamine.ward', 'Ward')}</Text>
         </View>
       </View>
     </View>

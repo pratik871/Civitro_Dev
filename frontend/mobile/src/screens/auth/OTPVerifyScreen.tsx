@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/Button';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -19,6 +20,7 @@ type OTPRouteProp = RouteProp<AuthStackParamList, 'OTPVerify'>;
 const OTP_LENGTH = 6;
 
 export const OTPVerifyScreen: React.FC = () => {
+  const { t } = useTranslation();
   const route = useRoute<OTPRouteProp>();
   const { phone } = route.params;
   const { login, isLoading } = useAuth();
@@ -80,13 +82,13 @@ export const OTPVerifyScreen: React.FC = () => {
   const handleVerify = async () => {
     const otpString = otp.join('');
     if (otpString.length !== OTP_LENGTH) {
-      setError('Please enter the complete OTP');
+      setError(t('auth.enterCompleteOTP', 'Please enter the complete OTP'));
       return;
     }
 
     const result = await login(phone, otpString);
     if (!result.success) {
-      setError(result.error || 'Verification failed');
+      setError(result.error || t('auth.verificationFailed', 'Verification failed'));
     }
   };
 
@@ -103,9 +105,9 @@ export const OTPVerifyScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <View style={styles.content}>
-        <Text style={styles.title}>Verify OTP</Text>
+        <Text style={styles.title}>{t('auth.verifyOTP', 'Verify OTP')}</Text>
         <Text style={styles.subtitle}>
-          Enter the 6-digit code sent to{'\n'}
+          {t('auth.enterOTPCode', 'Enter the 6-digit code sent to')}{'\n'}
           <Text style={styles.phoneText}>{maskedPhone}</Text>
         </Text>
 
@@ -135,7 +137,7 @@ export const OTPVerifyScreen: React.FC = () => {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <Button
-          title="Verify & Continue"
+          title={t('auth.verifyAndContinue', 'Verify & Continue')}
           onPress={handleVerify}
           fullWidth
           size="lg"
@@ -146,12 +148,12 @@ export const OTPVerifyScreen: React.FC = () => {
         <View style={styles.resendRow}>
           {resendTimer > 0 ? (
             <Text style={styles.resendText}>
-              Resend OTP in{' '}
-              <Text style={styles.timerText}>{resendTimer}s</Text>
+              {t('auth.resendOTPIn', 'Resend OTP in')}{' '}
+              <Text style={styles.timerText}>{resendTimer}{t('auth.seconds', 's')}</Text>
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResend}>
-              <Text style={styles.resendLink}>Resend OTP</Text>
+              <Text style={styles.resendLink}>{t('auth.resendOTP', 'Resend OTP')}</Text>
             </TouchableOpacity>
           )}
         </View>
