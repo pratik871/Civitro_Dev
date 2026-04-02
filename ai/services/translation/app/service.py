@@ -98,11 +98,21 @@ class _LRUCache:
 # ---------------------------------------------------------------------------
 
 class TranslationService:
-    """Translates text using Ollama (dev) or Bhashini API (production)."""
+    """Translates text using Ollama (dev), Bhashini API (production), or Bhashini-local (docker)."""
 
     def __init__(self) -> None:
         self._app_env = os.getenv("APP_ENV", "local")
-        self._backend = "bhashini" if self._app_env == "production" else "ollama"
+
+        # Backend selection: bhashini-local for docker/production, bhashini cloud
+        # API as fallback for production, ollama for local dev.
+        backend_override = os.getenv("TRANSLATION_BACKEND", "")
+        if backend_override:
+            self._backend = backend_override
+        elif self._app_env in ("docker", "production"):
+            self._backend = "bhashini-local"
+        else:
+            self._backend = "ollama"
+
         self._cache = _LRUCache(maxsize=10000)
 
         # Ollama configuration
@@ -112,10 +122,15 @@ class TranslationService:
             self._ollama_url = "http://localhost:11434/api/generate"
         self._ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
-        # Bhashini configuration
+        # Bhashini cloud API configuration
         self._bhashini_url = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
         self._bhashini_api_key = os.getenv("BHASHINI_API_KEY", "")
         self._bhashini_user_id = os.getenv("BHASHINI_USER_ID", "")
+
+        # Bhashini-local (IndicTrans2 container) configuration
+        self._bhashini_local_url = os.getenv(
+            "BHASHINI_LOCAL_URL", "http://bhashini:8025/bhashini/translate"
+        )
 
         self._client: httpx.AsyncClient | None = None
 
@@ -221,6 +236,22 @@ class TranslationService:
             raise RuntimeError("Ollama returned empty translation")
         return translated
 
+    async def _translate_bhashini_local(self, text: str, source_lang: str, target_lang: str) -> str:
+        """Translate using the local Bhashini NMT (IndicTrans2) container."""
+        payload = {
+            "text": text,
+            "source_language": source_lang,
+            "target_language": target_lang,
+        }
+        client = await self._get_client()
+        resp = await client.post(self._bhashini_local_url, json=payload)
+        resp.raise_for_status()
+        data: dict[str, Any] = resp.json()
+        translated = data.get("translated_text", "")
+        if not translated:
+            raise RuntimeError("Bhashini-local returned empty translation")
+        return translated
+
     async def _translate_bhashini(self, text: str, source_lang: str, target_lang: str) -> str:
         """Translate using the Bhashini NMT pipeline."""
         payload = {
@@ -294,7 +325,21 @@ class TranslationService:
             return cached
 
         # Translate using the configured backend
-        if self._backend == "bhashini":
+        if self._backend == "bhashini-local":
+            try:
+                translated = await self._translate_bhashini_local(text, source_lang, target_lang)
+                confidence = 0.92
+            except Exception as exc:
+                log.warning(
+                    "bhashini-local failed, falling back to cloud",
+                    error=str(exc),
+                )
+                if self._bhashini_api_key:
+                    translated = await self._translate_bhashini(text, source_lang, target_lang)
+                    confidence = 0.95
+                else:
+                    raise
+        elif self._backend == "bhashini":
             translated = await self._translate_bhashini(text, source_lang, target_lang)
             confidence = 0.95
         else:

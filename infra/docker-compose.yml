@@ -11,6 +11,7 @@ volumes:
   timescaledb-data:
   minio-data:
   ollama-data:
+  bhashini-models:
 
 services:
   # ── PostgreSQL with PostGIS ──────────────────────────────────
@@ -1019,5 +1020,35 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - civitro-network
+
+  # ── Service 25: Bhashini NMT (IndicTrans2 offline translation) ─
+  bhashini:
+    build:
+      context: ../ai
+      dockerfile: services/bhashini/Dockerfile
+    container_name: civitro-bhashini
+    restart: unless-stopped
+    profiles: ["wave3"]
+    ports:
+      - "8025:8025"
+    environment:
+      - APP_ENV=docker
+      - HF_HOME=/models
+      - TRANSFORMERS_CACHE=/models
+      - TORCH_NUM_THREADS=2
+    volumes:
+      - bhashini-models:/models
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8025/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     networks:
       - civitro-network

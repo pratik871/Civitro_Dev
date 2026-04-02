@@ -1,0 +1,22 @@
+[project]
+name = "civitro-bhashini-nmt"
+version = "0.1.0"
+description = "Offline IndicTrans2 NMT service for 22 Indian languages (CPU-only)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.10.0",
+    "torch>=2.2.0",
+    "transformers>=4.38.0",
+    "sentencepiece>=0.2.0",
+    "protobuf>=4.25.0",
+    "IndicTransToolkit>=0.0.2",
+]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
