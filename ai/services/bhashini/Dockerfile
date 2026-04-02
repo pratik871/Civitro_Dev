@@ -5,7 +5,7 @@ WORKDIR /build
 
 # Install CPU-only PyTorch first (keeps image ~700MB smaller than full CUDA build)
 RUN pip install --no-cache-dir \
-    torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+    torch==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu
 
 # Install IndicTransToolkit and dependencies
 RUN pip install --no-cache-dir \
