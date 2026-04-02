@@ -1,5 +1,5 @@
-import React, { useEffect, Component } from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import React, { useEffect, useState, Component } from 'react';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootNavigator } from './src/navigation';
 import { colors } from './src/theme/colors';
 import { useSettingsStore } from './src/stores/settingsStore';
-import './src/i18n';
+import { i18nReady } from './src/i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,7 +60,19 @@ class ErrorBoundary extends Component<
 
 const App: React.FC = () => {
   const loadSettings = useSettingsStore(state => state.loadSettings);
-  useEffect(() => { loadSettings(); }, [loadSettings]);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    Promise.all([loadSettings(), i18nReady]).then(() => setReady(true));
+  }, [loadSettings]);
+
+  if (!ready) {
+    return (
+      <View style={[styles.root, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#FF6B35" />
+      </View>
+    );
+  }
 
   return (
     <ErrorBoundary>

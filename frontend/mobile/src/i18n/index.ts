@@ -32,42 +32,47 @@ const getStoredLanguage = async (): Promise<string> => {
   return 'en';
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      en: { translation: en },
-      hi: { translation: hi },
-      ta: { translation: ta },
-      te: { translation: te },
-      kn: { translation: kn },
-      ml: { translation: ml },
-      mr: { translation: mr },
-      bn: { translation: bn },
-      gu: { translation: gu },
-      pa: { translation: pa },
-      or: { translation: or_ },
-      as: { translation: as_ },
-      ur: { translation: ur },
-      sa: { translation: sa },
-      ks: { translation: ks },
-      ne: { translation: ne },
-    },
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    react: {
-      useSuspense: false,
-    },
-  });
+// Initialize with a promise so the app can wait for the stored language
+let resolveReady: () => void;
+export const i18nReady = new Promise<void>(resolve => { resolveReady = resolve; });
 
-// Async init: set the stored language after i18n is ready
-getStoredLanguage().then(lang => {
-  if (lang !== 'en') {
-    i18n.changeLanguage(lang);
-  }
-});
+async function initI18n() {
+  const storedLang = await getStoredLanguage();
+
+  await i18n
+    .use(initReactI18next)
+    .init({
+      resources: {
+        en: { translation: en },
+        hi: { translation: hi },
+        ta: { translation: ta },
+        te: { translation: te },
+        kn: { translation: kn },
+        ml: { translation: ml },
+        mr: { translation: mr },
+        bn: { translation: bn },
+        gu: { translation: gu },
+        pa: { translation: pa },
+        or: { translation: or_ },
+        as: { translation: as_ },
+        ur: { translation: ur },
+        sa: { translation: sa },
+        ks: { translation: ks },
+        ne: { translation: ne },
+      },
+      lng: storedLang,
+      fallbackLng: 'en',
+      interpolation: {
+        escapeValue: false,
+      },
+      react: {
+        useSuspense: false,
+      },
+    });
+
+  resolveReady!();
+}
+
+initI18n();
 
 export default i18n;
