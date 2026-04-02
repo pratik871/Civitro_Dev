@@ -797,8 +797,6 @@ services:
       - "8021:8021"
     environment:
       - APP_ENV=docker
-    volumes:
-      - ../config:/app/config:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
