@@ -12,6 +12,8 @@ import {
 import Svg, { Circle, Path, Line } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useSettingsStore } from '../../stores/settingsStore';
+import api from '../../lib/api';
 import {
   GOVERNANCE_TIERS,
   TIER_LEVEL_COLORS,
@@ -48,8 +50,24 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
   onViewIssues,
 }) => {
   const { t } = useTranslation();
+  const language = useSettingsStore(state => state.language);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [translitNames, setTranslitNames] = useState<Record<string, string>>({});
+
+  // Transliterate rep names when language changes
+  React.useEffect(() => {
+    if (language === 'en') { setTranslitNames({}); return; }
+    reps.forEach(rep => {
+      api.post<{ translated_text: string }>('/api/v1/translate', {
+        text: rep.name,
+        source_language: 'en',
+        target_language: language,
+      }).then(res => {
+        setTranslitNames(prev => ({ ...prev, [rep.tierKey]: res.translated_text }));
+      }).catch(() => {});
+    });
+  }, [language, reps.length]);
 
   const toggleCard = useCallback((key: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -139,6 +157,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
       {!showAll && selectedKey && reps.find(r => r.tierKey === selectedKey) && (
         <RepCard
           rep={reps.find(r => r.tierKey === selectedKey)!}
+          translitName={translitNames[selectedKey]}
           onMessage={onMessage}
           onRate={onRate}
           onViewIssues={onViewIssues}
@@ -152,6 +171,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
             <RepCard
               key={rep.tierKey}
               rep={rep}
+              translitName={translitNames[rep.tierKey]}
               onMessage={onMessage}
               onRate={onRate}
               onViewIssues={onViewIssues}
@@ -184,12 +204,13 @@ const ConnectorArrow: React.FC = () => (
 // ---------------------------------------------------------------------------
 interface RepCardProps {
   rep: GovernanceRep;
+  translitName?: string;
   onMessage?: (rep: GovernanceRep) => void;
   onRate?: (rep: GovernanceRep) => void;
   onViewIssues?: () => void;
 }
 
-const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues }) => {
+const RepCard: React.FC<RepCardProps> = ({ rep, translitName, onMessage, onRate, onViewIssues }) => {
   const { t } = useTranslation();
   const tier = GOVERNANCE_TIERS.find(t => t.key === rep.tierKey);
   if (!tier) return null;
@@ -214,7 +235,7 @@ const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues 
       </View>
 
       {/* Name & title */}
-      <Text style={styles.repName}>{rep.name}</Text>
+      <Text style={styles.repName}>{translitName || rep.name}</Text>
       <Text style={styles.repTitle}>{rep.title}</Text>
 
       {/* Meta pills */}
