@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, {
   Defs,
@@ -8,8 +8,11 @@ import Svg, {
   Circle,
   Line,
 } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { borderRadius } from '../../theme/spacing';
+import { useSettingsStore } from '../../stores/settingsStore';
+import api from '../../lib/api';
 import type { WardMoodData } from '../../hooks/useWardMood';
 
 const NAVY = '#0B1426';
@@ -57,10 +60,51 @@ interface WardMoodProps {
 }
 
 export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
+  const { t } = useTranslation();
+  const language = useSettingsStore(state => state.language);
+  const [translatedTopics, setTranslatedTopics] = useState<Record<string, string>>({});
+  const [translatedMood, setTranslatedMood] = useState<string>('');
+  const [translatedContext, setTranslatedContext] = useState<string>('');
+
   if (!data.topics || data.topics.length === 0) return null;
   const topTopic = data.topics.reduce((a, b) => (b.percentage > a.percentage ? b : a), data.topics[0]);
   const contextTemplate = MOOD_CONTEXT[data.mood] ?? MOOD_CONTEXT.concerned;
   const context = contextTemplate.replace('{topic}', topTopic?.name ?? 'general');
+
+  // Auto-translate when language is not English
+  useEffect(() => {
+    if (language === 'en') {
+      setTranslatedTopics({});
+      setTranslatedMood('');
+      setTranslatedContext('');
+      return;
+    }
+
+    // Translate mood label
+    api.post<{ translated_text: string }>('/api/v1/translate', {
+      text: capitalize(data.mood),
+      source_language: 'en',
+      target_language: language,
+    }).then(res => setTranslatedMood(res.translated_text)).catch(() => {});
+
+    // Translate context
+    api.post<{ translated_text: string }>('/api/v1/translate', {
+      text: context,
+      source_language: 'en',
+      target_language: language,
+    }).then(res => setTranslatedContext(res.translated_text)).catch(() => {});
+
+    // Translate topic names
+    data.topics.forEach(topic => {
+      api.post<{ translated_text: string }>('/api/v1/translate', {
+        text: topic.name,
+        source_language: 'en',
+        target_language: language,
+      }).then(res => {
+        setTranslatedTopics(prev => ({ ...prev, [topic.name]: res.translated_text }));
+      }).catch(() => {});
+    });
+  }, [language, data.mood, data.topics.length]);
 
   const sparkD = useMemo(
     () => sparkPath(data.trend.sparkline, 100, 20),
@@ -81,7 +125,7 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
             <Circle cx={6} cy={6.5} r={0.8} fill={NAVY} />
             <Circle cx={10} cy={6.5} r={0.8} fill={NAVY} />
           </Svg>
-          <Text style={styles.title}>Ward Mood</Text>
+          <Text style={styles.title}>{t('dashboard.wardMood', 'Ward Mood')}</Text>
         </View>
         <View style={styles.liveTag}>
           <Text style={styles.liveTagText}>Live</Text>
@@ -138,7 +182,7 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
             adjustsFontSizeToFit
             minimumFontScale={0.7}
           >
-            {capitalize(data.mood)}
+            {translatedMood || capitalize(data.mood)}
           </Text>
           <Text
             style={styles.moodDetail}
@@ -146,15 +190,14 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
             adjustsFontSizeToFit
             minimumFontScale={0.7}
           >
-            {context}
+            {translatedContext || context}
           </Text>
         </View>
       </View>
 
       {/* Topic pills */}
       <View style={styles.topicPills}>
-        {console.log('MOOD TOPICS:', data.topics.map(t => `${t.name}:${t.sentiment}`))}
-      {data.topics.map(topic => {
+        {data.topics.map(topic => {
           const color = topicColor(topic.sentiment);
           const isPositive = topic.sentiment > 0.1;
           return (
@@ -170,7 +213,7 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
               >
-                {topic.name} ({topic.percentage}%)
+                {translatedTopics[topic.name] || topic.name} ({topic.percentage}%)
               </Text>
             </TouchableOpacity>
           );
@@ -179,7 +222,7 @@ export const WardMood: React.FC<WardMoodProps> = ({ data }) => {
 
       {/* 7-day trend */}
       <View style={styles.trendRow}>
-        <Text style={styles.trendLabel}>7-day trend</Text>
+        <Text style={styles.trendLabel}>{t('dashboard.weekTrend', '7-day trend')}</Text>
         <Svg width={100} height={20} viewBox="0 0 100 20" style={styles.trendSparkline}>
           <Defs>
             <LinearGradient id="moodSparkGrad" x1="0" y1="0" x2="0" y2="1">
