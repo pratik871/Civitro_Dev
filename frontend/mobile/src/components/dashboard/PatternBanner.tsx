@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { useSettingsStore } from '../../stores/settingsStore';
+import api from '../../lib/api';
 
 const SAFFRON = '#FF6B35';
 const SAFFRON_LIGHT = '#FFF3ED';
@@ -33,6 +35,18 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
   onViewEvidence,
 }) => {
   const { t } = useTranslation();
+  const language = useSettingsStore(state => state.language);
+  const [translatedDesc, setTranslatedDesc] = useState<string>('');
+
+  useEffect(() => {
+    if (language === 'en' || !description) { setTranslatedDesc(''); return; }
+    api.post<{ translated_text: string }>('/api/v1/translate', {
+      text: description,
+      source_language: 'en',
+      target_language: language,
+    }).then(res => setTranslatedDesc(res.translated_text)).catch(() => {});
+  }, [language, description]);
+
   const renderStatIcon = (icon: string) => {
     switch (icon) {
       case 'location':
@@ -86,7 +100,7 @@ export const PatternBanner: React.FC<PatternBannerProps> = ({
         adjustsFontSizeToFit
         minimumFontScale={0.7}
       >
-        {description}
+        {translatedDesc || description}
       </Text>
 
       {/* Stats */}

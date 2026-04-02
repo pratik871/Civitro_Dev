@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { useSettingsStore } from '../../stores/settingsStore';
+import api from '../../lib/api';
 
 const SAFFRON = '#FF6B35';
 
@@ -55,6 +57,17 @@ const ActionCard: React.FC<{
 }> = ({ action, onPress, onSupport, onShare }) => {
   const [supported, setSupported] = React.useState(action.hasSupported ?? false);
   const badgeStyle = BADGE_STYLES[action.badgeType] ?? BADGE_STYLES.new;
+  const language = useSettingsStore(state => state.language);
+  const [translatedTitle, setTranslatedTitle] = useState<string>('');
+
+  useEffect(() => {
+    if (language === 'en' || !action.title) { setTranslatedTitle(''); return; }
+    api.post<{ translated_text: string }>('/api/v1/translate', {
+      text: action.title,
+      source_language: 'en',
+      target_language: language,
+    }).then(res => setTranslatedTitle(res.translated_text)).catch(() => {});
+  }, [language, action.title]);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -73,7 +86,7 @@ const ActionCard: React.FC<{
         adjustsFontSizeToFit
         minimumFontScale={0.7}
       >
-        {action.title}
+        {translatedTitle || action.title}
       </Text>
 
       {/* Progress bar */}

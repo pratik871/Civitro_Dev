@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
+import { useSettingsStore } from '../../stores/settingsStore';
+import api from '../../lib/api';
 import type { Issue, IssueCategory, IssueStatus } from '../../types/issue';
 
 const SAFFRON = '#FF6B35';
@@ -154,6 +156,17 @@ export const IssueFeedCard: React.FC<IssueFeedCardProps> = ({
 }) => {
   const statusColor = STATUS_COLORS[issue.status] ?? STATUS_OPEN;
   const progressSteps = getProgressSteps(issue.status);
+  const language = useSettingsStore(state => state.language);
+  const [translatedTitle, setTranslatedTitle] = useState<string>('');
+
+  useEffect(() => {
+    if (language === 'en' || !issue.title) { setTranslatedTitle(''); return; }
+    api.post<{ translated_text: string }>('/api/v1/translate', {
+      text: issue.title,
+      source_language: 'auto',
+      target_language: language,
+    }).then(res => setTranslatedTitle(res.translated_text)).catch(() => {});
+  }, [language, issue.title]);
 
   // Time ago
   const timeAgo = (() => {
@@ -203,7 +216,7 @@ export const IssueFeedCard: React.FC<IssueFeedCardProps> = ({
         adjustsFontSizeToFit
         minimumFontScale={0.7}
       >
-        {issue.title}
+        {translatedTitle || issue.title}
       </Text>
       <View style={styles.locationRow}>
         <Svg viewBox="0 0 16 16" width={14} height={14} fill="none">
