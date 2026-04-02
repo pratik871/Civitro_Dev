@@ -70,9 +70,14 @@ type HomeNavProp = NativeStackNavigationProp<RootStackParamList>;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function formatTimeAgo(dateStr: string): string {
+function formatTimeAgo(dateStr: string, t?: (key: string, fallback: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (t) {
+    if (days === 0) return t('home.today', 'today');
+    if (days === 1) return t('home.oneDayAgo', '1 day ago');
+    return t('home.daysAgo', '{{count}} days ago', { count: days } as any);
+  }
   if (days === 0) return 'today';
   if (days === 1) return '1 day ago';
   return `${days} days ago`;
@@ -156,11 +161,11 @@ export const HomeScreen: React.FC = () => {
         .join(' ');
     }
     const score = user?.civicScore ?? 0;
-    if (score >= 75) return 'Star Citizen';
-    if (score >= 50) return 'Active Citizen';
-    if (score >= 25) return 'Reporter';
-    return 'New Citizen';
-  }, [dashboardStats?.civic_level, user?.civicScore]);
+    if (score >= 75) return t('home.starCitizen', 'Star Citizen');
+    if (score >= 50) return t('home.activeCitizen', 'Active Citizen');
+    if (score >= 25) return t('home.reporter', 'Reporter');
+    return t('home.newCitizen', 'New Citizen');
+  }, [dashboardStats?.civic_level, user?.civicScore, t]);
 
   const unreadCount = dashboardStats?.unread_messages ?? unreadData?.count ?? 0;
 
@@ -175,7 +180,7 @@ export const HomeScreen: React.FC = () => {
     return actionsData.slice(0, 4).map((a) => ({
       id: a.id,
       title: a.title,
-      badge: a.status === 'acknowledged' ? 'Acknowledged' : a.supportCount >= 100 ? 'Trending' : 'New',
+      badge: a.status === 'acknowledged' ? t('home.acknowledged', 'Acknowledged') : a.supportCount >= 100 ? t('home.trending', 'Trending') : t('home.newBadge', 'New'),
       badgeType: (a.status === 'acknowledged' ? 'acknowledged' : a.supportCount >= 100 ? 'trending' : 'new') as 'trending' | 'acknowledged' | 'new',
       ward: a.wardName || '',
       supporters: a.supportCount || 0,
@@ -185,8 +190,8 @@ export const HomeScreen: React.FC = () => {
       impactLabel: a.economicImpact?.costOfInaction ? `\u20B9${Math.round(a.economicImpact.costOfInaction / 100000)}L` : '',
       impactColor: '#0F766E',
       creatorInitial: (a.creatorName || 'C').charAt(0),
-      creatorName: a.creatorName || 'Citizen',
-      createdAgo: formatTimeAgo(a.createdAt),
+      creatorName: a.creatorName || t('home.citizen', 'Citizen'),
+      createdAgo: formatTimeAgo(a.createdAt, t),
       hasSupported: a.hasSupported ?? false,
     }));
   }, [actionsData]);
@@ -274,9 +279,9 @@ export const HomeScreen: React.FC = () => {
               {greeting}, {firstName}
             </Text>
             <Text style={styles.greetingSubText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-              {civicLevel} Level · {dashboardStats?.ward_name || user?.ward || 'Ward 45'}
+              {civicLevel} {t('home.level', 'Level')} · {dashboardStats?.ward_name || user?.ward || t('home.defaultWard', 'Ward 45')}
             </Text>
-            <Text style={styles.lastSynced} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>Last synced: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+            <Text style={styles.lastSynced} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{t('home.lastSynced', 'Last synced:')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
           </View>
         </View>
 
@@ -386,9 +391,9 @@ export const HomeScreen: React.FC = () => {
               <Circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="525" cy="259" r="33" />
               <Circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="765" cy="259" r="33" />
             </Svg>
-            <Text style={styles.taglineText}>{'DEMOCRACY'}</Text>
+            <Text style={styles.taglineText}>{t('home.democracyTagline', 'DEMOCRACY')}</Text>
             <Text style={styles.taglineDot}>{'\u2022'}</Text>
-            <Text style={styles.taglineText}>{'YOU SHAPE'}</Text>
+            <Text style={styles.taglineText}>{t('home.youShape', 'YOU SHAPE')}</Text>
             <Text style={styles.taglineTM}>
               <Text style={styles.taglineTMDot}>{'.'}</Text>{'TM'}
             </Text>
@@ -414,7 +419,7 @@ export const HomeScreen: React.FC = () => {
             <Svg viewBox="0 0 24 24" width={16} height={16} fill="none">
               <Path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01" stroke="#D97706" strokeWidth={2} strokeLinecap="round" />
             </Svg>
-            <Text style={styles.offlineText}>Offline — data may not be current</Text>
+            <Text style={styles.offlineText}>{t('home.offline', 'Offline — data may not be current')}</Text>
           </View>
         )}
 
@@ -469,15 +474,15 @@ export const HomeScreen: React.FC = () => {
               <Circle cx={85} cy={53} r={1.5} fill="#0B1426" />
               <Path d="M75 60Q80 65 85 60" stroke="#0B1426" strokeWidth={1.5} fill="none" strokeLinecap="round" />
             </Svg>
-            <Text style={styles.emptyTitle}>Plant Your Flag</Text>
-            <Text style={styles.emptySubtitle}>Be the first to report an issue in your ward and start building your civic reputation.</Text>
+            <Text style={styles.emptyTitle}>{t('home.plantYourFlag', 'Plant Your Flag')}</Text>
+            <Text style={styles.emptySubtitle}>{t('home.beTheFirst', 'Be the first to report an issue in your ward and start building your civic reputation.')}</Text>
             <View style={styles.emptySteps}>
-              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>1</Text></View><Text style={styles.emptyStepText}>Spot an issue</Text></View>
-              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>2</Text></View><Text style={styles.emptyStepText}>Snap a photo</Text></View>
-              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>3</Text></View><Text style={styles.emptyStepText}>Watch it get fixed</Text></View>
+              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>1</Text></View><Text style={styles.emptyStepText}>{t('home.spotAnIssue', 'Spot an issue')}</Text></View>
+              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>2</Text></View><Text style={styles.emptyStepText}>{t('home.snapAPhoto', 'Snap a photo')}</Text></View>
+              <View style={styles.emptyStep}><View style={styles.emptyStepNum}><Text style={styles.emptyStepNumText}>3</Text></View><Text style={styles.emptyStepText}>{t('home.watchItGetFixed', 'Watch it get fixed')}</Text></View>
             </View>
             <TouchableOpacity style={styles.emptyCta} onPress={() => navigation.navigate('Main', { screen: 'Report' } as any)} activeOpacity={0.7}>
-              <Text style={styles.emptyCtaText}>Report Your First Issue</Text>
+              <Text style={styles.emptyCtaText}>{t('home.reportYourFirstIssue', 'Report Your First Issue')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -513,7 +518,7 @@ export const HomeScreen: React.FC = () => {
                 if (rep.userId) {
                   navigation.navigate('Chat', { recipientId: rep.userId, recipientName: rep.name });
                 } else {
-                  setComingSoonFeature('Direct Messaging with Representatives');
+                  setComingSoonFeature(String(t('home.directMessaging', 'Direct Messaging with Representatives')));
                 }
               }}
               onRate={(rep) => {
@@ -521,7 +526,7 @@ export const HomeScreen: React.FC = () => {
                 if (match) {
                   navigation.navigate('LeaderProfile', { leaderId: match.id });
                 } else {
-                  setComingSoonFeature('Rating for ' + rep.name);
+                  setComingSoonFeature(String(t('home.ratingFor', 'Rating for {{name}}', { name: rep.name } as any)));
                 }
               }}
               onViewIssues={() => navigation.navigate('Main', { screen: 'Map' } as any)}
@@ -640,8 +645,8 @@ export const HomeScreen: React.FC = () => {
                 const shareUrl = `https://civitro.com/share/action/${id}`;
                 try {
                   await Share.share({
-                    title: action ? `Community Action: ${action.title}` : 'Community Action on Civitro',
-                    message: action ? `Support this: "${action.title}"\n\n${shareUrl}` : shareUrl,
+                    title: action ? String(t('home.shareActionTitle', 'Community Action: {{title}}', { title: action.title } as any)) : String(t('home.shareActionGeneric', 'Community Action on Civitro')),
+                    message: action ? String(t('home.shareActionMessage', 'Support this: "{{title}}"', { title: action.title } as any)) + `\n\n${shareUrl}` : shareUrl,
                     url: shareUrl,
                   });
                 } catch {}
@@ -658,7 +663,7 @@ export const HomeScreen: React.FC = () => {
             <CelebrationBanner
               issueTitle={recentResolution.title}
               reportCount={recentResolution.citizen_reports}
-              timeAgo={formatTimeAgo(recentResolution.resolved_at)}
+              timeAgo={formatTimeAgo(recentResolution.resolved_at, t)}
               onPress={() => {}}
             />
           </View>
@@ -783,8 +788,8 @@ export const HomeScreen: React.FC = () => {
           <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
             <Path d="M20 6L9 17l-5-5" stroke="#9CA3AF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
-          <Text style={styles.endOfFeedText}>You're all caught up</Text>
-          <Text style={styles.endOfFeedTagline}>Democracy. You Shape.{'\u2122'}</Text>
+          <Text style={styles.endOfFeedText}>{t('home.allCaughtUp', "You're all caught up")}</Text>
+          <Text style={styles.endOfFeedTagline}>{t('home.democracyYouShape', 'Democracy. You Shape.')}{'\u2122'}</Text>
         </View>
 
         {/* Bottom spacer for FAB clearance */}
@@ -803,8 +808,8 @@ export const HomeScreen: React.FC = () => {
             navigation.navigate('CreateAction' as any);
           } else {
             const labels: Record<string, string> = {
-              text: 'Text Report',
-              pin: 'Pin Location',
+              text: t('home.textReport', 'Text Report'),
+              pin: t('home.pinLocation', 'Pin Location'),
             };
             setComingSoonFeature(labels[key] || key);
           }
@@ -822,13 +827,13 @@ export const HomeScreen: React.FC = () => {
                 <Path d="M2 12l10 5 10-5" stroke={SAFFRON} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
               </Svg>
             </View>
-            <Text style={styles.modalTitle}>Coming Soon</Text>
+            <Text style={styles.modalTitle}>{t('home.comingSoon', 'Coming Soon')}</Text>
             <Text style={styles.modalSubtitle}>
               <Text style={styles.modalFeatureName}>{comingSoonFeature}</Text>
-              {' '}is being built. We will notify you when it is ready.
+              {' '}{t('home.isBeingBuilt', 'is being built. We will notify you when it is ready.')}
             </Text>
             <TouchableOpacity style={styles.modalBtn} onPress={() => setComingSoonFeature(null)} activeOpacity={0.7}>
-              <Text style={styles.modalBtnText}>Got it</Text>
+              <Text style={styles.modalBtnText}>{t('home.gotIt', 'Got it')}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>

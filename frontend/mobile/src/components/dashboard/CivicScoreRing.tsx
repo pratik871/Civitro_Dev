@@ -57,7 +57,7 @@ function computeMilestone(score: number, reported: number) {
   const nextTier = CIVIC_TIERS[nextIdx];
 
   if (currentIdx === CIVIC_TIERS.length - 1) {
-    return { prefix: 'Max level', highlight: '', suffix: 'reached!', progress: 1 };
+    return { prefix: 'max_level', highlight: '', suffix: 'reached', progress: 1, isMaxLevel: true, reportsNeeded: 0, pointsNeeded: 0, nextTierName: '' };
   }
 
   const currentTier = CIVIC_TIERS[currentIdx];
@@ -73,18 +73,26 @@ function computeMilestone(score: number, reported: number) {
 
   if (reportsNeeded > 0) {
     return {
-      prefix: 'Report ',
-      highlight: `${reportsNeeded} more`,
-      suffix: ` to reach ${nextTier.name}`,
+      prefix: 'report',
+      highlight: String(reportsNeeded),
+      suffix: nextTier.name,
       progress: overallProgress,
+      isMaxLevel: false,
+      reportsNeeded,
+      pointsNeeded: 0,
+      nextTierName: nextTier.name,
     };
   }
   const pointsNeeded = Math.max(0, nextTier.minScore - score);
   return {
-    prefix: '',
-    highlight: `${pointsNeeded} more`,
-    suffix: ` points to reach ${nextTier.name}`,
+    prefix: 'points',
+    highlight: String(pointsNeeded),
+    suffix: nextTier.name,
     progress: overallProgress,
+    isMaxLevel: false,
+    reportsNeeded: 0,
+    pointsNeeded,
+    nextTierName: nextTier.name,
   };
 }
 
@@ -229,9 +237,13 @@ export const CivicScoreRing: React.FC<CivicScoreRingProps> = ({
 
           <View style={styles.milestoneRow}>
             <Text style={styles.milestoneText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-              {milestone.prefix}
-              {milestone.highlight ? <Text style={styles.milestoneHighlight}>{milestone.highlight}</Text> : null}
-              {milestone.suffix}
+              {milestone.isMaxLevel ? (
+                <>{t('home.maxLevelReached', 'Max level reached!')}</>
+              ) : milestone.reportsNeeded > 0 ? (
+                <>{t('home.report', 'Report')} <Text style={styles.milestoneHighlight}>{String(t('home.nMore', '{{count}} more', { count: milestone.reportsNeeded } as any))}</Text> {String(t('home.toReach', 'to reach {{name}}', { name: milestone.nextTierName } as any))}</>
+              ) : (
+                <><Text style={styles.milestoneHighlight}>{String(t('home.nMore', '{{count}} more', { count: milestone.pointsNeeded } as any))}</Text> {String(t('home.pointsToReach', 'points to reach {{name}}', { name: milestone.nextTierName } as any))}</>
+              )}
             </Text>
             <TouchableOpacity style={styles.boostCta} onPress={onBoostPress} activeOpacity={0.7}>
               <Text style={styles.boostCtaText}>{t('home.boost')}</Text>
