@@ -4,10 +4,30 @@ from __future__ import annotations
 
 import hashlib
 import os
+import sys
 import logging
 import time
+import types
 from collections import OrderedDict
 from typing import Any
+
+# ---------------------------------------------------------------------------
+# Compatibility shim: IndicTrans2 model code imports transformers.onnx which
+# was removed in transformers >= 4.45. Create a stub module so the import
+# doesn't fail. The ONNX classes are never actually used at runtime.
+# ---------------------------------------------------------------------------
+if "transformers.onnx" not in sys.modules:
+    onnx_stub = types.ModuleType("transformers.onnx")
+
+    class _OnnxConfig:
+        pass
+
+    class _OnnxSeq2SeqConfigWithPast:
+        pass
+
+    onnx_stub.OnnxConfig = _OnnxConfig  # type: ignore[attr-defined]
+    onnx_stub.OnnxSeq2SeqConfigWithPast = _OnnxSeq2SeqConfigWithPast  # type: ignore[attr-defined]
+    sys.modules["transformers.onnx"] = onnx_stub
 
 logger = logging.getLogger("bhashini.service")
 
