@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Text,
   View,
@@ -10,6 +10,7 @@ import {
 import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import { useTranslate } from '../../hooks/useTranslate';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { translateCached } from '../../lib/translationCache';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -63,14 +64,13 @@ interface TranslateButtonProps {
 }
 
 /**
- * A small pill-shaped "Translate" button.
+ * Auto-translating content button.
  *
- * - Only visible when the user's app language is not English (the source content language).
- * - On tap it calls the translate API and invokes `onTranslated`.
- * - A second tap toggles back to the original text via `onShowOriginal`.
- * - Shows a loading spinner while the request is in flight.
- * - After translation, shows a "Translated from [language]" label and a
- *   "Show Original" / "Show Translation" toggle.
+ * When user's language is not English:
+ * - Auto-translates on mount (shows translated by default)
+ * - Shows "Translated" label with "Show Original" toggle
+ * - Tapping "Show Original" reveals English text
+ * - Tapping "Show Translated" goes back
  */
 export const TranslateButton: React.FC<TranslateButtonProps> = ({
   text,
@@ -78,53 +78,37 @@ export const TranslateButton: React.FC<TranslateButtonProps> = ({
   onShowOriginal,
   style,
 }) => {
-  const { translate, translating } = useTranslate();
   const userLanguage = useSettingsStore(state => state.language);
-
+  const [loading, setLoading] = useState(false);
   const [translated, setTranslated] = useState(false);
-  const [sourceLang, setSourceLang] = useState<string | null>(null);
-  const [showingTranslated, setShowingTranslated] = useState(false);
+  const [showingOriginal, setShowingOriginal] = useState(false);
+  const [cachedTranslation, setCachedTranslation] = useState('');
 
-  const handlePress = useCallback(async () => {
-    if (translated && showingTranslated) {
-      // Toggle back to original
-      setShowingTranslated(false);
-      onShowOriginal?.();
-      return;
-    }
+  // Auto-translate on mount when language is not English
+  useEffect(() => {
+    if (userLanguage === 'en' || !text?.trim()) return;
 
-    if (translated && !showingTranslated) {
-      // Re-show translation (already cached)
-      setShowingTranslated(true);
-      // We still have the translated text from the first call; the parent
-      // should have cached it. Call onTranslated again.
-      // Note: we can't re-call because we didn't store it — so we re-translate.
-      // But for efficiency we'll store the result.
-      return;
-    }
+    let cancelled = false;
+    setLoading(true);
 
-    // First translation
-    const result = await translate(text);
-    if (result) {
-      setTranslated(true);
-      setShowingTranslated(true);
-      setSourceLang(result.sourceLanguage);
-      onTranslated?.(result.translatedText);
-    }
-  }, [translated, showingTranslated, translate, text, onTranslated, onShowOriginal]);
+    translateCached(text, userLanguage, 'auto').then(result => {
+      if (cancelled) return;
+      setLoading(false);
+      if (result && result !== text) {
+        setTranslated(true);
+        setCachedTranslation(result);
+        onTranslated?.(result);
+      }
+    });
 
-  // Re-show cached translation without re-fetching
-  const handleToggleBack = useCallback(() => {
-    setShowingTranslated(true);
-    // Parent must re-apply the cached translated text
-    onTranslated?.('__toggle_back__');
-  }, [onTranslated]);
+    return () => { cancelled = true; };
+  }, [text, userLanguage]);
 
-  // Don't render at all if user language is English (source content language)
+  // Don't render if user language is English
   if (userLanguage === 'en') return null;
   if (!text?.trim()) return null;
 
-  if (translating) {
+  if (loading) {
     return (
       <View style={[styles.container, style]}>
         <View style={styles.pill}>
@@ -135,17 +119,21 @@ export const TranslateButton: React.FC<TranslateButtonProps> = ({
     );
   }
 
-  if (translated && showingTranslated) {
+  if (!translated) return null;
+
+  if (!showingOriginal) {
+    // Showing translated (default) — offer "Show Original"
     return (
       <View style={[styles.container, style]}>
         <View style={styles.translatedInfo}>
           <GlobeIcon size={12} color={colors.info} />
-          <Text style={styles.translatedLabel}>
-            Translated from {LANGUAGE_NAMES[sourceLang || 'auto'] || sourceLang}
-          </Text>
+          <Text style={styles.translatedLabel}>Translated</Text>
         </View>
         <TouchableOpacity
-          onPress={handlePress}
+          onPress={() => {
+            setShowingOriginal(true);
+            onShowOriginal?.();
+          }}
           activeOpacity={0.6}
           hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
         >
@@ -155,30 +143,18 @@ export const TranslateButton: React.FC<TranslateButtonProps> = ({
     );
   }
 
-  if (translated && !showingTranslated) {
-    return (
-      <View style={[styles.container, style]}>
-        <TouchableOpacity
-          onPress={handleToggleBack}
-          activeOpacity={0.6}
-          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-        >
-          <Text style={styles.toggleLink}>Show Translation</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
+  // Showing original — offer "Show Translated"
   return (
     <View style={[styles.container, style]}>
       <TouchableOpacity
-        style={styles.pill}
-        onPress={handlePress}
-        activeOpacity={0.7}
+        onPress={() => {
+          setShowingOriginal(false);
+          onTranslated?.(cachedTranslation);
+        }}
+        activeOpacity={0.6}
         hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
       >
-        <GlobeIcon size={14} color={colors.info} />
-        <Text style={styles.pillText}>Translate</Text>
+        <Text style={styles.toggleLink}>Show Translated</Text>
       </TouchableOpacity>
     </View>
   );
@@ -196,8 +172,8 @@ interface InlineTranslateLinkProps {
 }
 
 /**
- * Compact "Translate" link for chat message bubbles.
- * Shows as a small text link under a message.
+ * Compact inline translate link for chat messages.
+ * Auto-translates on mount, shows "Show Original" toggle.
  */
 export const InlineTranslateLink: React.FC<InlineTranslateLinkProps> = ({
   text,
@@ -205,64 +181,60 @@ export const InlineTranslateLink: React.FC<InlineTranslateLinkProps> = ({
   onShowOriginal,
   style,
 }) => {
-  const { translate, translating } = useTranslate();
   const userLanguage = useSettingsStore(state => state.language);
-
+  const [loading, setLoading] = useState(false);
   const [translated, setTranslated] = useState(false);
-  const [showingTranslated, setShowingTranslated] = useState(false);
+  const [showingOriginal, setShowingOriginal] = useState(false);
   const [cachedTranslation, setCachedTranslation] = useState('');
-  const [sourceLang, setSourceLang] = useState<string | null>(null);
 
-  const handlePress = async () => {
-    if (translated && showingTranslated) {
-      setShowingTranslated(false);
-      onShowOriginal();
-      return;
-    }
+  // Auto-translate on mount
+  useEffect(() => {
+    if (userLanguage === 'en' || !text?.trim()) return;
+    let cancelled = false;
+    setLoading(true);
+    translateCached(text, userLanguage, 'auto').then(result => {
+      if (cancelled) return;
+      setLoading(false);
+      if (result && result !== text) {
+        setTranslated(true);
+        setCachedTranslation(result);
+        onTranslated(result);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [text, userLanguage]);
 
-    if (translated && !showingTranslated) {
-      setShowingTranslated(true);
-      onTranslated(cachedTranslation);
-      return;
-    }
-
-    const result = await translate(text);
-    if (result) {
-      setTranslated(true);
-      setShowingTranslated(true);
-      setCachedTranslation(result.translatedText);
-      setSourceLang(result.sourceLanguage);
-      onTranslated(result.translatedText);
-    }
-  };
-
-  // Don't render if user language is English or text is empty
   if (userLanguage === 'en') return null;
   if (!text?.trim()) return null;
 
-  if (translating) {
+  if (loading) {
     return (
       <View style={[styles.inlineContainer, style]}>
         <ActivityIndicator size="small" color={colors.info} />
-        <Text style={styles.inlineText}>Translating...</Text>
       </View>
     );
   }
 
+  if (!translated) return null;
+
   return (
     <TouchableOpacity
       style={[styles.inlineContainer, style]}
-      onPress={handlePress}
+      onPress={() => {
+        if (showingOriginal) {
+          setShowingOriginal(false);
+          onTranslated(cachedTranslation);
+        } else {
+          setShowingOriginal(true);
+          onShowOriginal();
+        }
+      }}
       activeOpacity={0.6}
       hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
     >
       <GlobeIcon size={11} color={colors.info} />
       <Text style={styles.inlineText}>
-        {translated && showingTranslated
-          ? 'Show Original'
-          : translated && !showingTranslated
-          ? 'Show Translation'
-          : 'Translate'}
+        {showingOriginal ? 'Show Translated' : 'Show Original'}
       </Text>
     </TouchableOpacity>
   );
