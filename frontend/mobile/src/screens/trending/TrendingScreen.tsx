@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import api from '../../lib/api';
+import { batchTranslate } from '../../lib/translationCache';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatNumber } from '../../lib/utils';
@@ -48,9 +50,11 @@ export const TrendingScreen: React.FC = () => {
     ]),
   ) as Record<string, { color: string; label: string; icon: string }>;
 
+  const language = useSettingsStore(state => state.language);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [filter, setFilter] = useState<string>('all');
+  const [translatedTitles, setTranslatedTitles] = useState<Record<string, string>>({});
 
   const { data: trending, isLoading, refetch } = useQuery({
     queryKey: ['trending'],
@@ -69,6 +73,14 @@ export const TrendingScreen: React.FC = () => {
   const filters = ['all', 'positive', 'negative', 'mixed'];
 
   const trendingData = trending ?? [];
+
+  // Auto-translate topic titles
+  useEffect(() => {
+    if (language === 'en' || trendingData.length === 0) { setTranslatedTitles({}); return; }
+    const titles = trendingData.map(t => t.title).filter(Boolean);
+    if (titles.length === 0) return;
+    batchTranslate(titles, language).then(setTranslatedTitles);
+  }, [language, trendingData.length]);
   const filteredTopics =
     filter === 'all'
       ? trendingData
@@ -221,7 +233,7 @@ export const TrendingScreen: React.FC = () => {
                     <Text style={styles.rankNumber}>#{index + 1}</Text>
                   </View>
                   <View style={styles.topicInfo}>
-                    <Text style={styles.topicTitle}>{topic.title}</Text>
+                    <Text style={styles.topicTitle}>{translatedTitles[topic.title] || topic.title}</Text>
                     <View style={styles.topicMeta}>
                       <Badge
                         text={topic.category}

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Share } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../ui/Card';
 import { colors } from '../../theme/colors';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { translateCached } from '../../lib/translationCache';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
 import type { Voice } from '../../types/voice';
@@ -22,10 +24,19 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
   onComment,
 }) => {
   const { t } = useTranslation();
+  const language = useSettingsStore(state => state.language);
   const tags = voice.tags ?? voice.hashtags ?? [];
   const upvotes = voice.likesCount ?? voice.upvotes ?? 0;
   const comments = voice.repliesCount ?? voice.commentCount ?? 0;
   const text = voice.text ?? voice.content ?? '';
+  const [translatedText, setTranslatedText] = useState('');
+
+  useEffect(() => {
+    if (language === 'en' || !text) { setTranslatedText(''); return; }
+    translateCached(text, language, 'auto').then(result => {
+      if (result && result !== text) setTranslatedText(result);
+    });
+  }, [text, language]);
 
   const handleShare = () => {
     Share.share({
@@ -54,7 +65,7 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
       </View>
 
       {/* Voice text */}
-      <Text style={styles.content}>{text}</Text>
+      <Text style={styles.content}>{translatedText || text}</Text>
 
       {/* Hashtags */}
       {tags.length > 0 && (
