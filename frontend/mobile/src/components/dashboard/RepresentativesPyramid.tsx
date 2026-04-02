@@ -13,7 +13,7 @@ import Svg, { Circle, Path, Line } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useSettingsStore } from '../../stores/settingsStore';
-import api from '../../lib/api';
+import { transliterateName } from '../../lib/transliterate';
 import {
   GOVERNANCE_TIERS,
   TIER_LEVEL_COLORS,
@@ -53,21 +53,12 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
   const language = useSettingsStore(state => state.language);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const [translitNames, setTranslitNames] = useState<Record<string, string>>({});
 
-  // Transliterate rep names when language changes
-  React.useEffect(() => {
-    if (language === 'en') { setTranslitNames({}); return; }
-    reps.forEach(rep => {
-      api.post<{ translated_text: string }>('/api/v1/translate', {
-        text: rep.name,
-        source_language: 'en',
-        target_language: language,
-      }).then(res => {
-        setTranslitNames(prev => ({ ...prev, [rep.tierKey]: res.translated_text }));
-      }).catch(() => {});
-    });
-  }, [language, reps.length]);
+  // Instant dictionary-based name transliteration (no API call)
+  const getTranslitName = useCallback(
+    (name: string) => transliterateName(name, language),
+    [language],
+  );
 
   const toggleCard = useCallback((key: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -157,7 +148,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
       {!showAll && selectedKey && reps.find(r => r.tierKey === selectedKey) && (
         <RepCard
           rep={reps.find(r => r.tierKey === selectedKey)!}
-          translitName={translitNames[selectedKey]}
+          translitName={getTranslitName(reps.find(r => r.tierKey === selectedKey)!.name)}
           onMessage={onMessage}
           onRate={onRate}
           onViewIssues={onViewIssues}
@@ -171,7 +162,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
             <RepCard
               key={rep.tierKey}
               rep={rep}
-              translitName={translitNames[rep.tierKey]}
+              translitName={getTranslitName(rep.name)}
               onMessage={onMessage}
               onRate={onRate}
               onViewIssues={onViewIssues}
