@@ -4,44 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import os
-import sys
 import logging
 import time
-import types
 from collections import OrderedDict
 from typing import Any
-
-# ---------------------------------------------------------------------------
-# Compatibility shim: IndicTrans2 model code imports transformers.onnx which
-# was removed in transformers >= 4.45. Create a stub module so the import
-# doesn't fail. The ONNX classes are never actually used at runtime.
-# ---------------------------------------------------------------------------
-if "transformers.onnx" not in sys.modules:
-    import importlib
-
-    class _OnnxConfig:
-        pass
-
-    class _OnnxSeq2SeqConfigWithPast:
-        pass
-
-    def _compute_effective_axis_dimension(*a: Any, **kw: Any) -> int:
-        return 1
-
-    # Create transformers.onnx as a package-like module
-    onnx_pkg = types.ModuleType("transformers.onnx")
-    onnx_pkg.__path__ = []  # makes it a package
-    onnx_pkg.__package__ = "transformers.onnx"
-    onnx_pkg.OnnxConfig = _OnnxConfig  # type: ignore[attr-defined]
-    onnx_pkg.OnnxSeq2SeqConfigWithPast = _OnnxSeq2SeqConfigWithPast  # type: ignore[attr-defined]
-
-    # Create transformers.onnx.utils submodule
-    onnx_utils = types.ModuleType("transformers.onnx.utils")
-    onnx_utils.__package__ = "transformers.onnx"
-    onnx_utils.compute_effective_axis_dimension = _compute_effective_axis_dimension  # type: ignore[attr-defined]
-
-    sys.modules["transformers.onnx"] = onnx_pkg
-    sys.modules["transformers.onnx.utils"] = onnx_utils
 
 logger = logging.getLogger("bhashini.service")
 
