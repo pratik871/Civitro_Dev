@@ -12,7 +12,14 @@ RUN pip install --no-cache-dir \
     transformers==4.41.2 \
     sentencepiece>=0.2.0 \
     protobuf>=4.25.0 \
-    huggingface_hub>=0.20.0
+    huggingface_hub>=0.20.0 \
+    nltk>=3.8.0
+
+# Install IndicTransToolkit from GitHub (handles preprocessing/postprocessing)
+RUN pip install --no-cache-dir git+https://github.com/VarunGumma/IndicTransToolkit.git
+
+# Pre-download nltk punkt tokenizer (needed by IndicTransToolkit)
+RUN python -c "import nltk; nltk.download('punkt', download_dir='/usr/share/nltk_data'); nltk.download('punkt_tab', download_dir='/usr/share/nltk_data')"
 
 # Install FastAPI runtime
 RUN pip install --no-cache-dir \
