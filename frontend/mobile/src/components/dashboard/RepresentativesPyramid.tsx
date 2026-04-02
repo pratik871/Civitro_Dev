@@ -10,6 +10,7 @@ import {
   UIManager,
 } from 'react-native';
 import Svg, { Circle, Path, Line } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import {
   GOVERNANCE_TIERS,
@@ -45,6 +46,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
   onRate,
   onViewIssues,
 }) => {
+  const { t } = useTranslation();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
@@ -64,10 +66,10 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
     <View>
       {/* Section header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Your Representatives</Text>
+        <Text style={styles.sectionTitle}>{t('reps.yourRepresentatives', 'Your Representatives')}</Text>
         <TouchableOpacity onPress={toggleSeeAll} activeOpacity={0.6} style={styles.seeAllBtn}>
           <Text style={[styles.seeAllText, showAll && { color: colors.textPrimary }]}>
-            {showAll ? 'Collapse' : 'See All'}
+            {showAll ? t('common.collapse', 'Collapse') : t('common.seeAll', 'See All')}
           </Text>
           <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
             <Path
@@ -187,6 +189,7 @@ interface RepCardProps {
 }
 
 const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues }) => {
+  const { t } = useTranslation();
   const tier = GOVERNANCE_TIERS.find(t => t.key === rep.tierKey);
   if (!tier) return null;
   const levelColors = TIER_LEVEL_COLORS[tier.level];
@@ -219,7 +222,7 @@ const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues 
           <View style={[styles.pill, { backgroundColor: rpColors.bg }]}>
             <View style={[styles.pillDot, { backgroundColor: rpColors.text }]} />
             <Text style={[styles.pillText, { color: rpColors.text }]}>
-              Avg {rep.responseTimeDays} days
+              {t('reps.avgDays', 'Avg {{days}} days', { days: rep.responseTimeDays })}
             </Text>
           </View>
         )}
@@ -227,7 +230,7 @@ const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues 
           <View style={[styles.pill, { backgroundColor: rpColors.bg }]}>
             <View style={[styles.pillDot, { backgroundColor: rpColors.text }]} />
             <Text style={[styles.pillText, { color: rpColors.text }]}>
-              {tier.key === 't5' || tier.key === 't7' ? '14-day SLA' : 'No response data'}
+              {tier.key === 't5' || tier.key === 't7' ? t('reps.sla14', '14-day SLA') : t('reps.noData', 'No response data')}
             </Text>
           </View>
         )}
@@ -258,21 +261,21 @@ const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues 
             onPress={() => onMessage?.(rep)}
             activeOpacity={0.7}
           >
-            <Text style={styles.actionBtnText}>Message</Text>
+            <Text style={styles.actionBtnText}>{t('reps.message', 'Message')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionBtn}
             onPress={() => onRate?.(rep)}
             activeOpacity={0.7}
           >
-            <Text style={styles.actionBtnText}>Rate</Text>
+            <Text style={styles.actionBtnText}>{t('reps.rate', 'Rate')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionBtn}
             onPress={() => onViewIssues?.()}
             activeOpacity={0.7}
           >
-            <Text style={styles.actionBtnText}>View Issues</Text>
+            <Text style={styles.actionBtnText}>{t('reps.viewIssues', 'View Issues')}</Text>
           </TouchableOpacity>
         </View>
       )}

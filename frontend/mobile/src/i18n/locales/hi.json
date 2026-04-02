@@ -410,5 +410,14 @@
   "dashboard": {
     "wardMood": "वार्ड मूड",
     "weekTrend": "7-दिन का रुझान"
+  },
+  "reps": {
+    "yourRepresentatives": "आपके प्रतिनिधि",
+    "avgDays": "औसत {{days}} दिन",
+    "sla14": "14-दिन SLA",
+    "noData": "कोई प्रतिक्रिया डेटा नहीं",
+    "message": "संदेश",
+    "rate": "रेटिंग",
+    "viewIssues": "मुद्दे देखें"
   }
 }
