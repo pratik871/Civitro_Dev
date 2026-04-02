@@ -9,6 +9,7 @@ export interface GovernanceTier {
   showActions?: boolean; // Show Message/Rate/View Issues buttons
 }
 
+// i18n keys — labels are resolved at render time via t() in components
 export const GOVERNANCE_TIERS: GovernanceTier[] = [
   { key: 't1',  label: 'Ward',    fullLabel: 'T1 Ward Councillor',    level: 'municipal', showActions: true },
   { key: 't2',  label: 'Mayor',   fullLabel: 'T2 Mayor',             level: 'municipal', showActions: true },
@@ -20,6 +21,19 @@ export const GOVERNANCE_TIERS: GovernanceTier[] = [
   { key: 't7',  label: 'Central', fullLabel: 'T7 Central Minister',  level: 'central', showActions: true },
   { key: 't8',  label: 'PM',      fullLabel: 'T8 Prime Minister',    level: 'central', showActions: true },
 ];
+
+// i18n-friendly label/fullLabel lookup by tier key
+export const TIER_I18N_KEYS: Record<string, { label: string; fullLabel: string }> = {
+  t1:  { label: 'reps.tiers.t1',  fullLabel: 'reps.tiers.t1Full' },
+  t2:  { label: 'reps.tiers.t2',  fullLabel: 'reps.tiers.t2Full' },
+  t2b: { label: 'reps.tiers.t2b', fullLabel: 'reps.tiers.t2bFull' },
+  t3:  { label: 'reps.tiers.t3',  fullLabel: 'reps.tiers.t3Full' },
+  t4:  { label: 'reps.tiers.t4',  fullLabel: 'reps.tiers.t4Full' },
+  t5:  { label: 'reps.tiers.t5',  fullLabel: 'reps.tiers.t5Full' },
+  t6:  { label: 'reps.tiers.t6',  fullLabel: 'reps.tiers.t6Full' },
+  t7:  { label: 'reps.tiers.t7',  fullLabel: 'reps.tiers.t7Full' },
+  t8:  { label: 'reps.tiers.t8',  fullLabel: 'reps.tiers.t8Full' },
+};
 
 export interface GovernanceRep {
   id: string;

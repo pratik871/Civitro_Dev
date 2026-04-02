@@ -15,6 +15,7 @@ import { colors } from '../../theme/colors';
 import {
   GOVERNANCE_TIERS,
   TIER_LEVEL_COLORS,
+  TIER_I18N_KEYS,
   getResponseRingColor,
   getResponsePillVariant,
 } from '../../types/governance';
@@ -120,7 +121,7 @@ export const RepresentativesPyramid: React.FC<RepresentativesPyramidProps> = ({
                       </View>
                     )}
                   </View>
-                  <Text style={styles.tierLabel}>{tier.label}</Text>
+                  <Text style={styles.tierLabel}>{TIER_I18N_KEYS[rep.tierKey] ? t(TIER_I18N_KEYS[rep.tierKey].label, tier.label) : tier.label}</Text>
                   <View style={styles.responseRow}>
                     <View style={[styles.respDot, { backgroundColor: ringColor }]} />
                     <Text style={styles.respText}>
@@ -208,7 +209,7 @@ const RepCard: React.FC<RepCardProps> = ({ rep, onMessage, onRate, onViewIssues 
       {/* Tier tag */}
       <View style={[styles.tierTag, { backgroundColor: levelColors.bg }]}>
         <Text style={[styles.tierTagText, { color: levelColors.text }]}>
-          {tier.fullLabel}{rep.isDepartmentRouted && rep.department ? ` · ${rep.department}` : ''}
+          {TIER_I18N_KEYS[rep.tierKey] ? t(TIER_I18N_KEYS[rep.tierKey].fullLabel, tier.fullLabel) : tier.fullLabel}{rep.isDepartmentRouted && rep.department ? ` · ${rep.department}` : ''}
         </Text>
       </View>
 
