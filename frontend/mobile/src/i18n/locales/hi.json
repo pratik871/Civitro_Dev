@@ -476,5 +476,25 @@
       "t8": "PM",
       "t8Full": "T8 प्रधानमंत्री"
     }
+  },
+  "leaders": {
+    "yourGovChain": "आपकी शासन श्रृंखला",
+    "wardInfo": "वार्ड 45, अंधेरी पूर्व",
+    "districtInfo": "मुंबई उपनगरीय जिला",
+    "noRepsFound": "कोई प्रतिनिधि नहीं मिला",
+    "noResponseData": "कोई प्रतिक्रिया डेटा नहीं",
+    "avgResolved": "औसत {{pct}}% हल",
+    "t1Municipal": "T1 नगरपालिका",
+    "t2MunicipalCorp": "T2 नगर निगम",
+    "t3StateAssembly": "T3 विधान सभा",
+    "t5ChiefMinister": "T5 मुख्यमंत्री",
+    "t6MP": "T6 सांसद",
+    "t8PM": "T8 प्रधानमंत्री",
+    "branchesByDept": "विभाग द्वारा शाखाएं",
+    "deptRouting": "समस्या श्रेणी निर्धारित करती है कि कौन सा मंत्री",
+    "branchesByJurisdiction": "अधिकार क्षेत्र द्वारा शाखाएं",
+    "jurisdictionRouting": "राज्य के मुद्दे सांसद को छोड़ते हैं; केंद्रीय योजना के मुद्दे सांसद से होकर जाते हैं",
+    "open": "खुले",
+    "resolved": "हल"
   }
 }

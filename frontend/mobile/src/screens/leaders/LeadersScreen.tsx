@@ -13,7 +13,10 @@ import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { useLeaders } from '../../hooks/useLeaders';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { transliterateName, translateTitle } from '../../lib/transliterate';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import type { Leader } from '../../types/leader';
@@ -48,11 +51,12 @@ function getDotColor(rate: number): string {
   return '#D1D5DB';
 }
 
-function getResponsePill(rate: number): { bg: string; color: string; label: string } {
-  if (rate <= 0) return { bg: '#F3F4F6', color: '#9CA3AF', label: 'No response data' };
-  if (rate >= 0.7) return { bg: '#ECFDF5', color: '#047857', label: `Avg ${Math.round(rate * 100)}% resolved` };
-  if (rate >= 0.4) return { bg: '#FFFBEB', color: '#92400E', label: `Avg ${Math.round(rate * 100)}% resolved` };
-  return { bg: '#FEF2F2', color: '#B91C1C', label: `Avg ${Math.round(rate * 100)}% resolved` };
+function getResponsePill(rate: number, t: (k: string, d: string, o?: any) => string): { bg: string; color: string; label: string } {
+  if (rate <= 0) return { bg: '#F3F4F6', color: '#9CA3AF', label: t('leaders.noResponseData', 'No response data') };
+  const pct = Math.round(rate * 100);
+  if (rate >= 0.7) return { bg: '#ECFDF5', color: '#047857', label: t('leaders.avgResolved', 'Avg {{pct}}% resolved', { pct }) };
+  if (rate >= 0.4) return { bg: '#FFFBEB', color: '#92400E', label: t('leaders.avgResolved', 'Avg {{pct}}% resolved', { pct }) };
+  return { bg: '#FEF2F2', color: '#B91C1C', label: t('leaders.avgResolved', 'Avg {{pct}}% resolved', { pct }) };
 }
 
 // ── Build ordered chain items from leaders ──
@@ -60,7 +64,7 @@ type ChainItem =
   | { type: 'card'; leader: Leader; tag: string; level: string }
   | { type: 'branch'; text: string; bold: string };
 
-function buildChain(leaders: Leader[]): ChainItem[] {
+function buildChain(leaders: Leader[], t: (k: string, d: string) => string): ChainItem[] {
   const byLevel: Record<string, Leader[]> = {};
   for (const l of leaders) {
     const key = l.governanceLevel;
@@ -70,48 +74,37 @@ function buildChain(leaders: Leader[]): ChainItem[] {
 
   const chain: ChainItem[] = [];
 
-  // T1: Ward councillors
   for (const l of byLevel['ward_councillor'] ?? []) {
-    chain.push({ type: 'card', leader: l, tag: 'T1 Municipal', level: 'municipal' });
+    chain.push({ type: 'card', leader: l, tag: t('leaders.t1Municipal', 'T1 Municipal'), level: 'municipal' });
   }
-
-  // T2: Mayor
   for (const l of byLevel['mayor'] ?? []) {
-    chain.push({ type: 'card', leader: l, tag: 'T2 Municipal Corporation', level: 'municipal' });
+    chain.push({ type: 'card', leader: l, tag: t('leaders.t2MunicipalCorp', 'T2 Municipal Corporation'), level: 'municipal' });
   }
-
-  // T3: MLA
   for (const l of byLevel['mla'] ?? []) {
-    chain.push({ type: 'card', leader: l, tag: 'T3 State Assembly', level: 'state' });
+    chain.push({ type: 'card', leader: l, tag: t('leaders.t3StateAssembly', 'T3 State Assembly'), level: 'state' });
   }
 
-  // Branch: department routing
   chain.push({
     type: 'branch',
-    bold: 'Branches by department',
-    text: 'issue category determines which minister',
+    bold: t('leaders.branchesByDept', 'Branches by department'),
+    text: t('leaders.deptRouting', 'issue category determines which minister'),
   });
 
-  // T5: CM
   for (const l of byLevel['cm'] ?? []) {
-    chain.push({ type: 'card', leader: l, tag: 'T5 Chief Minister', level: 'state' });
+    chain.push({ type: 'card', leader: l, tag: t('leaders.t5ChiefMinister', 'T5 Chief Minister'), level: 'state' });
   }
 
-  // Branch: jurisdiction routing
   chain.push({
     type: 'branch',
-    bold: 'Branches by jurisdiction',
-    text: 'state issues skip MP; central-scheme issues go through MP',
+    bold: t('leaders.branchesByJurisdiction', 'Branches by jurisdiction'),
+    text: t('leaders.jurisdictionRouting', 'state issues skip MP; central-scheme issues go through MP'),
   });
 
-  // T6: MP
   for (const l of byLevel['mp'] ?? []) {
-    chain.push({ type: 'card', leader: l, tag: 'T6 Member of Parliament', level: 'central' });
+    chain.push({ type: 'card', leader: l, tag: t('leaders.t6MP', 'T6 Member of Parliament'), level: 'central' });
   }
-
-  // T8: PM
   for (const l of byLevel['pm'] ?? []) {
-    chain.push({ type: 'card', leader: l, tag: 'T8 Prime Minister', level: 'central' });
+    chain.push({ type: 'card', leader: l, tag: t('leaders.t8PM', 'T8 Prime Minister'), level: 'central' });
   }
 
   return chain;
@@ -119,6 +112,8 @@ function buildChain(leaders: Leader[]): ChainItem[] {
 
 // ── Main Screen ──
 export const LeadersScreen: React.FC = () => {
+  const { t } = useTranslation();
+  const language = useSettingsStore(state => state.language);
   const navigation = useNavigation<LeadersNavProp>();
   const { data: leaders, isLoading, refetch } = useLeaders();
   const insets = useSafeAreaInsets();
@@ -128,7 +123,7 @@ export const LeadersScreen: React.FC = () => {
   }, [refetch]);
 
   const allLeaders = leaders ?? [];
-  const chain = useMemo(() => buildChain(allLeaders), [allLeaders]);
+  const chain = useMemo(() => buildChain(allLeaders, t), [allLeaders, t]);
 
   if (isLoading) {
     return (
@@ -153,9 +148,9 @@ export const LeadersScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Your Governance Chain</Text>
+            <Text style={styles.headerTitle}>{t('leaders.yourGovChain', 'Your Governance Chain')}</Text>
             <Text style={styles.headerSubtitle}>
-              Ward 45, Andheri East {'\u00B7'} Mumbai Suburban District
+              {t('leaders.wardInfo', 'Ward 45, Andheri East')} {'\u00B7'} {t('leaders.districtInfo', 'Mumbai Suburban District')}
             </Text>
           </View>
         </View>
@@ -163,7 +158,7 @@ export const LeadersScreen: React.FC = () => {
         {allLeaders.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{'\u{1F464}'}</Text>
-            <Text style={styles.emptyText}>No representatives found</Text>
+            <Text style={styles.emptyText}>{t('leaders.noRepsFound', 'No representatives found')}</Text>
           </View>
         ) : (
           <View style={styles.timeline}>
@@ -187,7 +182,7 @@ export const LeadersScreen: React.FC = () => {
               const { leader, tag, level } = item;
               const lc = LEVEL_COLORS[level] ?? LEVEL_COLORS.state;
               const dotColor = getDotColor(leader.responseRate);
-              const resp = getResponsePill(leader.responseRate);
+              const resp = getResponsePill(leader.responseRate, t);
               const rating = leader.overallRating ?? 0;
               const isDashed = level === 'central' && tag.includes('Parliament');
 
@@ -211,7 +206,7 @@ export const LeadersScreen: React.FC = () => {
                     </View>
 
                     {/* Name */}
-                    <Text style={styles.name}>{leader.name}</Text>
+                    <Text style={styles.name}>{transliterateName(leader.name, language)}</Text>
                     <Text style={styles.title}>
                       {leader.partyAbbr || ''}{leader.constituency ? ` \u00B7 ${leader.constituency}` : ''}
                     </Text>
@@ -239,7 +234,7 @@ export const LeadersScreen: React.FC = () => {
                       {(leader.issuesTotal > 0 || leader.issuesResolved > 0) && (
                         <View style={[styles.pill, { backgroundColor: '#F3F4F6' }]}>
                           <Text style={[styles.pillText, { color: colors.textSecondary }]}>
-                            {leader.issuesTotal - leader.issuesResolved} open {'\u00B7'} {leader.issuesResolved} resolved
+                            {leader.issuesTotal - leader.issuesResolved} {t('leaders.open', 'open')} {'\u00B7'} {leader.issuesResolved} {t('leaders.resolved', 'resolved')}
                           </Text>
                         </View>
                       )}
@@ -256,21 +251,21 @@ export const LeadersScreen: React.FC = () => {
                           })}
                           activeOpacity={0.7}
                         >
-                          <Text style={styles.actionBtnText}>Message</Text>
+                          <Text style={styles.actionBtnText}>{t('reps.message', 'Message')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.actionBtn}
                           onPress={() => navigation.navigate('LeaderProfile', { leaderId: leader.id })}
                           activeOpacity={0.7}
                         >
-                          <Text style={styles.actionBtnText}>Rate</Text>
+                          <Text style={styles.actionBtnText}>{t('reps.rate', 'Rate')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.actionBtn}
                           onPress={() => navigation.navigate('LeaderProfile', { leaderId: leader.id })}
                           activeOpacity={0.7}
                         >
-                          <Text style={styles.actionBtnText}>View Issues</Text>
+                          <Text style={styles.actionBtnText}>{t('reps.viewIssues', 'View Issues')}</Text>
                         </TouchableOpacity>
                       </View>
                     )}
