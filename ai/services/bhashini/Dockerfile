@@ -40,7 +40,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Bake models into image — no runtime downloads needed
-COPY --from=downloader /models /models
+COPY --from=downloader --chown=appuser:appuser /models /models
 
 COPY services/bhashini/app /app/app
 
