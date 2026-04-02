@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Share } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../ui/Card';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -20,6 +21,7 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
   onUpvote,
   onComment,
 }) => {
+  const { t } = useTranslation();
   const tags = voice.tags ?? voice.hashtags ?? [];
   const upvotes = voice.likesCount ?? voice.upvotes ?? 0;
   const comments = voice.repliesCount ?? voice.commentCount ?? 0;
@@ -41,7 +43,7 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
           </Text>
         </View>
         <View style={styles.headerInfo}>
-          <Text style={styles.userName}>{voice.userName ?? 'Citizen'}</Text>
+          <Text style={styles.userName}>{voice.userName ?? t('home.citizen', 'Citizen')}</Text>
           <Text style={styles.time}>{formatRelativeTime(voice.createdAt)}</Text>
         </View>
         {voice.language && voice.language !== 'en' && (
@@ -101,7 +103,7 @@ export const VoiceCard: React.FC<VoiceCardProps> = ({
           <Svg viewBox="0 0 16 16" width={16} height={16} fill="none">
             <Path d="M4 8v5a1 1 0 001 1h6a1 1 0 001-1V8M11 4L8 1 5 4M8 1v9" stroke="#9CA3AF" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
-          <Text style={styles.actionText}>Share</Text>
+          <Text style={styles.actionText}>{t('actions.share', 'Share')}</Text>
         </TouchableOpacity>
       </View>
     </Card>
