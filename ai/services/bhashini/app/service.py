@@ -290,7 +290,13 @@ class BhashiniNMTService:
             # Without IndicTransToolkit, manually add language tags
             processed_texts = [f"{src_flores} {t}" for t in texts]
 
-        # Tokenize
+        # Tokenize — set src/tgt lang on tokenizer
+        try:
+            tokenizer.src_lang = src_flores
+            tokenizer.tgt_lang = tgt_flores
+        except Exception:
+            pass
+
         inputs = tokenizer(
             processed_texts,
             return_tensors="pt",
@@ -299,16 +305,24 @@ class BhashiniNMTService:
             max_length=256,
         )
 
+        # Resolve target BOS token ID
+        tgt_token_id = tokenizer.convert_tokens_to_ids(tgt_flores)
+        if tgt_token_id == tokenizer.unk_token_id:
+            # Flores code not in vocab — try without forced BOS
+            tgt_token_id = None
+
+        gen_kwargs: dict[str, Any] = {
+            "max_length": 256,
+            "num_beams": 5,
+            "num_return_sequences": 1,
+            "early_stopping": True,
+        }
+        if tgt_token_id is not None:
+            gen_kwargs["forced_bos_token_id"] = tgt_token_id
+
         # Generate translations
         with torch.no_grad():
-            generated = model.generate(
-                **inputs,
-                forced_bos_token_id=tokenizer.convert_tokens_to_ids(tgt_flores),
-                max_length=256,
-                num_beams=5,
-                num_return_sequences=1,
-                early_stopping=True,
-            )
+            generated = model.generate(**inputs, **gen_kwargs)
 
         # Decode
         raw_translations = tokenizer.batch_decode(
