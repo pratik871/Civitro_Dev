@@ -87,7 +87,7 @@ export const AboutScreen: React.FC = () => {
             <Text style={styles.logoText}>C</Text>
           </View>
           <Text style={styles.appName}>Civitro</Text>
-          <Text style={styles.tagline}>{t('settings.tagline')}</Text>
+          <Text style={styles.tagline}>Democracy. You Shape.{'\u2122'}</Text>
         </View>
 
         {/* Description */}
