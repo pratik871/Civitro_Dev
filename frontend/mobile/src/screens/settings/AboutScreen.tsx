@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Linking,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -83,10 +84,11 @@ export const AboutScreen: React.FC = () => {
       >
         {/* Logo / App Name */}
         <View style={styles.logoArea}>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>C</Text>
-          </View>
-          <Text style={styles.appName}>Civitro</Text>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.tagline}>Democracy. You Shape.{'\u2122'}</Text>
         </View>
 
@@ -194,25 +196,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing['2xl'],
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.xl,
-    backgroundColor: colors.navy,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  appName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
+  logoImage: {
+    width: 180,
+    height: 100,
+    marginBottom: spacing.sm,
   },
   tagline: {
     fontSize: 15,
