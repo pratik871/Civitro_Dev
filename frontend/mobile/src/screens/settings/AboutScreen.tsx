@@ -8,7 +8,10 @@ import {
   StatusBar,
   Linking,
   Image,
+  Modal,
+  Pressable,
 } from 'react-native';
+import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -51,13 +54,12 @@ export const AboutScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<AboutNavProp>();
   const insets = useSafeAreaInsets();
+  const [showComingSoon, setShowComingSoon] = React.useState(false);
+  const [comingSoonLabel, setComingSoonLabel] = React.useState('');
 
   const handleLinkPress = (item: LinkItem) => {
-    if (item.action === 'url') {
-      Linking.openURL(item.target);
-    } else if (item.target === 'Terms') {
-      navigation.navigate('Terms' as any);
-    }
+    setComingSoonLabel(t(item.labelKey));
+    setShowComingSoon(true);
   };
 
   return (
@@ -144,6 +146,43 @@ export const AboutScreen: React.FC = () => {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Coming Soon Modal */}
+      <Modal visible={showComingSoon} transparent animationType="fade" onRequestClose={() => setShowComingSoon(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowComingSoon(false)}>
+          <View style={styles.modalCard}>
+            {/* Animated icon */}
+            <View style={styles.modalIconWrap}>
+              <Svg width={48} height={48} viewBox="0 0 48 48" fill="none">
+                <SvgCircle cx={24} cy={24} r={22} stroke="#FF6B35" strokeWidth={2.5} strokeDasharray="8 4" />
+                <Path d="M24 14v12l8 4" stroke="#FF6B35" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+
+            {/* Title */}
+            <Text style={styles.modalTitle}>{t('home.comingSoon', 'Coming Soon')}</Text>
+
+            {/* Feature name */}
+            <View style={styles.modalFeaturePill}>
+              <Text style={styles.modalFeatureText}>{comingSoonLabel}</Text>
+            </View>
+
+            {/* Description */}
+            <Text style={styles.modalDesc}>
+              {t('about.comingSoonDesc', "We're working hard to bring this to you. Stay tuned for updates!")}
+            </Text>
+
+            {/* Button */}
+            <TouchableOpacity
+              style={styles.modalBtn}
+              onPress={() => setShowComingSoon(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalBtnText}>{t('home.gotIt', 'Got it')}</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -288,5 +327,75 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+
+  // Coming Soon Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(11, 20, 38, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 32,
+    elevation: 12,
+  },
+  modalIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFF3ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0B1426',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalFeaturePill: {
+    backgroundColor: '#FFF3ED',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FF6B35' + '30',
+  },
+  modalFeatureText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FF6B35',
+  },
+  modalDesc: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  modalBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#FF6B35',
+    alignItems: 'center',
+  },
+  modalBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
