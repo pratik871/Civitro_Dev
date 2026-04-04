@@ -1339,14 +1339,6 @@ const HomeScreen = ({ lang, nav }) => {
       </div>
 
       <div className="screen-pad">
-        {/* === 0. AUTH FLOW PREVIEW BANNER === */}
-        <div onClick={() => nav('login')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'linear-gradient(135deg, #0B1426, #1E3A5F)', borderRadius: 12, marginBottom: 12, cursor: 'pointer' }}>
-          <I n="shield" sz={18} c="#FF6B35" />
-          <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'white' }}>{tx('previewAuth', lang)}</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: '#FF6B35', background: 'rgba(255,107,53,0.2)', padding: '3px 8px', borderRadius: 6 }}>INVESTOR</span>
-          <I n="chevR" sz={14} c="#FF6B35" />
-        </div>
-
         {/* === 1. CIVIC SCORE RING === */}
         <div className="card section-gap" style={{ overflow: 'hidden', cursor: 'pointer' }} onClick={() => nav('chi')}>
           <div style={{ position: 'absolute', top: -100, right: -100, width: 240, height: 240, background: 'radial-gradient(circle, rgba(255,107,53,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -3670,24 +3662,6 @@ const App = () => {
 
   return (
     <>
-      {/* INVESTOR BANNER */}
-      <div className="investor-banner">
-        <div className="banner-logo">
-          <div className="banner-logo-icon">C</div>
-          <span>Civitro</span>
-          <span className="banner-label">Investor Demo</span>
-        </div>
-        <span className="banner-metric"><b>100M+</b> users</span>
-        <span className="banner-metric"><b>44</b> screens</span>
-        <span className="banner-metric"><b>22</b> languages</span>
-        <span className="banner-metric"><b>Real-time</b> AI</span>
-        <button
-          className={`auto-demo-btn ${auto ? 'active' : ''}`}
-          onClick={() => setAuto(!auto)}
-        >
-          {auto ? '\u25A0 Stop Demo' : '\u25B6 Auto Demo'}
-        </button>
-      </div>
 
       {/* PHONE */}
       <div className="phone-container">
