@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Civitro — Investor Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --saffron: #FF6B35;
+    --saffron-light: #FF8F5E;
+    --saffron-dark: #E55A28;
+    --navy: #0B1426;
+    --navy-light: #1A2744;
+    --bg: #FFFCF8;
+    --bg-card: #FFFFFF;
+    --text-primary: #0B1426;
+    --text-secondary: #5A6678;
+    --text-muted: #8E99A8;
+    --border: #E8ECF0;
+    --success: #22C55E;
+    --success-bg: #ECFDF5;
+    --warning: #F59E0B;
+    --warning-bg: #FFFBEB;
+    --danger: #EF4444;
+    --info: #3B82F6;
+    --info-bg: #EFF6FF;
+    --purple: #8B5CF6;
+    --shadow-sm: 0 1px 2px rgba(11,20,38,0.05);
+    --shadow-md: 0 4px 12px rgba(11,20,38,0.08);
+    --shadow-lg: 0 8px 30px rgba(11,20,38,0.12);
+    --shadow-xl: 0 20px 60px rgba(11,20,38,0.15);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0B1426 0%, #1a2744 50%, #0B1426 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* Investor Banner */
+  .investor-banner {
+    width: 100%;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--saffron);
+    position: relative;
+    z-index: 100;
+  }
+
+  .investor-banner::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--saffron), var(--saffron-light), var(--saffron), transparent);
+  }
+
+  .banner-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .banner-logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--saffron);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    color: white;
+    font-size: 18px;
+  }
+
+  .banner-title {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .banner-subtitle {
+    color: var(--saffron);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .banner-metrics {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .banner-metric {
+    text-align: center;
+  }
+
+  .banner-metric-value {
+    color: var(--saffron);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .banner-metric-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .auto-demo-btn {
+    background: linear-gradient(135deg, var(--saffron), var(--saffron-dark));
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: var(--radius-full);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .auto-demo-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(255,107,53,0.4);
+  }
+
+  .auto-demo-btn.active {
+    background: linear-gradient(135deg, var(--success), #16A34A);
+    animation: pulse-btn 2s infinite;
+  }
+
+  @keyframes pulse-btn {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+  }
+
+  /* Phone Frame */
+  .phone-container {
+    padding: 30px 20px 20px;
+    display: flex;
+    justify-content: center;
+    flex: 1;
+  }
+
+  .phone-frame {
+    width: 393px;
+    height: 852px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 0 0 10px #1a1a2e, 0 0 0 12px #2d2d44, var(--shadow-xl), 0 40px 80px rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 34px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 50;
+  }
+
+  .phone-notch::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: #1a1a2e;
+    border-radius: 50%;
+  }
+
+  .status-bar {
+    height: 54px;
+    padding: 14px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    position: relative;
+    z-index: 40;
+    flex-shrink: 0;
+  }
+
+  .status-time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .status-icons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  /* Screen Content */
+  .screen-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .screen-content::-webkit-scrollbar { width: 0; }
+
+  /* Bottom Tab Bar */
+  .tab-bar {
+    height: 80px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 8px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px 12px;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .tab-icon {
+    font-size: 22px;
+    transition: transform 0.2s ease;
+  }
+
+  .tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+  }
+
+  .tab-item.active .tab-label { color: var(--saffron); font-weight: 600; }
+  .tab-item.active .tab-icon { transform: scale(1.1); }
+
+  .tab-fab {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, var(--saffron), var(--saffron-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -20px;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 3px solid white;
+    font-size: 24px;
+    color: white;
+  }
+
+  .tab-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 25px rgba(255,107,53,0.5);
+  }
+
+  /* Language Switcher */
+  .lang-switcher {
+    position: fixed;
+    right: calc(50% - 215px);
+    top: 200px;
+    z-index: 200;
+  }
+
+  .lang-fab {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: white;
+    border: 2px solid var(--saffron);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .lang-fab:hover { transform: scale(1.1); }
+
+  .lang-menu {
+    position: absolute;
+    right: 0;
+    top: 52px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    min-width: 160px;
+    border: 1px solid var(--border);
+  }
+
+  .lang-option {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    background: none;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+  }
+
+  .lang-option:hover { background: #FFF5EE; }
+  .lang-option.active { background: #FFF0E6; color: var(--saffron); font-weight: 600; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+  }
+
+  .card-elevated {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    gap: 4px;
+  }
+
+  .badge-success { background: var(--success-bg); color: var(--success); }
+  .badge-warning { background: var(--warning-bg); color: var(--warning); }
+  .badge-info { background: var(--info-bg); color: var(--info); }
+  .badge-danger { background: #FEF2F2; color: var(--danger); }
+  .badge-saffron { background: #FFF5EE; color: var(--saffron); }
+  .badge-purple { background: #F5F3FF; color: var(--purple); }
+
+  /* Progress Bar */
+  .progress-bar {
+    height: 8px;
+    background: #F1F5F9;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 1s ease;
+    background: linear-gradient(90deg, var(--saffron), var(--saffron-light));
+  }
+
+  /* Button */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--radius-full);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--saffron), var(--saffron-dark));
+    color: white;
+  }
+  .btn-primary:hover { box-shadow: 0 4px 15px rgba(255,107,53,0.3); transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+  }
+  .btn-outline:hover { border-color: var(--saffron); color: var(--saffron); }
+
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+  /* Section */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title .see-all {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--saffron);
+    cursor: pointer;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+  }
+
+  @keyframes confettiDrop {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes ringDraw {
+    from { stroke-dashoffset: 283; }
+  }
+
+  .animate-in {
+    animation: fadeInUp 0.5s ease both;
+  }
+
+  .animate-delay-1 { animation-delay: 0.1s; }
+  .animate-delay-2 { animation-delay: 0.2s; }
+  .animate-delay-3 { animation-delay: 0.3s; }
+  .animate-delay-4 { animation-delay: 0.4s; }
+  .animate-delay-5 { animation-delay: 0.5s; }
+
+  /* Footer */
+  .investor-footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .investor-footer .tagline {
+    color: var(--saffron);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Civic Score Ring */
+  .civic-ring-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .civic-ring svg {
+    transform: rotate(-90deg);
+    filter: drop-shadow(0 2px 8px rgba(255,107,53,0.2));
+  }
+
+  .civic-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .civic-ring-score {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--saffron);
+    line-height: 1;
+  }
+
+  .civic-ring-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Quick Actions */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 4px;
+    border-radius: var(--radius-md);
+    background: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .quick-action:hover {
+    border-color: var(--saffron);
+    box-shadow: 0 2px 12px rgba(255,107,53,0.1);
+    transform: translateY(-2px);
+  }
+
+  .quick-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .quick-action-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* Issue card */
+  .issue-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .issue-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .issue-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  /* Representative card */
+  .rep-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .rep-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--saffron);
+  }
+
+  .rep-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .rep-tier {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--navy);
+    color: white;
+  }
+
+  /* Stars */
+  .stars {
+    color: #F59E0B;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  /* Voice card */
+  .voice-card {
+    padding: 14px;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+  }
+
+  .voice-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Poll option */
+  .poll-option {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .poll-option:hover { border-color: var(--saffron); }
+
+  .poll-option.selected { border-color: var(--saffron); background: #FFF5EE; }
+
+  .poll-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255,107,53,0.08), rgba(255,107,53,0.03));
+    border-radius: var(--radius-md);
+    transition: width 1s ease;
+  }
+
+  /* Map placeholder */
+  .map-container {
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(135deg, #e8f0fe 0%, #d4e4fc 100%);
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .map-dot {
+    position: absolute;
+    border-radius: 50%;
+    animation: mapPulse 2s infinite;
+  }
+
+  @keyframes mapPulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.5); opacity: 0.4; }
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    animation: confettiDrop 2s ease-in forwards;
+  }
+
+  /* Screen transitions */
+  .screen-wrapper {
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .phone-frame {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .phone-notch { display: none; }
+    .phone-container { padding: 0; }
+    .investor-banner { padding: 10px 16px; gap: 20px; }
+    .banner-metrics { gap: 16px; }
+    .lang-switcher { right: 10px; top: 80px; }
+    .investor-footer { display: none; }
+  }
+
+  /* Scrollbar for desktop */
+  @media (min-width: 501px) {
+    .screen-content::-webkit-scrollbar { width: 3px; }
+    .screen-content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+  }
+
+  /* Promise tracker status bar */
+  .promise-status-bar {
+    display: flex;
+    gap: 2px;
+    margin: 8px 0;
+  }
+
+  .promise-status-segment {
+    height: 6px;
+    flex: 1;
+    border-radius: 3px;
+    background: #E8ECF0;
+    transition: background 0.5s ease;
+  }
+
+  .promise-status-segment.filled { background: var(--saffron); }
+  .promise-status-segment.filled-green { background: var(--success); }
+
+  /* Escalation timeline */
+  .escalation-line {
+    position: absolute;
+    left: 23px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  /* Pattern alert */
+  .pattern-alert {
+    background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+    border: 1px solid #FDBA74;
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Mood gauge */
+  .mood-gauge {
+    height: 8px;
+    background: linear-gradient(90deg, #EF4444, #F59E0B, #22C55E);
+    border-radius: var(--radius-full);
+    position: relative;
+  }
+
+  .mood-indicator {
+    position: absolute;
+    top: -4px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border: 3px solid var(--success);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    box-shadow: var(--shadow-sm);
+    transition: left 0.5s ease;
+  }
+
+  /* Profile avatar */
+  .profile-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--saffron), var(--saffron-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.3);
+  }
+
+  /* Steps indicator */
+  .steps-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: center;
+    margin: 16px 0;
+  }
+
+  .step-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+
+  .step-dot.active {
+    background: var(--saffron);
+    color: white;
+    box-shadow: 0 2px 10px rgba(255,107,53,0.3);
+  }
+
+  .step-dot.completed {
+    background: var(--success);
+    color: white;
+  }
+
+  .step-dot.pending {
+    background: #F1F5F9;
+    color: var(--text-muted);
+  }
+
+  .step-line {
+    width: 40px;
+    height: 2px;
+    background: var(--border);
+    transition: background 0.3s ease;
+  }
+
+  .step-line.active { background: var(--saffron); }
+  .step-line.completed { background: var(--success); }
+
+  /* Ledger timeline */
+  .ledger-item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 16px;
+  }
+
+  .ledger-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+    z-index: 1;
+  }
+
+  .ledger-line {
+    position: absolute;
+    left: 5px;
+    top: 16px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── Translations ───────────────────────────────────────────────────────
+const translations = {
+  en: {
+    greeting: "Good morning, Priya",
+    civicScore: "Civic Score",
+    activeCitizen: "Active Citizen",
+    quickActions: "Quick Actions",
+    reportIssue: "Report Issue",
+    voteInPoll: "Vote in Poll",
+    createVoice: "Create Voice",
+    startAction: "Start Action",
+    wardMood: "Ward Mood",
+    hopeful: "Hopeful",
+    communityPulse: "Community Pulse",
+    issues: "Issues",
+    resolved: "Resolved",
+    actions: "Actions",
+    representatives: "Your Representatives",
+    patternAlert: "12 water leak reports in your ward this month",
+    recentIssues: "Recent Issues",
+    communityActions: "Community Actions",
+    seeAll: "See All",
+    upvotes: "upvotes",
+    comments: "comments",
+    supporters: "supporters",
+    home: "Home",
+    report: "Report",
+    leaders: "Leaders",
+    map: "Map",
+    trending: "Trending",
+    reportNewIssue: "Report New Issue",
+    takePhoto: "Take or Upload Photo",
+    aiClassification: "AI Classification",
+    pothole: "Pothole",
+    confidence: "confidence",
+    locationDetected: "Location Detected",
+    andheriEastSVRoad: "Andheri East, SV Road",
+    reviewSubmit: "Review & Submit",
+    submitIssue: "Submit Issue",
+    issueSubmitted: "Issue Submitted!",
+    yourIssueTracked: "Your issue is now being tracked on the immutable ledger.",
+    back: "Back",
+    next: "Next",
+    issueDetail: "Issue Detail",
+    largerPothole: "Large pothole near Infinity Mall junction",
+    workStarted: "Work Started",
+    reported: "Reported",
+    acknowledged: "Acknowledged",
+    assigned: "Assigned",
+    inProgress: "In Progress",
+    resolved2: "Resolved",
+    ledgerTimeline: "Ledger Timeline",
+    immutableAuditTrail: "Immutable Audit Trail",
+    share: "Share",
+    governanceChain: "Governance Chain",
+    escalationTimeline: "Escalation Timeline",
+    avgResponse: "Avg Response",
+    days: "days",
+    message: "Message",
+    rate: "Rate",
+    viewIssues: "View Issues",
+    communityVoices: "Community Voices",
+    trendingTopics: "Trending Topics",
+    likes: "likes",
+    comment: "Comment",
+    polls: "Polls",
+    activePoll: "Active Poll",
+    shouldWardBudget: "Should ward budget prioritize road repair or drainage?",
+    roadRepair: "Road Repair",
+    drainageSystem: "Drainage System",
+    totalVotes: "total votes",
+    vote: "Vote",
+    voted: "Voted!",
+    fixWaterSupply: "Fix water supply failures in Ward 45",
+    support: "Support",
+    supported: "Supported!",
+    evidenceItems: "Evidence Items",
+    economicImpact: "Economic Impact",
+    promisesTracker: "Promises Tracker",
+    completeMetro: "Complete Metro Phase 3 by 2027",
+    onTrack: "On Track",
+    aiDetected: "AI Detected",
+    confidenceLevel: "Confidence",
+    promisedBy: "Promised by",
+    issueHeatmap: "Issue Heatmap",
+    filterCategories: "Filter by Category",
+    all: "All",
+    potholes: "Potholes",
+    drainage: "Drainage",
+    streetlights: "Streetlights",
+    water: "Water",
+    garbage: "Garbage",
+    profile: "Profile",
+    priyaSharma: "Priya Sharma",
+    ward45Andheri: "Ward 45, Andheri East, Mumbai",
+    issuesReported: "Issues Reported",
+    issuesResolved: "Issues Resolved",
+    voicesShared: "Voices Shared",
+    pollsVoted: "Polls Voted",
+    settings: "Settings",
+    notifications: "Notifications",
+    privacy: "Privacy & Security",
+    helpSupport: "Help & Support",
+    about: "About Civitro",
+    wardCouncillor: "Ward Councillor",
+    mayor: "Mayor BMC",
+    mla: "MLA Vile Parle",
+    cm: "CM Maharashtra",
+    mp: "MP Mumbai North",
+    pm: "Prime Minister",
+    step: "Step",
+    of: "of",
+    photoCapture: "Photo Capture",
+    drainageBlocked: "Drainage blocked Veera Desai Road",
+    streetlightOutage: "Streetlight outage on SV Road",
+    waterSupplyDisruption: "Water supply disruption Lokhandwala",
+    garbageOverflow: "Garbage overflow at DN Nagar",
+    viewOnMap: "View on Map",
+    category: "Category",
+  },
+  hi: {
+    greeting: "सुप्रभात, प्रिया",
+    civicScore: "नागरिक स्कोर",
+    activeCitizen: "सक्रिय नागरिक",
+    quickActions: "त्वरित कार्य",
+    reportIssue: "समस्या दर्ज करें",
+    voteInPoll: "मतदान करें",
+    createVoice: "आवाज़ बनाएँ",
+    startAction: "अभियान शुरू करें",
+    wardMood: "वार्ड मूड",
+    hopeful: "आशावादी",
+    communityPulse: "समुदाय की नब्ज़",
+    issues: "समस्याएँ",
+    resolved: "हल हुई",
+    actions: "अभियान",
+    representatives: "आपके प्रतिनिधि",
+    patternAlert: "इस महीने आपके वार्ड में 12 पानी लीक रिपोर्ट",
+    recentIssues: "हाल की समस्याएँ",
+    communityActions: "सामुदायिक अभियान",
+    seeAll: "सभी देखें",
+    upvotes: "अपवोट",
+    comments: "टिप्पणियाँ",
+    supporters: "समर्थक",
+    home: "होम",
+    report: "रिपोर्ट",
+    leaders: "नेता",
+    map: "नक्शा",
+    trending: "ट्रेंडिंग",
+    reportNewIssue: "नई समस्या दर्ज करें",
+    takePhoto: "फोटो लें या अपलोड करें",
+    aiClassification: "AI वर्गीकरण",
+    pothole: "गड्ढा",
+    confidence: "विश्वास",
+    locationDetected: "स्थान पहचाना गया",
+    andheriEastSVRoad: "अंधेरी पूर्व, एसवी रोड",
+    reviewSubmit: "समीक्षा और सबमिट",
+    submitIssue: "समस्या सबमिट करें",
+    issueSubmitted: "समस्या दर्ज हो गई!",
+    yourIssueTracked: "आपकी समस्या अब अपरिवर्तनीय लेजर पर ट्रैक की जा रही है।",
+    back: "वापस",
+    next: "अगला",
+    issueDetail: "समस्या विवरण",
+    largerPothole: "इन्फिनिटी मॉल जंक्शन के पास बड़ा गड्ढा",
+    workStarted: "कार्य शुरू",
+    reported: "रिपोर्ट किया",
+    acknowledged: "स्वीकृत",
+    assigned: "सौंपा गया",
+    inProgress: "प्रगति में",
+    resolved2: "हल हुआ",
+    ledgerTimeline: "लेजर टाइमलाइन",
+    immutableAuditTrail: "अपरिवर्तनीय ऑडिट ट्रेल",
+    share: "शेयर करें",
+    governanceChain: "शासन श्रृंखला",
+    escalationTimeline: "एस्केलेशन टाइमलाइन",
+    avgResponse: "औसत प्रतिक्रिया",
+    days: "दिन",
+    message: "संदेश",
+    rate: "रेटिंग",
+    viewIssues: "समस्याएँ देखें",
+    communityVoices: "सामुदायिक आवाज़ें",
+    trendingTopics: "ट्रेंडिंग विषय",
+    likes: "लाइक",
+    comment: "टिप्पणी",
+    polls: "मतदान",
+    activePoll: "सक्रिय मतदान",
+    shouldWardBudget: "वार्ड बजट सड़क मरम्मत या जल निकासी को प्राथमिकता दे?",
+    roadRepair: "सड़क मरम्मत",
+    drainageSystem: "जल निकासी प्रणाली",
+    totalVotes: "कुल मत",
+    vote: "मतदान करें",
+    voted: "मतदान किया!",
+    fixWaterSupply: "वार्ड 45 में जल आपूर्ति विफलता ठीक करें",
+    support: "समर्थन",
+    supported: "समर्थन दिया!",
+    evidenceItems: "साक्ष्य",
+    economicImpact: "आर्थिक प्रभाव",
+    promisesTracker: "वादे ट्रैकर",
+    completeMetro: "2027 तक मेट्रो फेज 3 पूरा करना",
+    onTrack: "सही दिशा में",
+    aiDetected: "AI द्वारा पहचाना",
+    confidenceLevel: "विश्वास स्तर",
+    promisedBy: "वादा किया",
+    issueHeatmap: "समस्या हीटमैप",
+    filterCategories: "श्रेणी से फ़िल्टर करें",
+    all: "सभी",
+    potholes: "गड्ढे",
+    drainage: "जल निकासी",
+    streetlights: "स्ट्रीटलाइट",
+    water: "पानी",
+    garbage: "कचरा",
+    profile: "प्रोफ़ाइल",
+    priyaSharma: "प्रिया शर्मा",
+    ward45Andheri: "वार्ड 45, अंधेरी पूर्व, मुंबई",
+    issuesReported: "रिपोर्ट की गई",
+    issuesResolved: "हल हुई",
+    voicesShared: "आवाज़ें",
+    pollsVoted: "मतदान",
+    settings: "सेटिंग्स",
+    notifications: "सूचनाएँ",
+    privacy: "गोपनीयता और सुरक्षा",
+    helpSupport: "सहायता",
+    about: "Civitro के बारे में",
+    wardCouncillor: "वार्ड पार्षद",
+    mayor: "BMC मेयर",
+    mla: "MLA विले पार्ले",
+    cm: "मुख्यमंत्री महाराष्ट्र",
+    mp: "सांसद मुंबई उत्तर",
+    pm: "प्रधानमंत्री",
+    step: "चरण",
+    of: "का",
+    photoCapture: "फोटो कैप्चर",
+    drainageBlocked: "वीरा देसाई रोड पर नाला बंद",
+    streetlightOutage: "एसवी रोड पर स्ट्रीटलाइट बंद",
+    waterSupplyDisruption: "लोखंडवाला में जल आपूर्ति बाधित",
+    garbageOverflow: "डीएन नगर में कचरा अतिप्रवाह",
+    viewOnMap: "नक्शे पर देखें",
+    category: "श्रेणी",
+  },
+  te: {
+    greeting: "శుభోదయం, ప్రియా",
+    civicScore: "పౌర స్కోరు",
+    activeCitizen: "చురుకైన పౌరుడు",
+    quickActions: "త్వరిత చర్యలు",
+    reportIssue: "సమస్య నివేదించు",
+    voteInPoll: "ఓటు వేయండి",
+    createVoice: "వాయిస్ సృష్టించు",
+    startAction: "చర్య ప్రారంభించు",
+    wardMood: "వార్డ్ మూడ్",
+    hopeful: "ఆశాజనకం",
+    communityPulse: "సమాజ స్పందన",
+    issues: "సమస్యలు",
+    resolved: "పరిష్కరించబడినవి",
+    actions: "చర్యలు",
+    representatives: "మీ ప్రతినిధులు",
+    patternAlert: "ఈ నెలలో మీ వార్డ్‌లో 12 నీటి లీకేజ్ నివేదికలు",
+    recentIssues: "ఇటీవలి సమస్యలు",
+    communityActions: "సామాజిక చర్యలు",
+    seeAll: "అన్నీ చూడు",
+    upvotes: "అప్‌వోట్లు",
+    comments: "వ్యాఖ్యలు",
+    supporters: "మద్దతుదారులు",
+    home: "హోమ్",
+    report: "రిపోర్ట్",
+    leaders: "నాయకులు",
+    map: "మ్యాప్",
+    trending: "ట్రెండింగ్",
+    reportNewIssue: "కొత్త సమస్య నివేదించు",
+    takePhoto: "ఫోటో తీయండి లేదా అప్‌లోడ్ చేయండి",
+    aiClassification: "AI వర్గీకరణ",
+    pothole: "గుంట",
+    confidence: "నమ్మకం",
+    locationDetected: "స్థానం గుర్తించబడింది",
+    andheriEastSVRoad: "అంధేరీ తూర్పు, SV రోడ్",
+    reviewSubmit: "సమీక్షించి సమర్పించు",
+    submitIssue: "సమస్య సమర్పించు",
+    issueSubmitted: "సమస్య నివేదించబడింది!",
+    yourIssueTracked: "మీ సమస్య ఇప్పుడు మార్పు-రహిత లెడ్జర్‌లో ట్రాక్ చేయబడుతోంది.",
+    back: "వెనుకకు",
+    next: "తదుపరి",
+    issueDetail: "సమస్య వివరాలు",
+    largerPothole: "ఇన్ఫినిటీ మాల్ జంక్షన్ వద్ద పెద్ద గుంట",
+    workStarted: "పని మొదలైంది",
+    reported: "నివేదించబడింది",
+    acknowledged: "గుర్తించబడింది",
+    assigned: "కేటాయించబడింది",
+    inProgress: "ప్రగతిలో",
+    resolved2: "పరిష్కరించబడింది",
+    ledgerTimeline: "లెడ్జర్ టైమ్‌లైన్",
+    immutableAuditTrail: "మార్పు-రహిత ఆడిట్ ట్రయల్",
+    share: "షేర్ చేయి",
+    governanceChain: "పాలన శ్రేణి",
+    escalationTimeline: "ఎస్కలేషన్ టైమ్‌లైన్",
+    avgResponse: "సగటు ప్రతిస్పందన",
+    days: "రోజులు",
+    message: "సందేశం",
+    rate: "రేటింగ్",
+    viewIssues: "సమస్యలు చూడు",
+    communityVoices: "సామాజిక వాయిస్‌లు",
+    trendingTopics: "ట్రెండింగ్ టాపిక్స్",
+    likes: "లైక్‌లు",
+    comment: "వ్యాఖ్య",
+    polls: "పోల్స్",
+    activePoll: "సక్రియ పోల్",
+    shouldWardBudget: "వార్డ్ బడ్జెట్ రోడ్ రిపేర్ లేదా డ్రైనేజీకి ప్రాధాన్యత ఇవ్వాలా?",
+    roadRepair: "రోడ్ రిపేర్",
+    drainageSystem: "డ్రైనేజీ వ్యవస్థ",
+    totalVotes: "మొత్తం ఓట్లు",
+    vote: "ఓటు వేయండి",
+    voted: "ఓటు వేశారు!",
+    fixWaterSupply: "వార్డ్ 45 లో నీటి సరఫరా వైఫల్యాలు పరిష్కరించు",
+    support: "మద్దతు",
+    supported: "మద్దతు ఇచ్చారు!",
+    evidenceItems: "సాక్ష్యాలు",
+    economicImpact: "ఆర్థిక ప్రభావం",
+    promisesTracker: "వాగ్దానాల ట్రాకర్",
+    completeMetro: "2027 నాటికి మెట్రో ఫేజ్ 3 పూర్తి",
+    onTrack: "సరైన దిశలో",
+    aiDetected: "AI గుర్తించింది",
+    confidenceLevel: "నమ్మకం స్థాయి",
+    promisedBy: "వాగ్దానం చేసిన",
+    issueHeatmap: "సమస్య హీట్‌మ్యాప్",
+    filterCategories: "వర్గం ద్వారా ఫిల్టర్",
+    all: "అన్నీ",
+    potholes: "గుంటలు",
+    drainage: "డ్రైనేజీ",
+    streetlights: "స్ట్రీట్‌లైట్లు",
+    water: "నీరు",
+    garbage: "చెత్త",
+    profile: "ప్రొఫైల్",
+    priyaSharma: "ప్రియా శర్మ",
+    ward45Andheri: "వార్డ్ 45, అంధేరీ తూర్పు, ముంబై",
+    issuesReported: "నివేదించిన సమస్యలు",
+    issuesResolved: "పరిష్కరించిన",
+    voicesShared: "వాయిస్‌లు",
+    pollsVoted: "పోల్స్ ఓట్లు",
+    settings: "సెట్టింగ్‌లు",
+    notifications: "నోటిఫికేషన్లు",
+    privacy: "గోప్యత & భద్రత",
+    helpSupport: "సహాయం",
+    about: "Civitro గురించి",
+    wardCouncillor: "వార్డ్ కౌన్సిలర్",
+    mayor: "BMC మేయర్",
+    mla: "MLA విలే పార్లే",
+    cm: "CM మహారాష్ట్ర",
+    mp: "MP ముంబై నార్త్",
+    pm: "ప్రధాన మంత్రి",
+    step: "దశ",
+    of: "లో",
+    photoCapture: "ఫోటో క్యాప్చర్",
+    drainageBlocked: "వీరా దేశాయ్ రోడ్ పై డ్రైనేజీ బ్లాక్",
+    streetlightOutage: "SV రోడ్ పై స్ట్రీట్‌లైట్ ఆగిపోయింది",
+    waterSupplyDisruption: "లోఖండ్‌వాలాలో నీటి సరఫరా అంతరాయం",
+    garbageOverflow: "DN నగర్‌లో చెత్త ఓవర్‌ఫ్లో",
+    viewOnMap: "మ్యాప్‌లో చూడు",
+    category: "వర్గం",
+  },
+  mr: {
+    greeting: "सुप्रभात, प्रिया",
+    civicScore: "नागरिक स्कोअर",
+    activeCitizen: "सक्रिय नागरिक",
+    quickActions: "जलद कृती",
+    reportIssue: "तक्रार नोंदवा",
+    voteInPoll: "मतदान करा",
+    createVoice: "व्हॉईस तयार करा",
+    startAction: "मोहीम सुरू करा",
+    wardMood: "वॉर्ड मूड",
+    hopeful: "आशादायक",
+    communityPulse: "समुदाय नाडी",
+    issues: "तक्रारी",
+    resolved: "सोडवलेल्या",
+    actions: "मोहिमा",
+    representatives: "तुमचे प्रतिनिधी",
+    patternAlert: "या महिन्यात तुमच्या वॉर्डमध्ये 12 पाणी गळतीच्या तक्रारी",
+    recentIssues: "अलीकडील तक्रारी",
+    communityActions: "सामुदायिक मोहिमा",
+    seeAll: "सर्व पहा",
+    upvotes: "अपवोट",
+    comments: "प्रतिक्रिया",
+    supporters: "समर्थक",
+    home: "होम",
+    report: "रिपोर्ट",
+    leaders: "नेते",
+    map: "नकाशा",
+    trending: "ट्रेंडिंग",
+    reportNewIssue: "नवीन तक्रार नोंदवा",
+    takePhoto: "फोटो काढा किंवा अपलोड करा",
+    aiClassification: "AI वर्गीकरण",
+    pothole: "खड्डा",
+    confidence: "विश्वास",
+    locationDetected: "स्थान ओळखले",
+    andheriEastSVRoad: "अंधेरी पूर्व, SV रोड",
+    reviewSubmit: "पुनरावलोकन आणि सबमिट",
+    submitIssue: "तक्रार सबमिट करा",
+    issueSubmitted: "तक्रार नोंदवली!",
+    yourIssueTracked: "तुमची तक्रार आता अपरिवर्तनीय लेजरवर ट्रॅक केली जात आहे.",
+    back: "मागे",
+    next: "पुढे",
+    issueDetail: "तक्रार तपशील",
+    largerPothole: "इन्फिनिटी मॉल जंक्शनजवळ मोठा खड्डा",
+    workStarted: "काम सुरू",
+    reported: "नोंदवले",
+    acknowledged: "स्वीकृत",
+    assigned: "नियुक्त",
+    inProgress: "प्रगतीत",
+    resolved2: "सोडवले",
+    ledgerTimeline: "लेजर टाइमलाइन",
+    immutableAuditTrail: "अपरिवर्तनीय ऑडिट ट्रेल",
+    share: "शेअर करा",
+    governanceChain: "शासन साखळी",
+    escalationTimeline: "एस्केलेशन टाइमलाइन",
+    avgResponse: "सरासरी प्रतिसाद",
+    days: "दिवस",
+    message: "संदेश",
+    rate: "रेटिंग",
+    viewIssues: "तक्रारी पहा",
+    communityVoices: "समुदाय आवाज",
+    trendingTopics: "ट्रेंडिंग विषय",
+    likes: "लाईक",
+    comment: "प्रतिक्रिया",
+    polls: "मतदान",
+    activePoll: "सक्रिय मतदान",
+    shouldWardBudget: "वॉर्ड बजेटने रस्ता दुरुस्ती किंवा ड्रेनेजला प्राधान्य द्यावे?",
+    roadRepair: "रस्ता दुरुस्ती",
+    drainageSystem: "ड्रेनेज व्यवस्था",
+    totalVotes: "एकूण मते",
+    vote: "मतदान करा",
+    voted: "मतदान केले!",
+    fixWaterSupply: "वॉर्ड 45 मधील पाणीपुरवठा बिघाड दुरुस्त करा",
+    support: "समर्थन",
+    supported: "समर्थन दिले!",
+    evidenceItems: "पुरावे",
+    economicImpact: "आर्थिक प्रभाव",
+    promisesTracker: "आश्वासने ट्रॅकर",
+    completeMetro: "2027 पर्यंत मेट्रो फेज 3 पूर्ण करा",
+    onTrack: "योग्य दिशेने",
+    aiDetected: "AI ने ओळखले",
+    confidenceLevel: "विश्वास पातळी",
+    promisedBy: "आश्वासन दिले",
+    issueHeatmap: "तक्रार हीटमॅप",
+    filterCategories: "श्रेणीनुसार फिल्टर",
+    all: "सर्व",
+    potholes: "खड्डे",
+    drainage: "ड्रेनेज",
+    streetlights: "स्ट्रीटलाइट",
+    water: "पाणी",
+    garbage: "कचरा",
+    profile: "प्रोफाइल",
+    priyaSharma: "प्रिया शर्मा",
+    ward45Andheri: "वॉर्ड 45, अंधेरी पूर्व, मुंबई",
+    issuesReported: "नोंदवलेल्या",
+    issuesResolved: "सोडवलेल्या",
+    voicesShared: "आवाज",
+    pollsVoted: "मतदान",
+    settings: "सेटिंग्ज",
+    notifications: "सूचना",
+    privacy: "गोपनीयता आणि सुरक्षा",
+    helpSupport: "मदत",
+    about: "Civitro बद्दल",
+    wardCouncillor: "वॉर्ड नगरसेवक",
+    mayor: "BMC महापौर",
+    mla: "MLA विले पार्ले",
+    cm: "मुख्यमंत्री महाराष्ट्र",
+    mp: "खासदार मुंबई उत्तर",
+    pm: "पंतप्रधान",
+    step: "चरण",
+    of: "पैकी",
+    photoCapture: "फोटो कॅप्चर",
+    drainageBlocked: "वीरा देसाई रोडवर ड्रेनेज बंद",
+    streetlightOutage: "SV रोडवर स्ट्रीटलाइट बंद",
+    waterSupplyDisruption: "लोखंडवालामध्ये पाणीपुरवठा बाधित",
+    garbageOverflow: "DN नगरमध्ये कचरा ओव्हरफ्लो",
+    viewOnMap: "नकाशावर पहा",
+    category: "श्रेणी",
+  }
+};
+
+const langNames = { en: "English", hi: "हिन्दी", te: "తెలుగు", mr: "मराठी" };
+const langFlags = { en: "EN", hi: "HI", te: "TE", mr: "MR" };
+
+// ─── Screens enum ─────────────────────────────────────────────
+const SCREENS = {
+  HOME: 'home',
+  REPORT: 'report',
+  ISSUE_DETAIL: 'issueDetail',
+  LEADERS: 'leaders',
+  VOICES: 'voices',
+  POLLS: 'polls',
+  ACTIONS: 'actions',
+  PROMISES: 'promises',
+  MAP: 'map',
+  PROFILE: 'profile',
+};
+
+const AUTO_DEMO_SEQUENCE = [
+  SCREENS.HOME, SCREENS.REPORT, SCREENS.ISSUE_DETAIL,
+  SCREENS.LEADERS, SCREENS.VOICES, SCREENS.POLLS,
+  SCREENS.ACTIONS, SCREENS.PROMISES, SCREENS.MAP, SCREENS.PROFILE,
+];
+
+// ─── Components ─────────────────────────────────────────────────
+
+function CivicScoreRing({ score = 72 }) {
+  const circumference = 2 * Math.PI * 45;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div className="civic-ring-container" style={{ width: 120, height: 120 }}>
+      <div className="civic-ring" style={{ position: 'relative' }}>
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#F1F5F9" strokeWidth="10" />
+          <circle cx="60" cy="60" r="45" fill="none" stroke="url(#saffronGrad)" strokeWidth="10"
+            strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset}
+            style={{ animation: 'ringDraw 1.5s ease forwards' }} />
+          <defs>
+            <linearGradient id="saffronGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF6B35" />
+              <stop offset="100%" stopColor="#FF8F5E" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div className="civic-ring-text">
+          <div className="civic-ring-score">{score}</div>
+          <div className="civic-ring-label">/100</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status, t }) {
+  const config = {
+    'Work Started': { cls: 'badge-info', label: t.workStarted },
+    'Assigned': { cls: 'badge-warning', label: t.assigned },
+    'Reported': { cls: 'badge-saffron', label: t.reported },
+    'Resolved': { cls: 'badge-success', label: t.resolved2 },
+    'Acknowledged': { cls: 'badge-purple', label: t.acknowledged },
+  };
+  const c = config[status] || { cls: 'badge-info', label: status };
+  return <span className={`badge ${c.cls}`}>{c.label}</span>;
+}
+
+function ConfettiAnimation() {
+  const colors = ['#FF6B35', '#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444'];
+  const pieces = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    color: colors[i % colors.length],
+    delay: Math.random() * 0.5,
+    duration: 1.5 + Math.random() * 1,
+    rotation: Math.random() * 360,
+    size: 6 + Math.random() * 6,
+  }));
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 10 }}>
+      {pieces.map(p => (
+        <div key={p.id} className="confetti-piece" style={{
+          left: `${p.left}%`, top: '-10px',
+          width: p.size, height: p.size,
+          background: p.color,
+          borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+          animationDelay: `${p.delay}s`,
+          animationDuration: `${p.duration}s`,
+          transform: `rotate(${p.rotation}deg)`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Home Screen ─────────────────────────────────────────────
+function HomeScreen({ t, setScreen }) {
+  const issues = [
+    { title: t.largerPothole, cat: t.pothole, status: 'Work Started', votes: 47, icon: '🕳️', bg: '#FEF3C7' },
+    { title: t.drainageBlocked, cat: t.drainage, status: 'Assigned', votes: 23, icon: '🌊', bg: '#DBEAFE' },
+    { title: t.streetlightOutage, cat: t.streetlights, status: 'Reported', votes: 8, icon: '💡', bg: '#FEF9C3' },
+    { title: t.waterSupplyDisruption, cat: t.water, status: 'Resolved', votes: 156, icon: '💧', bg: '#D1FAE5' },
+  ];
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      {/* Greeting */}
+      <div className="animate-in" style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>{t.greeting} 👋</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{t.ward45Andheri}</div>
+      </div>
+
+      {/* Civic Score */}
+      <div className="card card-elevated animate-in animate-delay-1" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+        <CivicScoreRing score={72} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>{t.civicScore}</div>
+          <span className="badge badge-saffron" style={{ fontSize: 12 }}>🏆 {t.activeCitizen}</span>
+          <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>Top 15% in Ward 45</div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="animate-in animate-delay-2" style={{ marginBottom: 12 }}>
+        <div className="section-title">{t.quickActions}</div>
+        <div className="quick-actions">
+          {[
+            { icon: '📸', label: t.reportIssue, bg: '#FFF0E6', screen: SCREENS.REPORT },
+            { icon: '🗳️', label: t.voteInPoll, bg: '#EFF6FF', screen: SCREENS.POLLS },
+            { icon: '🎤', label: t.createVoice, bg: '#F0FDF4', screen: SCREENS.VOICES },
+            { icon: '🚀', label: t.startAction, bg: '#F5F3FF', screen: SCREENS.ACTIONS },
+          ].map((a, i) => (
+            <div key={i} className="quick-action" onClick={() => setScreen(a.screen)}>
+              <div className="quick-action-icon" style={{ background: a.bg }}>{a.icon}</div>
+              <div className="quick-action-label">{a.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ward Mood */}
+      <div className="card animate-in animate-delay-2" style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{t.wardMood}</div>
+          <span className="badge badge-success">{t.hopeful} 😊</span>
+        </div>
+        <div className="mood-gauge">
+          <div className="mood-indicator" style={{ left: '70%' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--text-muted)' }}>
+          <span>😞</span><span>😐</span><span>😊</span>
+        </div>
+      </div>
+
+      {/* Community Pulse */}
+      <div className="card animate-in animate-delay-3" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t.communityPulse}</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { value: '23', label: t.issues, color: 'var(--saffron)', bg: '#FFF5EE' },
+            { value: '67%', label: t.resolved, color: 'var(--success)', bg: '#ECFDF5' },
+            { value: '4', label: t.actions, color: 'var(--info)', bg: '#EFF6FF' },
+          ].map((s, i) => (
+            <div key={i} style={{ flex: 1, textAlign: 'center', padding: '10px 4px', borderRadius: 'var(--radius-sm)', background: s.bg }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 500, marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Representatives Pyramid */}
+      <div className="card animate-in animate-delay-3" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={() => setScreen(SCREENS.LEADERS)}>
+        <div className="section-title" style={{ marginBottom: 8 }}>
+          {t.representatives}
+          <span className="see-all">{t.seeAll} →</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            { label: t.wardCouncillor, emoji: '🏛️' },
+            { label: t.mayor, emoji: '🏢' },
+            { label: 'MLA', emoji: '📜' },
+            { label: 'CM', emoji: '⚖️' },
+            { label: 'PM', emoji: '🇮🇳' },
+          ].map((r, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>→</span>}
+              <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: i === 0 ? '#FFF0E6' : '#F8FAFC', fontWeight: 500, color: i === 0 ? 'var(--saffron)' : 'var(--text-secondary)' }}>
+                {r.emoji} {r.label}
+              </span>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Pattern Alert */}
+      <div className="pattern-alert animate-in animate-delay-4" style={{ marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>⚠️</span>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#92400E' }}>AI Pattern Alert</div>
+          <div style={{ fontSize: 11, color: '#B45309', marginTop: 2 }}>{t.patternAlert}</div>
+        </div>
+      </div>
+
+      {/* Recent Issues */}
+      <div className="animate-in animate-delay-4" style={{ marginBottom: 12 }}>
+        <div className="section-title">
+          {t.recentIssues}
+          <span className="see-all">{t.seeAll} →</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {issues.map((issue, i) => (
+            <div key={i} className="issue-card" onClick={() => setScreen(SCREENS.ISSUE_DETAIL)}>
+              <div className="issue-thumb" style={{ background: issue.bg }}>{issue.icon}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{issue.title}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <StatusBadge status={issue.status} t={t} />
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>👍 {issue.votes} {t.upvotes}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Community Actions */}
+      <div className="animate-in animate-delay-5">
+        <div className="section-title">
+          {t.communityActions}
+          <span className="see-all" onClick={() => setScreen(SCREENS.ACTIONS)}>{t.seeAll} →</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            { title: t.fixWaterSupply, progress: 62, supporters: 312, target: 500 },
+            { title: `${t.potholes} - Andheri East`, progress: 85, supporters: 425, target: 500 },
+          ].map((a, i) => (
+            <div key={i} className="card" style={{ cursor: 'pointer' }} onClick={() => setScreen(SCREENS.ACTIONS)}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{a.title}</div>
+              <div className="progress-bar" style={{ marginBottom: 6 }}>
+                <div className="progress-fill" style={{ width: `${a.progress}%` }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
+                <span>{a.supporters}/{a.target} {t.supporters}</span>
+                <span>{a.progress}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Report Issue Screen ──────────────────────────────────────
+function ReportScreen({ t, setScreen }) {
+  const [step, setStep] = useState(1);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleSubmit = () => {
+    setStep(5);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 3000);
+  };
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px', position: 'relative' }}>
+      {showConfetti && <ConfettiAnimation />}
+
+      {/* Header */}
+      <div style={{ padding: '16px 0 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={() => setScreen(SCREENS.HOME)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 4 }}>←</button>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.reportNewIssue}</div>
+      </div>
+
+      {/* Steps */}
+      {step < 5 && (
+        <div className="steps-indicator">
+          {[1,2,3,4].map((s, i) => (
+            <React.Fragment key={s}>
+              {i > 0 && <div className={`step-line ${step > s-1 ? 'completed' : step === s ? 'active' : ''}`} />}
+              <div className={`step-dot ${step > s ? 'completed' : step === s ? 'active' : 'pending'}`}>
+                {step > s ? '✓' : s}
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+
+      {/* Step Content */}
+      {step === 1 && (
+        <div className="animate-in">
+          <div className="card card-elevated" style={{ textAlign: 'center', padding: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t.photoCapture}</div>
+            <div style={{ width: '100%', height: 200, borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #FEE2E2, #FEF3C7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, border: '2px dashed #FDBA74', cursor: 'pointer' }}
+              onClick={() => setStep(2)}>
+              <span style={{ fontSize: 48 }}>📸</span>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>{t.takePhoto}</div>
+            </div>
+            {/* Simulated pothole image */}
+            <div style={{ marginTop: 16, width: '100%', height: 180, borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #78716C, #57534E)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', width: 80, height: 40, borderRadius: '50%', background: '#292524', boxShadow: 'inset 0 -5px 15px rgba(0,0,0,0.5)' }} />
+              <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '4px 8px', fontSize: 10, color: 'white', fontWeight: 600 }}>📍 Preview</div>
+              <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', gap: 4 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 6, background: 'rgba(255,255,255,0.2)' }} />
+                <div style={{ width: 40, height: 40, borderRadius: 6, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>+</div>
+              </div>
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ width: '100%', marginTop: 16, padding: 14, fontSize: 15 }} onClick={() => setStep(2)}>
+            {t.next} →
+          </button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="animate-in">
+          <div className="card card-elevated" style={{ padding: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              🤖 {t.aiClassification}
+            </div>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #FFF0E6, #FFEDD5)', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>🕳️</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--saffron)' }}>{t.pothole}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>94% {t.confidence}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {[t.pothole, t.drainage, t.water, t.garbage].map((c, i) => (
+                <span key={i} className={`badge ${i === 0 ? 'badge-saffron' : ''}`} style={i !== 0 ? { background: '#F8FAFC', color: 'var(--text-secondary)' } : {}}>
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button className="btn btn-outline" style={{ flex: 1, padding: 14 }} onClick={() => setStep(1)}>← {t.back}</button>
+            <button className="btn btn-primary" style={{ flex: 2, padding: 14 }} onClick={() => setStep(3)}>{t.next} →</button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="animate-in">
+          <div className="card card-elevated" style={{ padding: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              📍 {t.locationDetected}
+            </div>
+            <div style={{ width: '100%', height: 160, borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)', position: 'relative', marginBottom: 12, overflow: 'hidden' }}>
+              {/* Simple map */}
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+                <div style={{ width: 20, height: 20, background: 'var(--saffron)', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', boxShadow: '0 2px 10px rgba(255,107,53,0.4)' }} />
+              </div>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} style={{ position: 'absolute', top: `${20 + i * 25}%`, left: `${10 + i * 15}%`, width: '60%', height: 2, background: 'rgba(59,130,246,0.15)', transform: `rotate(${i % 2 ? 90 : 0}deg)` }} />
+              ))}
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{t.andheriEastSVRoad}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>19.1197° N, 72.8464° E</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button className="btn btn-outline" style={{ flex: 1, padding: 14 }} onClick={() => setStep(2)}>← {t.back}</button>
+            <button className="btn btn-primary" style={{ flex: 2, padding: 14 }} onClick={() => setStep(4)}>{t.next} →</button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="animate-in">
+          <div className="card card-elevated" style={{ padding: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>📋 {t.reviewSubmit}</div>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+              <div style={{ width: 80, height: 80, borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, #78716C, #57534E)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', bottom: 15, left: '50%', transform: 'translateX(-50%)', width: 30, height: 15, borderRadius: '50%', background: '#292524' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t.largerPothole}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span>📍</span> {t.andheriEastSVRoad}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span>🏷️</span> {t.pothole} (94%)
+                  </div>
+                </div>
+              </div>
+            </div>
+            <textarea style={{ width: '100%', height: 60, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', padding: 10, fontSize: 13, fontFamily: 'Inter, sans-serif', resize: 'none', outline: 'none' }}
+              placeholder="Add description..." defaultValue="Large pothole causing traffic hazards, approximately 2ft wide. Multiple vehicles damaged." />
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button className="btn btn-outline" style={{ flex: 1, padding: 14 }} onClick={() => setStep(3)}>← {t.back}</button>
+            <button className="btn btn-primary" style={{ flex: 2, padding: 14, fontSize: 15 }} onClick={handleSubmit}>
+              {t.submitIssue} 🚀
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="animate-in" style={{ textAlign: 'center', paddingTop: 60 }}>
+          <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, animation: 'scaleIn 0.5s ease' }}>
+            ✅
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>{t.issueSubmitted}</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>{t.yourIssueTracked}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 280, margin: '0 auto' }}>
+            <div style={{ background: '#F8FAFC', borderRadius: 'var(--radius-sm)', padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>🔗</span> Ledger Hash: <code style={{ color: 'var(--saffron)', fontWeight: 600 }}>0x7f3a...b2c1</code>
+            </div>
+            <div style={{ background: '#F8FAFC', borderRadius: 'var(--radius-sm)', padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>⏱️</span> {t.avgResponse}: ~5 {t.days}
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ marginTop: 24, padding: '12px 32px' }} onClick={() => { setStep(1); setScreen(SCREENS.HOME); }}>
+            {t.home} →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Issue Detail Screen ─────────────────────────────────────
+function IssueDetailScreen({ t, setScreen }) {
+  const steps = [
+    { label: t.reported, done: true, date: 'Mar 28, 2026' },
+    { label: t.acknowledged, done: true, date: 'Mar 28, 2026' },
+    { label: t.assigned, done: true, date: 'Mar 29, 2026' },
+    { label: t.workStarted, done: true, date: 'Mar 31, 2026' },
+    { label: t.inProgress, done: false, date: '' },
+    { label: t.resolved2, done: false, date: '' },
+  ];
+
+  const ledger = [
+    { action: 'Issue created by Priya Sharma', time: 'Mar 28, 10:24 AM', color: 'var(--saffron)', hash: '0x7f3a' },
+    { action: 'Auto-assigned to BMC Ward Office', time: 'Mar 28, 10:25 AM', color: 'var(--info)', hash: '0x8b2c' },
+    { action: 'Acknowledged by Junior Engineer', time: 'Mar 28, 2:15 PM', color: 'var(--purple)', hash: '0x9d4e' },
+    { action: 'Assigned to contractor: RK Infrastructure', time: 'Mar 29, 9:00 AM', color: 'var(--warning)', hash: '0xa1f7' },
+    { action: 'Work started - crew dispatched', time: 'Mar 31, 8:30 AM', color: 'var(--success)', hash: '0xb5e2' },
+  ];
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={() => setScreen(SCREENS.HOME)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 4 }}>←</button>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.issueDetail}</div>
+      </div>
+
+      {/* Photo */}
+      <div className="animate-in" style={{ width: '100%', height: 180, borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, #78716C, #57534E)', marginBottom: 12, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', width: 60, height: 30, borderRadius: '50%', background: '#292524', boxShadow: 'inset 0 -4px 12px rgba(0,0,0,0.5)' }} />
+        <div style={{ position: 'absolute', top: 10, left: 10 }}>
+          <span className="badge badge-info">🕳️ {t.pothole}</span>
+        </div>
+        <div style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(0,0,0,0.6)', borderRadius: 6, padding: '4px 8px', fontSize: 10, color: 'white' }}>📍 {t.andheriEastSVRoad}</div>
+      </div>
+
+      {/* Title & Stats */}
+      <div className="animate-in animate-delay-1" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{t.largerPothole}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <StatusBadge status="Work Started" t={t} />
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>👍 47 {t.upvotes}</span>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>💬 12 {t.comments}</span>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="card animate-in animate-delay-2" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Progress</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {steps.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: s.done ? 'var(--success)' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: s.done ? 'white' : 'var(--text-muted)', flexShrink: 0 }}>
+                {s.done ? '✓' : (i + 1)}
+              </div>
+              <div style={{ flex: 1, fontSize: 12, fontWeight: s.done ? 600 : 400, color: s.done ? 'var(--text-primary)' : 'var(--text-muted)' }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.date}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ledger Timeline */}
+      <div className="card animate-in animate-delay-3" style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>🔗 {t.ledgerTimeline}</div>
+          <span className="badge badge-purple" style={{ fontSize: 10 }}>🛡️ {t.immutableAuditTrail}</span>
+        </div>
+        <div style={{ position: 'relative' }}>
+          {ledger.map((item, i) => (
+            <div key={i} className="ledger-item">
+              <div className="ledger-dot" style={{ background: item.color }} />
+              {i < ledger.length - 1 && <div className="ledger-line" />}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{item.action}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{item.time}</span>
+                  <code style={{ fontSize: 9, color: 'var(--text-muted)', background: '#F8FAFC', padding: '1px 4px', borderRadius: 3 }}>{item.hash}...</code>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="animate-in animate-delay-4" style={{ display: 'flex', gap: 8 }}>
+        <button className="btn btn-primary" style={{ flex: 1 }}>👍 Upvote</button>
+        <button className="btn btn-outline" style={{ flex: 1 }}>💬 {t.comment}</button>
+        <button className="btn btn-outline" style={{ flex: 1 }}>🔗 {t.share}</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Leaders Screen ──────────────────────────────────────────
+function LeadersScreen({ t, setScreen }) {
+  const reps = [
+    { tier: 'T1', name: 'Rajesh Patel', role: t.wardCouncillor, party: 'BJP', stars: 3.8, response: 5, color: '#FF6B35', emoji: '🏛️' },
+    { tier: 'T2', name: 'Kishori Pednekar', role: t.mayor, party: 'UBT', stars: 3.2, response: 8, color: '#3B82F6', emoji: '🏢' },
+    { tier: 'T3', name: 'Suresh Kumar', role: t.mla, party: 'BJP', stars: 4.1, response: 12, color: '#8B5CF6', emoji: '📜' },
+    { tier: 'T5', name: 'Devendra Fadnavis', role: t.cm, party: 'BJP', stars: 3.9, response: 30, color: '#22C55E', emoji: '⚖️' },
+    { tier: 'T6', name: 'Piyush Goyal', role: t.mp, party: 'BJP', stars: 3.5, response: 45, color: '#F59E0B', emoji: '🏛️' },
+    { tier: 'T8', name: t.pm, role: t.pm, party: 'BJP', stars: 0, response: null, color: '#0B1426', emoji: '🇮🇳' },
+  ];
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.governanceChain}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{t.escalationTimeline}</div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {reps.map((rep, i) => (
+          <div key={i} className="rep-card animate-in" style={{ animationDelay: `${i * 0.08}s` }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <span className="rep-tier">{rep.tier}</span>
+              <div className="rep-avatar" style={{ background: `linear-gradient(135deg, ${rep.color}, ${rep.color}dd)` }}>
+                {rep.emoji}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <span style={{ fontSize: 14, fontWeight: 700 }}>{rep.name}</span>
+                {rep.party && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#FFF0E6', color: 'var(--saffron)', fontWeight: 600 }}>{rep.party}</span>}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>{rep.role}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {rep.stars > 0 && <span className="stars">{'★'.repeat(Math.floor(rep.stars))}{'☆'.repeat(5 - Math.floor(rep.stars))} <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 12 }}>{rep.stars}</span></span>}
+                {rep.response && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>⏱️ {t.avgResponse}: {rep.response} {t.days}</span>}
+              </div>
+              {rep.stars > 0 && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                  <button className="btn btn-primary btn-sm">{t.message}</button>
+                  <button className="btn btn-outline btn-sm">{t.rate}</button>
+                  <button className="btn btn-outline btn-sm">{t.viewIssues}</button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Escalation info */}
+      <div className="card animate-in" style={{ marginTop: 12, background: 'linear-gradient(135deg, #F8FAFC, #EFF6FF)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+          <span style={{ fontSize: 18 }}>ℹ️</span>
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: 2 }}>Auto-Escalation Engine</div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 11 }}>Issues automatically escalate up the governance chain if not resolved within SLA timelines.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Voices Screen ───────────────────────────────────────────
+function VoicesScreen({ t, setScreen }) {
+  const voices = [
+    {
+      user: 'Priya S.', avatar: '👩‍💻', time: '2h ago',
+      text: 'The new park near Versova Beach is wonderful! Finally a green space for kids. #AchhiPahal #AndheriEast',
+      likes: 89, comments: 12, hashtags: ['AchhiPahal', 'AndheriEast'],
+    },
+    {
+      user: 'Amit K.', avatar: '👨‍🔧', time: '4h ago',
+      text: 'When will the Metro Phase 3 construction noise end? It\'s been 2 years! #MetroWoes',
+      likes: 234, comments: 45, hashtags: ['MetroWoes'],
+    },
+    {
+      user: 'Sneha R.', avatar: '👩‍🏫', time: '6h ago',
+      text: 'Thank you BMC for fixing the water pipeline in our colony within 48 hours! #GoodGovernance',
+      likes: 67, comments: 8, hashtags: ['GoodGovernance'],
+    },
+    {
+      user: 'Rahul M.', avatar: '👨‍💼', time: '8h ago',
+      text: 'Ward 45 needs more electric bus stops. The current infrastructure is inadequate for our growing population. #PublicTransport #SmartCity',
+      likes: 156, comments: 23, hashtags: ['PublicTransport', 'SmartCity'],
+    },
+  ];
+
+  const trending = ['#RoadRepair', '#WaterCrisis', '#MetroPhase3', '#CleanMumbai', '#SmartCity'];
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.communityVoices} 🎤</div>
+      </div>
+
+      {/* Trending */}
+      <div className="animate-in" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>{t.trendingTopics}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {trending.map((tag, i) => (
+            <span key={i} style={{ padding: '5px 12px', borderRadius: 'var(--radius-full)', background: i === 0 ? '#FFF0E6' : '#F8FAFC', color: i === 0 ? 'var(--saffron)' : 'var(--text-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Voice Posts */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {voices.map((v, i) => (
+          <div key={i} className="voice-card animate-in" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{v.avatar}</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{v.user}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{v.time}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-primary)', marginBottom: 10 }}>
+              {v.text.split(/(#\w+)/g).map((part, pi) =>
+                part.startsWith('#') ? <span key={pi} style={{ color: 'var(--saffron)', fontWeight: 600 }}>{part}</span> : part
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+              <button style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                ❤️ <span style={{ fontWeight: 600 }}>{v.likes}</span> {t.likes}
+              </button>
+              <button style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                💬 <span style={{ fontWeight: 600 }}>{v.comments}</span>
+              </button>
+              <button style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginLeft: 'auto' }}>
+                🔗 {t.share}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Polls Screen ────────────────────────────────────────────
+function PollsScreen({ t }) {
+  const [voted, setVoted] = useState(false);
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.polls} 🗳️</div>
+      </div>
+
+      {/* Active Poll */}
+      <div className="card card-elevated animate-in" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+          <span className="badge badge-saffron">{t.activePoll}</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ends in 3 days</span>
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, lineHeight: 1.4 }}>
+          {t.shouldWardBudget}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { label: t.roadRepair, pct: 63, icon: '🛣️' },
+            { label: t.drainageSystem, pct: 37, icon: '🌊' },
+          ].map((opt, i) => (
+            <div key={i}
+              className={`poll-option ${selected === i ? 'selected' : ''}`}
+              onClick={() => { if (!voted) setSelected(i); }}
+              style={{ position: 'relative' }}>
+              {voted && <div className="poll-fill" style={{ width: `${opt.pct}%` }} />}
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>{opt.icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{opt.label}</span>
+                </div>
+                {voted && <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--saffron)' }}>{opt.pct}%</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!voted ? (
+          <button className="btn btn-primary" style={{ width: '100%', marginTop: 16, padding: 14, fontSize: 15 }}
+            onClick={() => { if (selected !== null) setVoted(true); }}
+            disabled={selected === null}>
+            {t.vote} 🗳️
+          </button>
+        ) : (
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--success)' }}>✅ {t.voted}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>1,247 {t.totalVotes}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Past Polls */}
+      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Past Polls</div>
+      {[
+        { q: 'Should BMC increase green spaces in Andheri?', yes: 82, total: 2345 },
+        { q: 'Do you support one-way traffic on SV Road?', yes: 56, total: 1890 },
+      ].map((p, i) => (
+        <div key={i} className="card animate-in" style={{ marginBottom: 8, animationDelay: `${0.2 + i * 0.1}s` }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{p.q}</div>
+          <div className="progress-bar" style={{ marginBottom: 6 }}>
+            <div className="progress-fill" style={{ width: `${p.yes}%`, background: 'linear-gradient(90deg, var(--success), #16A34A)' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
+            <span>Yes: {p.yes}%</span>
+            <span>{p.total.toLocaleString()} {t.totalVotes}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Actions Screen ──────────────────────────────────────────
+function ActionsScreen({ t }) {
+  const [supported, setSupported] = useState({});
+
+  const actions = [
+    {
+      title: t.fixWaterSupply,
+      supporters: 312, target: 500, pct: 62,
+      evidence: 28, impact: '₹4.2 Cr',
+      deadline: 'Apr 30, 2026',
+      icon: '💧',
+    },
+    {
+      title: `${t.potholes} - Andheri East Road Repair Campaign`,
+      supporters: 425, target: 500, pct: 85,
+      evidence: 45, impact: '₹2.8 Cr',
+      deadline: 'May 15, 2026',
+      icon: '🛣️',
+    },
+    {
+      title: 'Street Light Restoration Drive - Ward 45',
+      supporters: 189, target: 300, pct: 63,
+      evidence: 15, impact: '₹1.1 Cr',
+      deadline: 'Jun 1, 2026',
+      icon: '💡',
+    },
+  ];
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.communityActions} 🚀</div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {actions.map((a, i) => (
+          <div key={i} className="card card-elevated animate-in" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#FFF0E6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{a.icon}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>{a.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Deadline: {a.deadline}</div>
+              </div>
+            </div>
+
+            <div className="progress-bar" style={{ marginBottom: 8, height: 10 }}>
+              <div className="progress-fill" style={{ width: `${a.pct}%` }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--saffron)' }}>{a.supporters}/{a.target} {t.supporters}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{a.pct}%</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+              <div style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: '#F8FAFC', textAlign: 'center' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--info)' }}>{a.evidence}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.evidenceItems}</div>
+              </div>
+              <div style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: '#F8FAFC', textAlign: 'center' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--success)' }}>{a.impact}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.economicImpact}</div>
+              </div>
+            </div>
+
+            <button className={`btn ${supported[i] ? 'btn-outline' : 'btn-primary'}`} style={{ width: '100%', padding: 12 }}
+              onClick={() => setSupported(s => ({ ...s, [i]: !s[i] }))}>
+              {supported[i] ? `✅ ${t.supported}` : `✊ ${t.support}`}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Promises Screen ─────────────────────────────────────────
+function PromisesScreen({ t }) {
+  const promises = [
+    {
+      title: t.completeMetro,
+      by: 'Suresh Kumar (MLA)',
+      status: t.onTrack,
+      confidence: 78,
+      date: 'Jan 2025',
+      updates: 12,
+      segments: 7,
+      icon: '🚇',
+    },
+    {
+      title: '24/7 water supply by 2027',
+      by: 'Rajesh Patel (Councillor)',
+      status: 'Delayed',
+      confidence: 45,
+      date: 'Mar 2024',
+      updates: 8,
+      segments: 4,
+      icon: '💧',
+    },
+    {
+      title: 'Build 3 new public parks',
+      by: 'Kishori Pednekar (Mayor)',
+      status: t.onTrack,
+      confidence: 92,
+      date: 'Feb 2025',
+      updates: 15,
+      segments: 9,
+      icon: '🌳',
+    },
+  ];
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.promisesTracker} 📊</div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {promises.map((p, i) => (
+          <div key={i} className="card card-elevated animate-in" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+              <div style={{ fontSize: 28 }}>{p.icon}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, marginBottom: 4 }}>{p.title}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span className={`badge ${p.status === t.onTrack ? 'badge-success' : 'badge-warning'}`}>{p.status}</span>
+                  <span className="badge badge-purple">🤖 {t.aiDetected}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="promise-status-bar">
+              {[...Array(10)].map((_, si) => (
+                <div key={si} className={`promise-status-segment ${si < p.segments ? (p.status === t.onTrack ? 'filled-green' : 'filled') : ''}`} />
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t.promisedBy}: {p.by}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Made: {p.date}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: p.confidence >= 70 ? 'var(--success)' : 'var(--warning)' }}>{p.confidence}%</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.confidenceLevel}</div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              📰 {p.updates} AI-tracked updates
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Map Screen ──────────────────────────────────────────────
+function MapScreen({ t }) {
+  const [filter, setFilter] = useState('all');
+  const cats = [
+    { key: 'all', label: t.all, icon: '🗺️' },
+    { key: 'potholes', label: t.potholes, icon: '🕳️' },
+    { key: 'drainage', label: t.drainage, icon: '🌊' },
+    { key: 'streetlights', label: t.streetlights, icon: '💡' },
+    { key: 'water', label: t.water, icon: '💧' },
+    { key: 'garbage', label: t.garbage, icon: '🗑️' },
+  ];
+
+  const dots = [
+    { x: 30, y: 25, size: 14, color: '#FF6B35', cat: 'potholes' },
+    { x: 55, y: 35, size: 20, color: '#FF6B35', cat: 'potholes' },
+    { x: 70, y: 20, size: 10, color: '#3B82F6', cat: 'drainage' },
+    { x: 20, y: 55, size: 16, color: '#3B82F6', cat: 'drainage' },
+    { x: 45, y: 60, size: 12, color: '#F59E0B', cat: 'streetlights' },
+    { x: 75, y: 55, size: 18, color: '#22C55E', cat: 'water' },
+    { x: 35, y: 75, size: 14, color: '#8B5CF6', cat: 'garbage' },
+    { x: 60, y: 70, size: 10, color: '#FF6B35', cat: 'potholes' },
+    { x: 50, y: 45, size: 22, color: '#EF4444', cat: 'water' },
+    { x: 80, y: 40, size: 12, color: '#8B5CF6', cat: 'garbage' },
+    { x: 15, y: 40, size: 8, color: '#F59E0B', cat: 'streetlights' },
+    { x: 65, y: 80, size: 16, color: '#3B82F6', cat: 'drainage' },
+  ];
+
+  const filteredDots = filter === 'all' ? dots : dots.filter(d => d.cat === filter);
+
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.issueHeatmap} 🗺️</div>
+      </div>
+
+      {/* Category chips */}
+      <div className="animate-in" style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 12, paddingBottom: 4 }}>
+        {cats.map(c => (
+          <button key={c.key}
+            onClick={() => setFilter(c.key)}
+            style={{
+              padding: '6px 14px', borderRadius: 'var(--radius-full)',
+              background: filter === c.key ? 'var(--saffron)' : 'white',
+              color: filter === c.key ? 'white' : 'var(--text-secondary)',
+              border: `1px solid ${filter === c.key ? 'var(--saffron)' : 'var(--border)'}`,
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+              fontFamily: 'Inter, sans-serif', transition: 'all 0.2s ease',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+            {c.icon} {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Map */}
+      <div className="map-container animate-in animate-delay-1">
+        {/* Grid lines */}
+        {[...Array(8)].map((_, i) => (
+          <React.Fragment key={i}>
+            <div style={{ position: 'absolute', top: `${(i + 1) * 12}%`, left: 0, right: 0, height: 1, background: 'rgba(59,130,246,0.08)' }} />
+            <div style={{ position: 'absolute', left: `${(i + 1) * 12}%`, top: 0, bottom: 0, width: 1, background: 'rgba(59,130,246,0.08)' }} />
+          </React.Fragment>
+        ))}
+
+        {/* Road-like shapes */}
+        <div style={{ position: 'absolute', top: '30%', left: '10%', right: '10%', height: 3, background: 'rgba(59,130,246,0.15)', borderRadius: 2 }} />
+        <div style={{ position: 'absolute', top: '60%', left: '5%', right: '15%', height: 3, background: 'rgba(59,130,246,0.15)', borderRadius: 2 }} />
+        <div style={{ position: 'absolute', top: '10%', left: '40%', bottom: '10%', width: 3, background: 'rgba(59,130,246,0.15)', borderRadius: 2 }} />
+        <div style={{ position: 'absolute', top: '20%', left: '70%', bottom: '20%', width: 3, background: 'rgba(59,130,246,0.15)', borderRadius: 2 }} />
+
+        {/* Dots */}
+        {filteredDots.map((d, i) => (
+          <div key={i} className="map-dot" style={{
+            left: `${d.x}%`, top: `${d.y}%`,
+            width: d.size, height: d.size,
+            background: d.color,
+            opacity: 0.7,
+            animationDelay: `${i * 0.2}s`,
+          }} />
+        ))}
+
+        {/* Label */}
+        <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'rgba(255,255,255,0.9)', borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: 4 }}>
+          📍 Ward 45, Andheri East
+        </div>
+
+        {/* Cluster count */}
+        <div style={{ position: 'absolute', top: '43%', left: '48%', background: 'var(--saffron)', color: 'white', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(255,107,53,0.4)' }}>
+          23
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="animate-in animate-delay-2" style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        {[
+          { label: 'Hotspots', value: '5', icon: '🔥', bg: '#FEF2F2' },
+          { label: 'Active', value: '23', icon: '📌', bg: '#FFF5EE' },
+          { label: 'This Week', value: '+8', icon: '📈', bg: '#ECFDF5' },
+        ].map((s, i) => (
+          <div key={i} style={{ flex: 1, textAlign: 'center', padding: 10, borderRadius: 'var(--radius-sm)', background: s.bg }}>
+            <div style={{ fontSize: 18 }}>{s.icon}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Profile Screen ──────────────────────────────────────────
+function ProfileScreen({ t }) {
+  return (
+    <div className="screen-wrapper" style={{ padding: '0 16px 20px' }}>
+      <div style={{ padding: '16px 0 8px' }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.profile}</div>
+      </div>
+
+      {/* Profile Card */}
+      <div className="card card-elevated animate-in" style={{ textAlign: 'center', padding: 24, marginBottom: 12 }}>
+        <div className="profile-avatar-large" style={{ margin: '0 auto 12px' }}>PS</div>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{t.priyaSharma}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>प्रिया शर्मा</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>📍 {t.ward45Andheri}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>📱 +91 98XXX XXXXX</div>
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <CivicScoreRing score={72} />
+          <div style={{ textAlign: 'left' }}>
+            <span className="badge badge-saffron">🏆 {t.activeCitizen}</span>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Top 15% in Ward 45</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="animate-in animate-delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
+        {[
+          { value: 15, label: t.issuesReported, icon: '📸', bg: '#FFF5EE' },
+          { value: 8, label: t.issuesResolved, icon: '✅', bg: '#ECFDF5' },
+          { value: 12, label: t.voicesShared, icon: '🎤', bg: '#EFF6FF' },
+          { value: 5, label: t.pollsVoted, icon: '🗳️', bg: '#F5F3FF' },
+        ].map((s, i) => (
+          <div key={i} style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius-md)', background: s.bg }}>
+            <div style={{ fontSize: 24 }}>{s.icon}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 500 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Settings */}
+      <div className="card animate-in animate-delay-2">
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t.settings}</div>
+        {[
+          { icon: '🔔', label: t.notifications },
+          { icon: '🔒', label: t.privacy },
+          { icon: '❓', label: t.helpSupport },
+          { icon: 'ℹ️', label: t.about },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
+            <span style={{ fontSize: 18 }}>{item.icon}</span>
+            <span style={{ fontSize: 14, fontWeight: 500, flex: 1 }}>{item.label}</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 16 }}>→</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ────────────────────────────────────────────────
+function App() {
+  const [lang, setLang] = useState('en');
+  const [screen, setScreen] = useState(SCREENS.HOME);
+  const [langOpen, setLangOpen] = useState(false);
+  const [autoDemo, setAutoDemo] = useState(false);
+  const autoDemoRef = useRef(null);
+  const autoDemoIdx = useRef(0);
+
+  const t = translations[lang];
+
+  // Auto demo
+  useEffect(() => {
+    if (autoDemo) {
+      autoDemoIdx.current = 0;
+      autoDemoRef.current = setInterval(() => {
+        autoDemoIdx.current = (autoDemoIdx.current + 1) % AUTO_DEMO_SEQUENCE.length;
+        setScreen(AUTO_DEMO_SEQUENCE[autoDemoIdx.current]);
+      }, 4000);
+    } else {
+      clearInterval(autoDemoRef.current);
+    }
+    return () => clearInterval(autoDemoRef.current);
+  }, [autoDemo]);
+
+  const getTabScreen = (tab) => {
+    const map = { home: SCREENS.HOME, report: SCREENS.REPORT, leaders: SCREENS.LEADERS, map: SCREENS.MAP, trending: SCREENS.VOICES };
+    return map[tab];
+  };
+
+  const isTabActive = (tab) => {
+    const map = { home: [SCREENS.HOME], report: [SCREENS.REPORT], leaders: [SCREENS.LEADERS, SCREENS.PROMISES], map: [SCREENS.MAP], trending: [SCREENS.VOICES, SCREENS.POLLS, SCREENS.ACTIONS] };
+    return map[tab]?.includes(screen);
+  };
+
+  // Sub-navigation for screens not in tab bar
+  const renderScreen = () => {
+    switch (screen) {
+      case SCREENS.HOME: return <HomeScreen t={t} setScreen={setScreen} />;
+      case SCREENS.REPORT: return <ReportScreen t={t} setScreen={setScreen} />;
+      case SCREENS.ISSUE_DETAIL: return <IssueDetailScreen t={t} setScreen={setScreen} />;
+      case SCREENS.LEADERS: return <LeadersScreen t={t} setScreen={setScreen} />;
+      case SCREENS.VOICES: return <VoicesScreen t={t} setScreen={setScreen} />;
+      case SCREENS.POLLS: return <PollsScreen t={t} />;
+      case SCREENS.ACTIONS: return <ActionsScreen t={t} />;
+      case SCREENS.PROMISES: return <PromisesScreen t={t} />;
+      case SCREENS.MAP: return <MapScreen t={t} />;
+      case SCREENS.PROFILE: return <ProfileScreen t={t} />;
+      default: return <HomeScreen t={t} setScreen={setScreen} />;
+    }
+  };
+
+  // Sub-nav tabs for trending section
+  const showSubNav = [SCREENS.VOICES, SCREENS.POLLS, SCREENS.ACTIONS, SCREENS.PROMISES].includes(screen);
+
+  return (
+    <>
+      {/* Investor Banner */}
+      <div className="investor-banner">
+        <div className="banner-logo">
+          <div className="banner-logo-icon">C</div>
+          <div>
+            <div className="banner-title">Civitro</div>
+            <div className="banner-subtitle">Investor Demo</div>
+          </div>
+        </div>
+        <div className="banner-metrics">
+          <div className="banner-metric">
+            <div className="banner-metric-value">100M+</div>
+            <div className="banner-metric-label">Target Users</div>
+          </div>
+          <div className="banner-metric">
+            <div className="banner-metric-value">23</div>
+            <div className="banner-metric-label">Microservices</div>
+          </div>
+          <div className="banner-metric">
+            <div className="banner-metric-value">22</div>
+            <div className="banner-metric-label">Languages</div>
+          </div>
+          <div className="banner-metric">
+            <div className="banner-metric-value">Real-time</div>
+            <div className="banner-metric-label">AI Engine</div>
+          </div>
+        </div>
+        <button className={`auto-demo-btn ${autoDemo ? 'active' : ''}`} onClick={() => setAutoDemo(a => !a)}>
+          {autoDemo ? '⏸ Stop Demo' : '▶ Auto Demo'}
+        </button>
+      </div>
+
+      {/* Language Switcher */}
+      <div className="lang-switcher">
+        <button className="lang-fab" onClick={() => setLangOpen(!langOpen)}>🌐</button>
+        {langOpen && (
+          <div className="lang-menu">
+            {Object.entries(langNames).map(([code, name]) => (
+              <button key={code} className={`lang-option ${lang === code ? 'active' : ''}`}
+                onClick={() => { setLang(code); setLangOpen(false); }}>
+                <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--text-muted)' }}>{langFlags[code]}</span>
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Phone */}
+      <div className="phone-container">
+        <div className="phone-frame">
+          <div className="phone-notch" />
+
+          {/* Status Bar */}
+          <div className="status-bar">
+            <div className="status-time">9:41</div>
+            <div className="status-icons">
+              <span>📶</span>
+              <span>📡</span>
+              <span style={{ fontSize: 14 }}>🔋</span>
+            </div>
+          </div>
+
+          {/* Sub-nav for Voices/Polls/Actions/Promises */}
+          {showSubNav && (
+            <div style={{ display: 'flex', gap: 0, padding: '0 16px', background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+              {[
+                { screen: SCREENS.VOICES, label: '🎤 ' + t.trending },
+                { screen: SCREENS.POLLS, label: '🗳️ ' + t.polls },
+                { screen: SCREENS.ACTIONS, label: '🚀 ' + t.actions },
+                { screen: SCREENS.PROMISES, label: '📊 Promises' },
+              ].map(tab => (
+                <button key={tab.screen}
+                  onClick={() => setScreen(tab.screen)}
+                  style={{
+                    flex: 1, padding: '10px 4px', fontSize: 10, fontWeight: 600,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: screen === tab.screen ? 'var(--saffron)' : 'var(--text-muted)',
+                    borderBottom: screen === tab.screen ? '2px solid var(--saffron)' : '2px solid transparent',
+                    fontFamily: 'Inter, sans-serif', transition: 'all 0.2s ease',
+                  }}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Screen Content */}
+          <div className="screen-content" key={screen}>
+            {renderScreen()}
+          </div>
+
+          {/* Tab Bar */}
+          <div className="tab-bar">
+            {[
+              { key: 'home', icon: '🏠', label: t.home },
+              { key: 'leaders', icon: '🏛️', label: t.leaders },
+            ].map(tab => (
+              <button key={tab.key} className={`tab-item ${isTabActive(tab.key) ? 'active' : ''}`}
+                onClick={() => setScreen(getTabScreen(tab.key))}>
+                <span className="tab-icon">{tab.icon}</span>
+                <span className="tab-label">{tab.label}</span>
+              </button>
+            ))}
+
+            {/* Center FAB */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="tab-fab" onClick={() => setScreen(SCREENS.REPORT)}>+</div>
+              <span className="tab-label" style={{ marginTop: 4, color: isTabActive('report') ? 'var(--saffron)' : 'var(--text-muted)', fontWeight: isTabActive('report') ? 600 : 500 }}>{t.report}</span>
+            </div>
+
+            {[
+              { key: 'map', icon: '🗺️', label: t.map },
+              { key: 'trending', icon: '🔥', label: t.trending },
+            ].map(tab => (
+              <button key={tab.key} className={`tab-item ${isTabActive(tab.key) ? 'active' : ''}`}
+                onClick={() => setScreen(getTabScreen(tab.key))}>
+                <span className="tab-icon">{tab.icon}</span>
+                <span className="tab-label">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Profile access via tapping avatar on Home screen - adding a floating profile button */}
+      <div style={{ position: 'fixed', left: 'calc(50% - 215px)', top: 200, zIndex: 200 }}>
+        <button onClick={() => setScreen(SCREENS.PROFILE)}
+          style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--saffron), var(--saffron-dark))', color: 'white', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, fontWeight: 700, boxShadow: 'var(--shadow-lg)', transition: 'all 0.3s ease', fontFamily: 'Inter, sans-serif' }}>
+          PS
+        </button>
+      </div>
+
+      {/* Footer */}
+      <div className="investor-footer">
+        <div className="tagline">Democracy. You Shape.&trade;</div>
+        <div>&copy; 2026 Civitro. All rights reserved. | contact@civitro.org</div>
+      </div>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>
