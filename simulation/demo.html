@@ -724,6 +724,151 @@ const TX = {
     viewDatamine: 'Analytics',
     viewOrgs: 'Organizations',
     viewLeaderDash: 'Leader Dashboard',
+    // Auth screens
+    welcomeBack: 'Welcome back',
+    sendOtp: 'Send OTP',
+    newToCivitro: 'New to Civitro?',
+    register: 'Register',
+    createAccount: 'Create your account',
+    joinRevolution: 'Join the civic revolution',
+    fullName: 'Full Name',
+    mobileNumber: 'Mobile Number',
+    emailOptional: 'Email (Optional)',
+    ward: 'Ward',
+    constituency: 'Constituency',
+    continueBtn: 'Continue',
+    alreadyHaveAccount: 'Already have an account?',
+    login: 'Login',
+    verifyOtp: 'Verify OTP',
+    enterOtp: 'Enter the 6-digit code sent to',
+    verifyAndContinue: 'Verify & Continue',
+    resendOtp: 'Resend OTP in',
+    verifyAadhaar: 'Verify Aadhaar',
+    aadhaarInstructions: 'Steps to get Aadhaar XML',
+    selectZipFile: 'Select ZIP File',
+    shareCode: '4-Digit Share Code',
+    skipForNow: 'Skip for Now',
+    aadhaarBenefits: 'Benefits of verification',
+    previewAuth: 'Preview Auth Flow',
+    // Issues list
+    allIssues: 'All Issues',
+    filterAll: 'All',
+    filterOpen: 'Open',
+    filterInProgress: 'In Progress',
+    filterResolved: 'Resolved',
+    // Voice screens
+    shareYourVoice: 'Share Your Voice',
+    whatsOnMind: "What's on your mind?",
+    addPhoto: 'Add Photo',
+    post: 'Post',
+    translate: 'Translate',
+    showOriginal: 'Show Original',
+    reply: 'Reply',
+    // Poll screens
+    youVoted: 'You voted',
+    retractVote: 'Retract Vote',
+    pollInfo: 'Poll Info',
+    createdBy: 'Created by',
+    endsIn: 'Ends in',
+    exitPolls: 'Exit Polls',
+    active: 'Active',
+    ended: 'Ended',
+    // Action screens
+    startCommunityAction: 'Start a Community Action',
+    whatChange: 'What change do you want to see?',
+    description: 'Description',
+    desiredOutcome: 'Desired Outcome',
+    linkIssues: 'Link Issues',
+    previewAction: 'Preview Action',
+    publishAction: 'Publish Action',
+    evidenceSection: 'Evidence',
+    linkedIssues: 'linked issues',
+    economicImpact: 'Economic Impact',
+    stakeholderResponses: 'Stakeholder Responses',
+    supported: 'Supported',
+    actionTimeline: 'Action Timeline',
+    citizenActions: 'Citizen Actions',
+    stakeholder: 'Stakeholder',
+    system: 'System',
+    escalation: 'Escalation',
+    // Promise detail
+    promiseDetail: 'Promise Detail',
+    statusTimeline: 'Status Timeline',
+    aiExtracted: 'AI Extracted',
+    source: 'Source',
+    evidence: 'Evidence',
+    aiDisclaimer: 'AI-generated analysis. Verify with original sources.',
+    // Org screens
+    orgDetail: 'Organization',
+    broadcasts: 'Broadcasts',
+    analytics: 'Analytics',
+    readRate: 'Read Rate',
+    admins: 'Admins',
+    functionaries: 'Functionaries',
+    addMember: 'Add Member',
+    newOrganization: 'New Organization',
+    politicalParty: 'Political Party',
+    ngo: 'NGO',
+    rwa: 'RWA',
+    club: 'Club',
+    newBroadcast: 'New Broadcast',
+    reached: 'reached',
+    // Heatmap
+    heatmapTitle: 'Issue Heatmap',
+    intensity: 'Intensity',
+    low: 'Low',
+    medium: 'Medium',
+    high: 'High',
+    points: 'points',
+    categories: 'categories',
+    // Leader profile
+    leaderProfile: 'Leader Profile',
+    rating: 'Rating',
+    avgResponseTime: 'Avg Response',
+    resolution: 'Resolution',
+    issuesHandled: 'Issues Handled',
+    bio: 'Bio',
+    promiseTracker: 'Promise Tracker',
+    ratingBreakdown: 'Rating Breakdown',
+    rateThisLeader: 'Rate This Leader',
+    recentActivity: 'Recent Activity',
+    responsiveness: 'Responsiveness',
+    transparency: 'Transparency',
+    accessibility: 'Accessibility',
+    effectiveness: 'Effectiveness',
+    communication: 'Communication',
+    // Settings screens
+    languageSettings: 'Language',
+    currentLanguage: 'Current Language',
+    autoTranslate: 'Auto-translate content',
+    notifSettings: 'Notification Settings',
+    pushNotifications: 'Push Notifications',
+    issueUpdates: 'Issue Updates',
+    newPolls: 'New Polls',
+    communityActionsNotif: 'Community Actions',
+    messagesNotif: 'Messages',
+    weeklyDigest: 'Weekly Digest',
+    privacySettings: 'Privacy & Security',
+    showProfilePublicly: 'Show Profile Publicly',
+    allowAnonymousVoices: 'Allow Anonymous Voices',
+    showCivicScore: 'Show Civic Score',
+    locationSharing: 'Location Sharing',
+    dataAnalytics: 'Data Analytics',
+    helpSupport: 'Help & Support',
+    faq: 'FAQ',
+    contactUs: 'Contact Us',
+    appFeedback: 'App Feedback',
+    aboutCivitro: 'About',
+    version: 'Version',
+    platformLabel: 'Platform',
+    languageAI: 'Language AI',
+    builtWith: 'Built With',
+    website: 'Website',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    openSource: 'Open Source',
+    madeInIndia: 'Made in India',
+    comingSoon: 'Coming Soon',
   },
   hi: {
     greet: { morning: 'सुप्रभात', afternoon: 'शुभ दोपहर', evening: 'शुभ संध्या' },
@@ -781,6 +926,18 @@ const TX = {
     orgsTitle: 'संगठन', members: 'सदस्य', createOrg: 'संगठन बनाएँ',
     leaderDashTitle: 'नेता डैशबोर्ड', totalIssuesLabel: 'कुल समस्याएँ', resolvedLabel: 'हल', pendingLabel: 'लंबित', avgResponse: 'औसत प्रतिक्रिया', citizenSatisfaction: 'नागरिक संतुष्टि', resolutionRate: 'निराकरण दर', recentIssues: 'हालिया समस्याएँ',
     viewPromises: '\u0935\u093E\u0926\u0947 \u0926\u0947\u0916\u0947\u0902', viewCHI: 'CHI \u0926\u0947\u0916\u0947\u0902', viewBudget: '\u092C\u091C\u091F \u0935\u094B\u091F', viewDatamine: '\u0935\u093F\u0936\u094D\u0932\u0947\u0937\u093F\u0915\u0940', viewOrgs: '\u0938\u0902\u0917\u0920\u0928', viewLeaderDash: '\u0928\u0947\u0924\u093E \u0921\u0948\u0936\u092C\u094B\u0930\u094D\u0921',
+    welcomeBack: '\u0935\u093E\u092A\u0938 \u0938\u094D\u0935\u093E\u0917\u0924', sendOtp: 'OTP \u092D\u0947\u091C\u0947\u0902', newToCivitro: 'Civitro \u092E\u0947\u0902 \u0928\u090F?', register: '\u092A\u0902\u091C\u0940\u0915\u0930\u0923', createAccount: '\u0905\u092A\u0928\u093E \u0916\u093E\u0924\u093E \u092C\u0928\u093E\u090F\u0902', joinRevolution: '\u0928\u093E\u0917\u0930\u093F\u0915 \u0915\u094D\u0930\u093E\u0902\u0924\u093F \u092E\u0947\u0902 \u0936\u093E\u092E\u093F\u0932 \u0939\u094B\u0902',
+    fullName: '\u092A\u0942\u0930\u093E \u0928\u093E\u092E', mobileNumber: '\u092E\u094B\u092C\u093E\u0907\u0932 \u0928\u0902\u092C\u0930', emailOptional: '\u0908\u092E\u0947\u0932 (\u0935\u0948\u0915\u0932\u094D\u092A\u093F\u0915)', ward: '\u0935\u093E\u0930\u094D\u0921', constituency: '\u0928\u093F\u0930\u094D\u0935\u093E\u091A\u0928 \u0915\u094D\u0937\u0947\u0924\u094D\u0930', continueBtn: '\u091C\u093E\u0930\u0940 \u0930\u0916\u0947\u0902', alreadyHaveAccount: '\u092A\u0939\u0932\u0947 \u0938\u0947 \u0916\u093E\u0924\u093E \u0939\u0948?', login: '\u0932\u0949\u0917\u093F\u0928',
+    verifyOtp: 'OTP \u0938\u0924\u094D\u092F\u093E\u092A\u093F\u0924 \u0915\u0930\u0947\u0902', enterOtp: '6 \u0905\u0902\u0915\u094B\u0902 \u0915\u093E \u0915\u094B\u0921 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902 \u091C\u094B \u092D\u0947\u091C\u093E \u0917\u092F\u093E', verifyAndContinue: '\u0938\u0924\u094D\u092F\u093E\u092A\u093F\u0924 \u0915\u0930\u0947\u0902 \u0914\u0930 \u091C\u093E\u0930\u0940 \u0930\u0916\u0947\u0902', resendOtp: 'OTP \u092A\u0941\u0928\u0903 \u092D\u0947\u091C\u0947\u0902',
+    verifyAadhaar: '\u0906\u0927\u093E\u0930 \u0938\u0924\u094D\u092F\u093E\u092A\u093F\u0924 \u0915\u0930\u0947\u0902', selectZipFile: 'ZIP \u092B\u093C\u093E\u0907\u0932 \u091A\u0941\u0928\u0947\u0902', shareCode: '4-\u0905\u0902\u0915 \u0936\u0947\u092F\u0930 \u0915\u094B\u0921', skipForNow: '\u0905\u092D\u0940 \u0915\u0947 \u0932\u093F\u090F \u091B\u094B\u0921\u093C\u0947\u0902',
+    previewAuth: '\u092A\u094D\u0930\u092E\u093E\u0923\u0940\u0915\u0930\u0923 \u092A\u094D\u0930\u0935\u093E\u0939 \u0926\u0947\u0916\u0947\u0902', allIssues: '\u0938\u092D\u0940 \u0938\u092E\u0938\u094D\u092F\u093E\u090F\u0901', shareYourVoice: '\u0905\u092A\u0928\u0940 \u0906\u0935\u093E\u091C\u093C \u0938\u093E\u091D\u093E \u0915\u0930\u0947\u0902', whatsOnMind: '\u0906\u092A\u0915\u0947 \u092E\u0928 \u092E\u0947\u0902 \u0915\u094D\u092F\u093E \u0939\u0948?', addPhoto: '\u092B\u093C\u094B\u091F\u094B \u091C\u094B\u0921\u093C\u0947\u0902', post: '\u092A\u094B\u0938\u094D\u091F',
+    translate: '\u0905\u0928\u0941\u0935\u093E\u0926', showOriginal: '\u092E\u0942\u0932 \u0926\u093F\u0916\u093E\u090F\u0902', reply: '\u091C\u0935\u093E\u092C', youVoted: '\u0906\u092A\u0928\u0947 \u092E\u0924\u0926\u093E\u0928 \u0915\u093F\u092F\u093E', retractVote: '\u092E\u0924 \u0935\u093E\u092A\u0938 \u0932\u0947\u0902',
+    exitPolls: '\u090F\u0917\u094D\u091C\u093F\u091F \u092A\u094B\u0932', startCommunityAction: '\u0938\u093E\u092E\u0941\u0926\u093E\u092F\u093F\u0915 \u0915\u093E\u0930\u094D\u0930\u0935\u093E\u0908 \u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902', publishAction: '\u0915\u093E\u0930\u094D\u0930\u0935\u093E\u0908 \u092A\u094D\u0930\u0915\u093E\u0936\u093F\u0924 \u0915\u0930\u0947\u0902', previewAction: '\u092A\u0942\u0930\u094D\u0935\u093E\u0935\u0932\u094B\u0915\u0928',
+    economicImpact: '\u0906\u0930\u094D\u0925\u093F\u0915 \u092A\u094D\u0930\u092D\u093E\u0935', actionTimeline: '\u0915\u093E\u0930\u094D\u0930\u0935\u093E\u0908 \u091F\u093E\u0907\u092E\u0932\u093E\u0907\u0928',
+    orgDetail: '\u0938\u0902\u0917\u0920\u0928', broadcasts: '\u092A\u094D\u0930\u0938\u093E\u0930\u0923', addMember: '\u0938\u0926\u0938\u094D\u092F \u091C\u094B\u0921\u093C\u0947\u0902', newOrganization: '\u0928\u092F\u093E \u0938\u0902\u0917\u0920\u0928',
+    heatmapTitle: '\u0938\u092E\u0938\u094D\u092F\u093E \u0939\u0940\u091F\u092E\u0948\u092A', leaderProfile: '\u0928\u0947\u0924\u093E \u092A\u094D\u0930\u094B\u092B\u093E\u0907\u0932', rateThisLeader: '\u0907\u0938 \u0928\u0947\u0924\u093E \u0915\u094B \u0930\u0947\u091F \u0915\u0930\u0947\u0902',
+    languageSettings: '\u092D\u093E\u0937\u093E', autoTranslate: '\u0938\u094D\u0935\u0924: \u0905\u0928\u0941\u0935\u093E\u0926', notifSettings: '\u0938\u0942\u091A\u0928\u093E \u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938', privacySettings: '\u0917\u094B\u092A\u0928\u0940\u092F\u0924\u093E \u0914\u0930 \u0938\u0941\u0930\u0915\u094D\u0937\u093E',
+    helpSupport: '\u092E\u0926\u0926 \u0914\u0930 \u0938\u0939\u093E\u092F\u0924\u093E', aboutCivitro: '\u091C\u093E\u0928\u0915\u093E\u0930\u0940', comingSoon: '\u091C\u0932\u094D\u0926 \u0906 \u0930\u0939\u093E \u0939\u0948', madeInIndia: '\u092D\u093E\u0930\u0924 \u092E\u0947\u0902 \u092C\u0928\u093E',
   },
   te: {
     greet: { morning: 'శుభోదయం', afternoon: 'శుభ మధ్యాహ్నం', evening: 'శుభ సాయంత్రం' },
@@ -838,6 +995,18 @@ const TX = {
     orgsTitle: 'సంస్థలు', members: 'సభ్యులు', createOrg: 'సంస్థ సృష్టించు',
     leaderDashTitle: 'నాయకుడి డాష్‌బోర్డ్', totalIssuesLabel: 'మొత్తం సమస్యలు', resolvedLabel: 'పరిష్కరించిన', pendingLabel: 'పెండింగ్', avgResponse: 'సగటు ప్రతిస్పందన', citizenSatisfaction: 'పౌర సంతృప్తి', resolutionRate: 'పరిష్కార రేటు', recentIssues: 'ఇటీవలి సమస్యలు',
     viewPromises: 'వాగ్దానాలు', viewCHI: 'CHI చూడండి', viewBudget: 'బడ్జెట్ ఓటు', viewDatamine: 'విశ్లేషణ', viewOrgs: 'సంస్థలు', viewLeaderDash: 'నాయకుడి డాష్‌బోర్డ్',
+    welcomeBack: 'తిరిగి స్వాగతం', sendOtp: 'OTP పంపండి', newToCivitro: 'Civitro కొత్తగా?', register: 'నమోదు', createAccount: 'మీ ఖాతా సృష్టించండి', joinRevolution: 'పౌర విప్లవంలో చేరండి',
+    fullName: 'పూర్తి పేరు', mobileNumber: 'మొబైల్ నంబర్', emailOptional: 'ఇమెయిల్ (ఐచ్ఛికం)', ward: 'వార్డ్', constituency: 'నియోజకవర్గం', continueBtn: 'కొనసాగించు', alreadyHaveAccount: 'ఇప్పటికే ఖాతా ఉందా?', login: 'లాగిన్',
+    verifyOtp: 'OTP ధృవీకరించండి', enterOtp: 'పంపిన 6-అంకెల కోడ్ నమోదు చేయండి', verifyAndContinue: 'ధృవీకరించి కొనసాగించండి', resendOtp: 'OTP మళ్ళీ పంపండి',
+    verifyAadhaar: 'ఆధార్ ధృవీకరించండి', selectZipFile: 'ZIP ఫైల్ ఎంచుకోండి', shareCode: '4-అంకెల షేర్ కోడ్', skipForNow: 'ప్రస్తుతం దాటవేయండి',
+    previewAuth: 'ప్రామాణీకరణ ప్రవాహం', allIssues: 'అన్ని సమస్యలు', shareYourVoice: 'మీ గళాన్ని పంచుకోండి', whatsOnMind: 'మీ మనసులో ఏముంది?', addPhoto: 'ఫోటో జోడించండి', post: 'పోస్ట్',
+    translate: 'అనువదించు', showOriginal: 'అసలు చూపించు', reply: 'ప్రత్యుత్తరం', youVoted: 'మీరు ఓటు వేశారు', retractVote: 'ఓటు ఉపసంహరించు',
+    exitPolls: 'ఎగ్జిట్ పోల్స్', startCommunityAction: 'సమాజ చర్య ప్రారంభించండి', publishAction: 'చర్య ప్రచురించండి', previewAction: 'పూర్వదర్శనం',
+    economicImpact: 'ఆర్థిక ప్రభావం', actionTimeline: 'చర్య టైమ్‌లైన్',
+    orgDetail: 'సంస్థ', broadcasts: 'ప్రసారాలు', addMember: 'సభ్యుడిని జోడించు', newOrganization: 'కొత్త సంస్థ',
+    heatmapTitle: 'సమస్య హీట్‌మ్యాప్', leaderProfile: 'నాయకుడి ప్రొఫైల్', rateThisLeader: 'ఈ నాయకుడిని రేట్ చేయండి',
+    languageSettings: 'భాష', autoTranslate: 'స్వయంచాలక అనువాదం', notifSettings: 'నోటిఫికేషన్ సెట్టింగ్‌లు', privacySettings: 'గోప్యత & భద్రత',
+    helpSupport: 'సహాయం & మద్దతు', aboutCivitro: 'గురించి', comingSoon: 'త్వరలో రాబోతోంది', madeInIndia: 'భారతదేశంలో తయారైంది',
   },
   mr: {
     greet: { morning: 'सुप्रभात', afternoon: 'शुभ दुपार', evening: 'शुभ संध्याकाळ' },
@@ -895,6 +1064,18 @@ const TX = {
     orgsTitle: '\u0938\u0902\u0938\u094D\u0925\u093E', members: '\u0938\u0926\u0938\u094D\u092F', createOrg: '\u0938\u0902\u0938\u094D\u0925\u093E \u0924\u092F\u093E\u0930 \u0915\u0930\u093E',
     leaderDashTitle: '\u0928\u0947\u0924\u093E \u0921\u0945\u0936\u092C\u094B\u0930\u094D\u0921', totalIssuesLabel: '\u090F\u0915\u0942\u0923 \u0938\u092E\u0938\u094D\u092F\u093E', resolvedLabel: '\u0938\u094B\u0921\u0935\u0932\u0947', pendingLabel: '\u092A\u094D\u0930\u0932\u0902\u092C\u093F\u0924', avgResponse: '\u0938\u0930\u093E\u0938\u0930\u0940 \u092A\u094D\u0930\u0924\u093F\u0938\u093E\u0926', citizenSatisfaction: '\u0928\u093E\u0917\u0930\u093F\u0915 \u0938\u092E\u093E\u0927\u093E\u0928', resolutionRate: '\u0928\u093F\u0930\u093E\u0915\u0930\u0923 \u0926\u0930', recentIssues: '\u0905\u0932\u0940\u0915\u0921\u0940\u0932 \u0938\u092E\u0938\u094D\u092F\u093E',
     viewPromises: '\u0906\u0936\u094D\u0935\u093E\u0938\u0928\u0947 \u092A\u0939\u093E', viewCHI: 'CHI \u092A\u0939\u093E', viewBudget: '\u092C\u091C\u0947\u091F \u092E\u0924\u0926\u093E\u0928', viewDatamine: '\u0935\u093F\u0936\u094D\u0932\u0947\u0937\u0923', viewOrgs: '\u0938\u0902\u0938\u094D\u0925\u093E', viewLeaderDash: '\u0928\u0947\u0924\u093E \u0921\u0945\u0936\u092C\u094B\u0930\u094D\u0921',
+    welcomeBack: '\u092A\u0941\u0928\u094D\u0939\u093E \u0938\u094D\u0935\u093E\u0917\u0924', sendOtp: 'OTP \u092A\u093E\u0920\u0935\u093E', newToCivitro: 'Civitro \u092E\u0927\u094D\u092F\u0947 \u0928\u0935\u0940\u0928?', register: '\u0928\u094B\u0902\u0926\u0923\u0940', createAccount: '\u0924\u0941\u092E\u091A\u0947 \u0916\u093E\u0924\u0947 \u0924\u092F\u093E\u0930 \u0915\u0930\u093E', joinRevolution: '\u0928\u093E\u0917\u0930\u093F\u0915 \u0915\u094D\u0930\u093E\u0902\u0924\u0940\u0924 \u0938\u0939\u092D\u093E\u0917\u0940 \u0935\u094D\u0939\u093E',
+    fullName: '\u092A\u0942\u0930\u094D\u0923 \u0928\u093E\u0935', mobileNumber: '\u092E\u094B\u092C\u093E\u0907\u0932 \u0928\u0902\u092C\u0930', emailOptional: '\u0908\u092E\u0947\u0932 (\u0910\u091A\u094D\u091B\u093F\u0915)', ward: '\u0935\u0949\u0930\u094D\u0921', constituency: '\u092E\u0924\u0926\u093E\u0930\u0938\u0902\u0918', continueBtn: '\u092A\u0941\u0922\u0947 \u091A\u0932\u093E', alreadyHaveAccount: '\u0906\u0927\u0940\u091A \u0916\u093E\u0924\u0947 \u0906\u0939\u0947?', login: '\u0932\u0949\u0917\u093F\u0928',
+    verifyOtp: 'OTP \u0938\u0924\u094D\u092F\u093E\u092A\u093F\u0924 \u0915\u0930\u093E', enterOtp: '\u092A\u093E\u0920\u0935\u0932\u0947\u0932\u093E 6 \u0905\u0902\u0915\u0940 \u0915\u094B\u0921 \u091F\u093E\u0915\u093E', verifyAndContinue: '\u0938\u0924\u094D\u092F\u093E\u092A\u093F\u0924 \u0915\u0930\u093E \u0906\u0923\u093F \u092A\u0941\u0922\u0947 \u091A\u0932\u093E', resendOtp: 'OTP \u092A\u0941\u0928\u094D\u0939\u093E \u092A\u093E\u0920\u0935\u093E',
+    verifyAadhaar: '\u0906\u0927\u093E\u0930 \u0938\u0924\u094D\u092F\u093E\u092A\u093F\u0924 \u0915\u0930\u093E', selectZipFile: 'ZIP \u092B\u093E\u0907\u0932 \u0928\u093F\u0935\u0921\u093E', shareCode: '4-\u0905\u0902\u0915\u0940 \u0936\u0947\u0905\u0930 \u0915\u094B\u0921', skipForNow: '\u0938\u0927\u094D\u092F\u093E \u0938\u094B\u0921\u093E',
+    previewAuth: '\u092A\u094D\u0930\u092E\u093E\u0923\u0940\u0915\u0930\u0923 \u092A\u094D\u0930\u0935\u093E\u0939 \u092A\u0939\u093E', allIssues: '\u0938\u0930\u094D\u0935 \u0938\u092E\u0938\u094D\u092F\u093E', shareYourVoice: '\u0924\u0941\u092E\u091A\u093E \u0906\u0935\u093E\u091C \u0936\u0947\u0905\u0930 \u0915\u0930\u093E', whatsOnMind: '\u0924\u0941\u092E\u091A\u094D\u092F\u093E \u092E\u0928\u093E\u0924 \u0915\u093E\u092F \u0906\u0939\u0947?', addPhoto: '\u092B\u094B\u091F\u094B \u091C\u094B\u0921\u093E', post: '\u092A\u094B\u0938\u094D\u091F',
+    translate: '\u0905\u0928\u0941\u0935\u093E\u0926', showOriginal: '\u092E\u0942\u0933 \u0926\u093E\u0916\u0935\u093E', reply: '\u0909\u0924\u094D\u0924\u0930', youVoted: '\u0924\u0941\u092E\u094D\u0939\u0940 \u092E\u0924\u0926\u093E\u0928 \u0915\u0947\u0932\u0947', retractVote: '\u092E\u0924 \u092E\u093E\u0917\u0947 \u0918\u094D\u092F\u093E',
+    exitPolls: '\u090F\u0917\u094D\u091D\u093F\u091F \u092A\u094B\u0932', startCommunityAction: '\u0938\u093E\u092E\u0941\u0926\u093E\u092F\u093F\u0915 \u0915\u093E\u0930\u094D\u0930\u0935\u093E\u0908 \u0938\u0941\u0930\u0942 \u0915\u0930\u093E', publishAction: '\u0915\u093E\u0930\u094D\u0930\u0935\u093E\u0908 \u092A\u094D\u0930\u0915\u093E\u0936\u093F\u0924 \u0915\u0930\u093E', previewAction: '\u092A\u0942\u0930\u094D\u0935\u093E\u0935\u0932\u094B\u0915\u0928',
+    economicImpact: '\u0906\u0930\u094D\u0925\u093F\u0915 \u092A\u0930\u093F\u0923\u093E\u092E', actionTimeline: '\u0915\u093E\u0930\u094D\u0930\u0935\u093E\u0908 \u091F\u093E\u0907\u092E\u0932\u093E\u0907\u0928',
+    orgDetail: '\u0938\u0902\u0938\u094D\u0925\u093E', broadcasts: '\u092A\u094D\u0930\u0938\u093E\u0930\u0923', addMember: '\u0938\u0926\u0938\u094D\u092F \u091C\u094B\u0921\u093E', newOrganization: '\u0928\u0935\u0940\u0928 \u0938\u0902\u0938\u094D\u0925\u093E',
+    heatmapTitle: '\u0938\u092E\u0938\u094D\u092F\u093E \u0939\u0940\u091F\u092E\u0945\u092A', leaderProfile: '\u0928\u0947\u0924\u093E \u092A\u094D\u0930\u094B\u092B\u093E\u0907\u0932', rateThisLeader: '\u092F\u093E \u0928\u0947\u0924\u094D\u092F\u093E\u0932\u093E \u0930\u0947\u091F \u0915\u0930\u093E',
+    languageSettings: '\u092D\u093E\u0937\u093E', autoTranslate: '\u0938\u094D\u0935\u092F\u0902\u091A\u0932\u093F\u0924 \u0905\u0928\u0941\u0935\u093E\u0926', notifSettings: '\u0938\u0942\u091A\u0928\u093E \u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938', privacySettings: '\u0917\u094B\u092A\u0928\u0940\u092F\u0924\u093E \u0906\u0923\u093F \u0938\u0941\u0930\u0915\u094D\u0937\u093E',
+    helpSupport: '\u092E\u0926\u0924 \u0906\u0923\u093F \u0938\u0939\u093E\u092F\u094D\u092F', aboutCivitro: '\u092E\u093E\u0939\u093F\u0924\u0940', comingSoon: '\u0932\u0935\u0915\u0930\u091A \u092F\u0947\u0924 \u0906\u0939\u0947', madeInIndia: '\u092D\u093E\u0930\u0924\u093E\u0924 \u092C\u0928\u0935\u0932\u0947',
   },
 };
 
@@ -1158,6 +1339,14 @@ const HomeScreen = ({ lang, nav }) => {
       </div>
 
       <div className="screen-pad">
+        {/* === 0. AUTH FLOW PREVIEW BANNER === */}
+        <div onClick={() => nav('login')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'linear-gradient(135deg, #0B1426, #1E3A5F)', borderRadius: 12, marginBottom: 12, cursor: 'pointer' }}>
+          <I n="shield" sz={18} c="#FF6B35" />
+          <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'white' }}>{tx('previewAuth', lang)}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: '#FF6B35', background: 'rgba(255,107,53,0.2)', padding: '3px 8px', borderRadius: 6 }}>INVESTOR</span>
+          <I n="chevR" sz={14} c="#FF6B35" />
+        </div>
+
         {/* === 1. CIVIC SCORE RING === */}
         <div className="card section-gap" style={{ overflow: 'hidden', cursor: 'pointer' }} onClick={() => nav('chi')}>
           <div style={{ position: 'absolute', top: -100, right: -100, width: 240, height: 240, background: 'radial-gradient(circle, rgba(255,107,53,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -1456,7 +1645,7 @@ const HomeScreen = ({ lang, nav }) => {
               <div className="pulse-dot" style={{ width: 8, height: 8, borderRadius: 4, background: '#10B981' }} />
               <span className="section-title">{tx('liveFromWard', lang)}</span>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#FF6B35', cursor: 'pointer' }}>{tx('seeAll', lang)}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#FF6B35', cursor: 'pointer' }} onClick={() => nav('issuesList')}>{tx('seeAll', lang)}</span>
           </div>
           {ISSUES.slice(0, 4).map((iss, idx) => {
             const sc = SC[iss.status]; const steps = progSteps(iss.status);
@@ -1627,7 +1816,7 @@ const LeadersScreen = ({ lang, nav }) => (
       const rc = r.resp !== null ? (r.resp <= 3 ? '#047857' : '#92400E') : '#6B7280';
       const rpBg = r.resp !== null ? (r.resp <= 3 ? '#ECFDF5' : '#FFFBEB') : '#F3F4F6';
       return (
-        <div key={r.key} style={{ display: 'flex', gap: 12, marginBottom: i < REPS.length-1 ? 0 : 16 }}>
+        <div key={r.key} style={{ display: 'flex', gap: 12, marginBottom: i < REPS.length-1 ? 0 : 16, cursor: 'pointer' }} onClick={() => nav('leaderProfile')}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ width: 12, height: 12, borderRadius: 6, background: '#FF6B35', border: '2px solid white', boxShadow: '0 0 0 2px #FF6B35' }}/>
             {i < REPS.length-1 && <div style={{ width: 2, flex: 1, minHeight: 80, background: '#E5E7EB' }}/>}
@@ -1652,11 +1841,11 @@ const LeadersScreen = ({ lang, nav }) => (
 /* ============================================================================
    VOICES, POLLS, ACTIONS, TRENDING, MAP, PROFILE — compact implementations
    ============================================================================ */
-const VoicesScreen = ({ lang }) => (
+const VoicesScreen = ({ lang, nav }) => (
   <div className="screen-in screen-pad" style={{ paddingTop: 16, position: 'relative' }}>
     <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 16 }}>{tx('voicesTitle', lang)}</div>
     {VOICES.map(v => (
-      <div key={v.id} className="card" style={{ marginBottom: 12 }}>
+      <div key={v.id} className="card" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={() => nav && nav('voiceDetail')}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 36, height: 36, borderRadius: 18, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{v.av}</span></div>
@@ -1673,19 +1862,22 @@ const VoicesScreen = ({ lang }) => (
         </div>
       </div>
     ))}
-    <div style={{ position: 'fixed', bottom: 100, right: 40, width: 56, height: 56, borderRadius: 28, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-saffron)', cursor: 'pointer', zIndex: 80 }}><I n="write" sz={24} c="white"/></div>
+    <div onClick={() => nav && nav('createVoice')} style={{ position: 'fixed', bottom: 100, right: 40, width: 56, height: 56, borderRadius: 28, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-saffron)', cursor: 'pointer', zIndex: 80 }}><I n="write" sz={24} c="white"/></div>
   </div>
 );
 
-const PollsScreen = ({ lang }) => (
+const PollsScreen = ({ lang, nav }) => (
   <div className="screen-in screen-pad" style={{ paddingTop: 16 }}>
-    <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 16 }}>{tx('pollsTitle', lang)}</div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <span style={{ fontSize: 22, fontWeight: 800, color: '#111827' }}>{tx('pollsTitle', lang)}</span>
+      <button className="btn-outline" style={{ fontSize: 11 }} onClick={() => nav && nav('exitPolls')}>{tx('exitPolls', lang)}</button>
+    </div>
     <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
       {[{ l: tx('totalPolls', lang), v: '24', c: '#3B82F6', bg: '#EFF6FF' }, { l: tx('activePolls', lang), v: '3', c: '#059669', bg: '#ECFDF5' }, { l: tx('totalVotes', lang), v: '8.4K', c: '#D97706', bg: '#FFFBEB' }].map((s, i) => (
         <div key={i} style={{ flex: 1, background: s.bg, borderRadius: 12, padding: 12, textAlign: 'center' }}><div style={{ fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 10, fontWeight: 600, color: '#6B7280', marginTop: 2 }}>{s.l}</div></div>
       ))}
     </div>
-    <div className="card">
+    <div className="card" style={{ cursor: 'pointer' }} onClick={() => nav && nav('pollDetail')}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 14, fontWeight: 700, color: '#111827', flex: 1 }}>{POLL.title}</span><span className="badge" style={{ background: '#ECFDF5', color: '#059669' }}>{POLL.status}</span></div>
       {POLL.options.map((o, i) => (
         <div key={i} style={{ marginBottom: 10 }}>
@@ -1699,12 +1891,13 @@ const PollsScreen = ({ lang }) => (
   </div>
 );
 
-const ActionsScreen = ({ lang }) => (
-  <div className="screen-in screen-pad" style={{ paddingTop: 16 }}>
+const ActionsScreen = ({ lang, nav }) => (
+  <div className="screen-in screen-pad" style={{ paddingTop: 16, position: 'relative' }}>
     <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 12 }}>{tx('actionsTitle', lang)}</div>
     <div className="hscroll" style={{ marginBottom: 16 }}>{[tx('all', lang), tx('trending', lang), tx('myActions', lang), tx('acknowledged', lang)].map((f, i) => <button key={i} style={{ padding: '8px 16px', borderRadius: 20, border: i===0?'2px solid #FF6B35':'1px solid #E5E7EB', background: i===0?'#FFF3ED':'white', color: i===0?'#FF6B35':'#6B7280', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'Inter' }}>{f}</button>)}</div>
     <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>{[{ l: 'Total', v: '12' }, { l: 'Active', v: '5' }, { l: 'Acknowledged', v: '3' }, { l: 'Completed', v: '4' }].map((s, i) => <div key={i} style={{ flex: 1, background: 'white', borderRadius: 10, padding: 10, textAlign: 'center', border: '1px solid #F3F4F6' }}><div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{s.v}</div><div style={{ fontSize: 9, color: '#6B7280' }}>{s.l}</div></div>)}</div>
-    {ACTIONS.map(a => <div key={a.id} className="card" style={{ marginBottom: 12 }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span className="badge" style={{ background: a.btype==='trending'?'#FEF3C7':'#EDE9FE', color: a.btype==='trending'?'#D97706':'#7C3AED' }}>{a.badge}</span><span style={{ fontSize: 11, color: '#6B7280' }}>{a.ward}</span></div><div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 8 }}>{a.title}</div><div className="progress-track" style={{ marginBottom: 4 }}><div className="progress-fill" style={{ width: `${a.pct}%` }}/></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 11, fontWeight: 600 }}>{a.sup}/{a.goal} {tx('supporters', lang)}</span><span style={{ fontSize: 11, color: '#6B7280' }}>{a.pct}%</span></div></div>)}
+    {ACTIONS.map(a => <div key={a.id} className="card" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={() => nav && nav('actionDetail')}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span className="badge" style={{ background: a.btype==='trending'?'#FEF3C7':'#EDE9FE', color: a.btype==='trending'?'#D97706':'#7C3AED' }}>{a.badge}</span><span style={{ fontSize: 11, color: '#6B7280' }}>{a.ward}</span></div><div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 8 }}>{a.title}</div><div className="progress-track" style={{ marginBottom: 4 }}><div className="progress-fill" style={{ width: `${a.pct}%` }}/></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 11, fontWeight: 600 }}>{a.sup}/{a.goal} {tx('supporters', lang)}</span><span style={{ fontSize: 11, color: '#6B7280' }}>{a.pct}%</span></div></div>)}
+    <div onClick={() => nav && nav('createAction')} style={{ position: 'fixed', bottom: 100, right: 40, width: 56, height: 56, borderRadius: 28, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(255,107,53,0.35)', cursor: 'pointer', zIndex: 80 }}><I n="plus" sz={24} c="white" /></div>
   </div>
 );
 
@@ -1737,7 +1930,7 @@ const TrendingScreen = ({ lang }) => {
   );
 };
 
-const MapScreen = ({ lang }) => {
+const MapScreen = ({ lang, nav }) => {
   const dots = useMemo(() => {
     const d = []; const cs = ['#EF4444','#F59E0B','#10B981','#3B82F6','#7C3AED'];
     for (let i=0; i<35; i++) d.push({ x: 20+Math.random()*320, y: 40+Math.random()*500, c: cs[Math.floor(Math.random()*cs.length)], s: 6+Math.random()*8 });
@@ -1749,7 +1942,7 @@ const MapScreen = ({ lang }) => {
         <div className="hscroll" style={{ gap: 6 }}>{['All','Pothole','Water','Drainage','Garbage','Streetlight'].map((f, i) => <button key={i} style={{ padding: '6px 12px', borderRadius: 16, background: i===0?'#FF6B35':'white', color: i===0?'white':'#374151', border: i===0?'none':'1px solid #E5E7EB', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', fontFamily: 'Inter' }}>{f}</button>)}</div>
       </div>
       <div style={{ position: 'absolute', top: 52, right: 12, zIndex: 10, display: 'flex', background: 'white', borderRadius: 10, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        {[tx('clusters', lang), tx('heatmap', lang)].map((m, i) => <button key={i} style={{ padding: '6px 12px', fontSize: 10, fontWeight: 600, border: 'none', background: i===0?'#FF6B35':'white', color: i===0?'white':'#6B7280', cursor: 'pointer', fontFamily: 'Inter' }}>{m}</button>)}
+        {[tx('clusters', lang), tx('heatmap', lang)].map((m, i) => <button key={i} onClick={() => i===1 && nav && nav('heatmap')} style={{ padding: '6px 12px', fontSize: 10, fontWeight: 600, border: 'none', background: i===0?'#FF6B35':'white', color: i===0?'white':'#6B7280', cursor: 'pointer', fontFamily: 'Inter' }}>{m}</button>)}
       </div>
       <div style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 30%, #A5D6A7 60%, #81C784 100%)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '20%', left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.6)' }}/>
@@ -1789,7 +1982,7 @@ const ProfileScreen = ({ lang, nav }) => (
         <div key={i} style={{ background: 'white', borderRadius: 12, padding: '12px 8px', textAlign: 'center', border: '1px solid #F3F4F6' }}><div style={{ fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 9, color: '#6B7280', lineHeight: '12px', marginTop: 4, whiteSpace: 'pre-line' }}>{s.l}</div></div>
       ))}
     </div>
-    {[{ l: tx('notif', lang), ic: 'bell', go: 'notifications' }, { l: tx('orgsTitle', lang), ic: 'org', go: 'organizations' }, { l: tx('language', lang), ic: 'globe' }, { l: tx('privacy', lang), ic: 'shield' }, { l: tx('help', lang), ic: 'comment' }, { l: tx('terms', lang), ic: 'check' }, { l: tx('about', lang), ic: 'star' }].map((it, i) => (
+    {[{ l: tx('notif', lang), ic: 'bell', go: 'notifSettings' }, { l: tx('orgsTitle', lang), ic: 'org', go: 'organizations' }, { l: tx('language', lang), ic: 'globe', go: 'language' }, { l: tx('privacy', lang), ic: 'shield', go: 'privacy' }, { l: tx('help', lang), ic: 'comment', go: 'help' }, { l: tx('terms', lang), ic: 'check' }, { l: tx('about', lang), ic: 'star', go: 'about' }].map((it, i) => (
       <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #F3F4F6', gap: 12, cursor: 'pointer' }} onClick={() => it.go && nav(it.go)}>
         <I n={it.ic} sz={20} c="#6B7280"/><span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#111827' }}>{it.l}</span><I n="chevR" sz={18} c="#D1D5DB"/>
       </div>
@@ -1972,7 +2165,7 @@ const SearchScreen = ({ lang, onBack }) => {
 /* ============================================================================
    PROMISES TRACKER SCREEN
    ============================================================================ */
-const PromisesScreen = ({ lang, onBack }) => {
+const PromisesScreen = ({ lang, nav, onBack }) => {
   const [filter, setFilter] = useState('All');
   const filters = ['All', tx('detected', lang), tx('onTrack', lang), tx('delayed', lang), tx('fulfilled', lang), tx('broken', lang)];
   const promises = [
@@ -2003,7 +2196,7 @@ const PromisesScreen = ({ lang, onBack }) => {
         </div>
         {/* Promise cards */}
         {promises.map(p => (
-          <div key={p.id} className="card" style={{ marginBottom: 12 }}>
+          <div key={p.id} className="card" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={() => nav && nav('promiseDetail')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: statusColor[p.status], background: statusBg[p.status], padding: '3px 10px', borderRadius: 6 }}>{p.status}</span>
               {p.badge && <span style={{ fontSize: 9, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', padding: '3px 8px', borderRadius: 6 }}>{p.badge}</span>}
@@ -2217,7 +2410,7 @@ const DatamineScreen = ({ lang, onBack }) => {
 /* ============================================================================
    ORGANIZATIONS SCREEN
    ============================================================================ */
-const OrganizationsScreen = ({ lang, onBack }) => {
+const OrganizationsScreen = ({ lang, nav, onBack }) => {
   const orgs = [
     { id: 'o1', name: 'Andheri East RWA', type: 'RWA', members: 234, desc: 'Resident Welfare Association for Andheri East ward', color: '#3B82F6', bg: '#EFF6FF' },
     { id: 'o2', name: 'Clean Mumbai Initiative', type: 'NGO', members: 1456, desc: 'Environmental cleanup and awareness drives', color: '#059669', bg: '#ECFDF5' },
@@ -2229,7 +2422,7 @@ const OrganizationsScreen = ({ lang, onBack }) => {
       <BackHeader title={tx('orgsTitle', lang)} onBack={onBack} />
       <div style={{ padding: '16px 16px 24px' }}>
         {orgs.map(o => (
-          <div key={o.id} className="card" style={{ marginBottom: 12 }}>
+          <div key={o.id} className="card" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={() => nav && nav('orgDetail')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: o.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <I n="org" sz={22} c={o.color} />
@@ -2248,7 +2441,7 @@ const OrganizationsScreen = ({ lang, onBack }) => {
           </div>
         ))}
         {/* FAB */}
-        <div style={{ position: 'fixed', bottom: 100, right: 40, width: 56, height: 56, borderRadius: 28, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(255,107,53,0.35)', cursor: 'pointer', zIndex: 80 }}>
+        <div onClick={() => nav && nav('createOrg')} style={{ position: 'fixed', bottom: 100, right: 40, width: 56, height: 56, borderRadius: 28, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(255,107,53,0.35)', cursor: 'pointer', zIndex: 80 }}>
           <I n="plus" sz={24} c="white" />
         </div>
       </div>
@@ -2331,6 +2524,1065 @@ const LeaderDashScreen = ({ lang, onBack }) => {
 };
 
 /* ============================================================================
+   LOGIN SCREEN
+   ============================================================================ */
+const LoginScreen = ({ lang, nav }) => (
+  <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px 24px', height: '100%' }}>
+    <div style={{ marginBottom: 24 }}>
+      <svg width="80" height="80" viewBox="0 0 641 366" style={{ display: 'block', margin: '0 auto 8px' }}>
+        <path fill="#121825" transform="scale(0.476934 0.476562)" d="M1125.26 361.315C1125.35 361.306 1125.43 361.296 1125.51 361.287C1158.61 359.981 1192.51 369.093 1218.01 390.742C1236.3 406.276 1248.82 426.994 1250.74 450.975C1252.8 475.223 1245.41 498.519 1229.48 516.96C1218.08 530.16 1205.23 538.725 1189.25 545.663C1172.86 552.784 1157.05 555.186 1139.39 556.544C1103.33 556.978 1070.59 549.543 1042.59 525.374C1024.36 509.791 1013.21 487.489 1011.69 463.55C1010.2 440.805 1017.83 418.403 1032.91 401.307C1057.29 373.428 1089.49 363.736 1125.26 361.315ZM1136.46 521.252C1144.95 520.369 1150.01 519.856 1157.95 517.075C1186.57 507.049 1201.63 480.618 1198.38 450.904C1196.7 434.896 1188.61 420.253 1175.94 410.321C1163.3 400.284 1143.92 394.272 1128.01 396.11C1107.91 397.775 1091.18 403.348 1077.66 419.084C1056.4 443.822 1059.63 484.224 1084.8 505.056C1100.25 517.844 1116.78 521.654 1136.46 521.252Z"/>
+        <path fill="#DA5E34" transform="scale(0.476934 0.476562)" d="M576.072 291.009C616.117 285.657 675.933 283.354 716.025 291.199C714.138 300.499 711.401 310 709.64 318.952C680.388 318.047 676.755 313.403 675.831 345.299L616.723 345.277C613.963 311.069 613.071 319.284 582.268 318.993C580.22 309.713 578.228 300.249 576.072 291.009Z"/>
+        <circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="525" cy="259" r="33"/>
+        <circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="765" cy="259" r="33"/>
+      </svg>
+      <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#6B7280', letterSpacing: 3 }}>DEMOCRACY {'\u2022'} YOU SHAPE{'\u2122'}</div>
+    </div>
+    <div style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{tx('welcomeBack', lang)}</div>
+    <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 32 }}>Sign in to continue your civic journey</div>
+    <div style={{ width: '100%', marginBottom: 16 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{tx('mobileNumber', lang)}</div>
+      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E5E7EB', borderRadius: 12, overflow: 'hidden' }}>
+        <span style={{ padding: '12px 12px', background: '#F9FAFB', borderRight: '1px solid #E5E7EB', fontSize: 14, fontWeight: 600, color: '#374151' }}>+91</span>
+        <div style={{ flex: 1, padding: '12px 14px', fontSize: 14, color: '#374151' }}>98765 43210</div>
+      </div>
+    </div>
+    <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, marginBottom: 20 }} onClick={() => nav('otp')}>{tx('sendOtp', lang)}</button>
+    <div style={{ fontSize: 13, color: '#6B7280' }}>{tx('newToCivitro', lang)} <span style={{ color: '#FF6B35', fontWeight: 700, cursor: 'pointer' }} onClick={() => nav('register')}>{tx('register', lang)}</span></div>
+    <div style={{ marginTop: 'auto', paddingTop: 24, fontSize: 10, color: '#9CA3AF', textAlign: 'center', lineHeight: '16px' }}>By continuing, you agree to Civitro's Terms of Service and Privacy Policy</div>
+  </div>
+);
+
+/* ============================================================================
+   REGISTER SCREEN
+   ============================================================================ */
+const RegisterScreen = ({ lang, nav }) => (
+  <div className="screen-in" style={{ padding: '16px 24px 24px' }}>
+    <button onClick={() => nav('login')} style={{ width: 32, height: 32, borderRadius: 16, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><I n="arrowL" sz={18} c="#111827"/></button>
+    <div style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{tx('createAccount', lang)}</div>
+    <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>{tx('joinRevolution', lang)}</div>
+    {[
+      { l: tx('fullName', lang), v: 'Priya Sharma' },
+      { l: tx('mobileNumber', lang), v: '+91 98765 43210', hasPrefix: true },
+      { l: tx('emailOptional', lang), v: 'priya@example.com' },
+      { l: tx('ward', lang), v: 'Ward 45 — Andheri East' },
+      { l: tx('constituency', lang), v: 'Vile Parle' },
+    ].map((f, i) => (
+      <div key={i} style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{f.l}</div>
+        <div style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#374151', background: 'white' }}>{f.v}</div>
+      </div>
+    ))}
+    <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, marginTop: 8 }} onClick={() => nav('otp')}>{tx('continueBtn', lang)}</button>
+    <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#6B7280' }}>{tx('alreadyHaveAccount', lang)} <span style={{ color: '#FF6B35', fontWeight: 700, cursor: 'pointer' }} onClick={() => nav('login')}>{tx('login', lang)}</span></div>
+  </div>
+);
+
+/* ============================================================================
+   OTP SCREEN
+   ============================================================================ */
+const OtpScreen = ({ lang, nav }) => (
+  <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 24px' }}>
+    <button onClick={() => nav('login')} style={{ alignSelf: 'flex-start', width: 32, height: 32, borderRadius: 16, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}><I n="arrowL" sz={18} c="#111827"/></button>
+    <div style={{ width: 60, height: 60, borderRadius: 30, background: '#FFF3ED', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+      <I n="shield" sz={28} c="#FF6B35" />
+    </div>
+    <div style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{tx('verifyOtp', lang)}</div>
+    <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 32, textAlign: 'center' }}>{tx('enterOtp', lang)} +91 98XXX XXXX0</div>
+    <div style={{ display: 'flex', gap: 10, marginBottom: 32 }}>
+      {[1,1,1,1,1,1].map((d, i) => (
+        <div key={i} style={{ width: 44, height: 52, borderRadius: 12, border: '2px solid #FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: '#111827', background: '#FFF3ED' }}>{d}</div>
+      ))}
+    </div>
+    <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, marginBottom: 20 }} onClick={() => nav('aadhaar')}>{tx('verifyAndContinue', lang)}</button>
+    <div style={{ fontSize: 13, color: '#9CA3AF' }}>{tx('resendOtp', lang)} <span style={{ fontWeight: 700, color: '#FF6B35' }}>28s</span></div>
+  </div>
+);
+
+/* ============================================================================
+   AADHAAR VERIFY SCREEN
+   ============================================================================ */
+const AadhaarScreen = ({ lang, nav }) => (
+  <div className="screen-in" style={{ padding: '16px 24px 24px' }}>
+    <button onClick={() => nav('otp')} style={{ width: 32, height: 32, borderRadius: 16, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><I n="arrowL" sz={18} c="#111827"/></button>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+      <I n="shield" sz={24} c="#FF6B35" />
+      <span style={{ fontSize: 22, fontWeight: 800, color: '#111827' }}>{tx('verifyAadhaar', lang)}</span>
+    </div>
+    <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 20 }}>Offline XML verification — your Aadhaar number is never stored</div>
+    <div className="card" style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 }}>How to get Aadhaar XML:</div>
+      {['Visit myaadhaar.uidai.gov.in', 'Click "Download Aadhaar"', 'Enter your Aadhaar number', 'Verify with OTP', 'Download ZIP file'].map((s, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <div style={{ width: 22, height: 22, borderRadius: 11, background: '#FFF3ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#FF6B35' }}>{i+1}</span>
+          </div>
+          <span style={{ fontSize: 13, color: '#374151' }}>{s}</span>
+        </div>
+      ))}
+    </div>
+    <button style={{ width: '100%', padding: '14px 0', borderRadius: 12, border: '2px dashed #E5E7EB', background: '#F9FAFB', color: '#6B7280', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <I n="plus" sz={18} c="#6B7280" /> {tx('selectZipFile', lang)}
+    </button>
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{tx('shareCode', lang)}</div>
+      <div style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#9CA3AF', background: 'white', letterSpacing: 8, textAlign: 'center' }}>_ _ _ _</div>
+    </div>
+    <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, marginBottom: 12 }} onClick={() => nav('home')}>{tx('verifyAadhaar', lang)}</button>
+    <div style={{ textAlign: 'center', marginBottom: 16 }}>
+      <span style={{ fontSize: 13, color: '#FF6B35', fontWeight: 600, cursor: 'pointer' }} onClick={() => nav('home')}>{tx('skipForNow', lang)}</span>
+    </div>
+    <div className="card" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <I n="shield" sz={16} c="#2563EB" />
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#1D4ED8' }}>Why verify?</span>
+      </div>
+      <div style={{ fontSize: 12, color: '#374151', lineHeight: '18px' }}>Verified citizens get higher civic score, priority issue routing, and can participate in official polls and budget voting.</div>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   ISSUES LIST SCREEN
+   ============================================================================ */
+const IssuesListScreen = ({ lang, nav, onBack }) => {
+  const [filter, setFilter] = useState('All');
+  const filters = [tx('filterAll', lang), tx('filterOpen', lang), tx('filterInProgress', lang), tx('filterResolved', lang)];
+  const stats = [{ l: 'Total', v: 156, c: '#111827' }, { l: 'Open', v: 89, c: '#EF4444' }, { l: 'In Progress', v: 34, c: '#F59E0B' }, { l: 'Resolved', v: 33, c: '#10B981' }];
+  return (
+    <div className="screen-in">
+      <BackHeader title={tx('allIssues', lang)} onBack={onBack} right={<I n="search" sz={20} c="#6B7280" />} />
+      <div style={{ padding: '12px 16px 24px' }}>
+        <div className="hscroll" style={{ marginBottom: 12 }}>
+          {filters.map((f, i) => (
+            <button key={i} onClick={() => setFilter(f)} style={{ padding: '7px 16px', borderRadius: 20, border: filter===f?'2px solid #FF6B35':'1px solid #E5E7EB', background: filter===f?'#FFF3ED':'white', color: filter===f?'#FF6B35':'#6B7280', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter' }}>{f}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          {stats.map((s, i) => (
+            <div key={i} style={{ flex: 1, background: 'white', borderRadius: 10, padding: 10, textAlign: 'center', border: '1px solid #F3F4F6' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: s.c }}>{s.v}</div>
+              <div style={{ fontSize: 9, color: '#6B7280' }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        {ISSUES.map(iss => {
+          const sc = SC[iss.status]; const steps = progSteps(iss.status);
+          return (
+            <div key={iss.id} style={{ background: 'white', borderRadius: 16, padding: 16, marginBottom: 12, borderLeft: `3px solid ${sc}`, boxShadow: '0 2px 6px rgba(0,0,0,0.06)', cursor: 'pointer' }} onClick={() => nav('issueDetail')}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <CatIcon cat={iss.cat} />
+                <span style={{ fontSize: 11, color: '#6B7280' }}>{iss.time}</span>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', lineHeight: '20px', marginBottom: 4 }}>{iss.title}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10 }}>
+                <I n="loc" sz={14} c="#FF6B35" /><span style={{ fontSize: 12, color: '#6B7280' }}>{iss.addr}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}><I n="arrowUp" sz={14} c="#6B7280" /><span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{iss.up}</span></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}><I n="comment" sz={14} c="#6B7280" /><span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{iss.cmt}</span></div>
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 600, color: sc, background: `${sc}18`, padding: '3px 8px', borderRadius: 6 }}>{SL[iss.status]}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   CREATE VOICE SCREEN
+   ============================================================================ */
+const CreateVoiceScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', gap: 12, borderBottom: '1px solid #F3F4F6', background: 'white' }}>
+      <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: 16, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><I n="arrowL" sz={18} c="#111827"/></button>
+      <span style={{ flex: 1, fontSize: 18, fontWeight: 700, color: '#111827' }}>{tx('shareYourVoice', lang)}</span>
+      <button className="btn-primary" style={{ padding: '8px 18px', fontSize: 12 }}>{tx('post', lang)}</button>
+    </div>
+    <div style={{ padding: '16px' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 20, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>PS</span></div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>Priya Sharma</div>
+          <span style={{ fontSize: 10, fontWeight: 600, color: '#3B82F6', background: '#EFF6FF', padding: '2px 8px', borderRadius: 6 }}>English</span>
+        </div>
+      </div>
+      <textarea style={{ width: '100%', height: 160, border: '1px solid #E5E7EB', borderRadius: 12, padding: 16, fontSize: 14, fontFamily: 'Inter', resize: 'none', outline: 'none', background: '#FAFAFA' }} placeholder={tx('whatsOnMind', lang)} defaultValue="The new park near Versova Beach is wonderful! Great initiative by BMC. We need more green spaces in our ward." />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 11, color: '#9CA3AF' }}>107/500</span>
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 8 }}>Suggested hashtags</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+        {['#AndheriEast', '#WardIssues', '#GoodGovernance'].map((tag, i) => (
+          <span key={i} style={{ fontSize: 12, fontWeight: 600, color: '#FF6B35', background: '#FFF3ED', padding: '6px 12px', borderRadius: 20, cursor: 'pointer' }}>{tag}</span>
+        ))}
+      </div>
+      <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderRadius: 12, border: '1px dashed #E5E7EB', background: '#F9FAFB', color: '#6B7280', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter', width: '100%', justifyContent: 'center' }}>
+        <I n="camera" sz={18} c="#6B7280" /> {tx('addPhoto', lang)}
+      </button>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   VOICE DETAIL SCREEN
+   ============================================================================ */
+const VoiceDetailScreen = ({ lang, onBack }) => {
+  const v = VOICES[0];
+  return (
+    <div className="screen-in">
+      <BackHeader title="" onBack={onBack} />
+      <div style={{ padding: '12px 16px 24px' }}>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 20, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{v.av}</span></div>
+              <div><div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{v.user}</div><div style={{ fontSize: 11, color: '#6B7280' }}>{v.time}</div></div>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#3B82F6', background: '#EFF6FF', padding: '3px 10px', borderRadius: 6, height: 'fit-content' }}>{v.lang}</span>
+          </div>
+          <div style={{ fontSize: 15, color: '#111827', lineHeight: '22px', marginBottom: 12 }}>{v.text}</div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            {v.tags.map((tag, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, color: '#FF6B35', background: '#FFF3ED', padding: '4px 10px', borderRadius: 20 }}>{tag}</span>)}
+          </div>
+          <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid #F3F4F6', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="arrowUp" sz={16} c="#FF6B35"/><span style={{ fontSize: 13, fontWeight: 700, color: '#FF6B35' }}>{v.likes}</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="comment" sz={16} c="#6B7280"/><span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>23 {tx('comments', lang)}</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="share" sz={16} c="#6B7280"/><span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{tx('share', lang)}</span></div>
+          </div>
+          <button className="btn-outline" style={{ fontSize: 12 }}>{tx('translate', lang)} / {tx('showOriginal', lang)}</button>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#111827', marginBottom: 12 }}>{tx('comments', lang)} (23)</div>
+        {[
+          { n: 'Amit D.', a: 'A', t: '1h ago', txt: 'Totally agree! We need more green initiatives like this.', likes: 12, bg: '#3B82F6', replies: 2 },
+          { n: 'Sneha K.', a: 'S', t: '45m ago', txt: 'The BMC should maintain it properly though. Let\'s not repeat the Joggers Park situation.', likes: 8, bg: '#10B981', replies: 1 },
+          { n: 'Raj P.', a: 'R', t: '30m ago', txt: 'Beautiful park! Took my kids there yesterday.', likes: 5, bg: '#7C3AED', replies: 0 },
+        ].map((c, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 12, padding: 12, background: '#FAFAFA', borderRadius: 12 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 16, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>{c.a}</span></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{c.n}</span><span style={{ fontSize: 10, color: '#6B7280' }}>{c.t}</span></div>
+              <div style={{ fontSize: 13, color: '#374151', lineHeight: '18px', marginBottom: 6 }}>{c.txt}</div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <span style={{ fontSize: 11, color: '#6B7280', cursor: 'pointer' }}>{'\u2764\uFE0F'} {c.likes}</span>
+                <span style={{ fontSize: 11, color: '#6B7280', cursor: 'pointer' }}>{tx('reply', lang)} {c.replies > 0 ? `(${c.replies})` : ''}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderTop: '1px solid #F3F4F6', marginTop: 8 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 16, background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>PS</span></div>
+          <div style={{ flex: 1, background: '#F3F4F6', borderRadius: 20, padding: '10px 14px', fontSize: 13, color: '#9CA3AF' }}>Add a comment...</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   POLL DETAIL SCREEN
+   ============================================================================ */
+const PollDetailScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title="" onBack={onBack} />
+    <div style={{ padding: '12px 16px 24px' }}>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#111827', lineHeight: '24px', marginBottom: 12 }}>{POLL.title}</div>
+        <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 16 }}>{POLL.total.toLocaleString()} total votes</div>
+        {POLL.options.map((o, i) => (
+          <div key={i} style={{ marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{o.label}</span><span style={{ fontSize: 14, fontWeight: 800, color: i===0?'#FF6B35':'#3B82F6' }}>{o.pct}%</span></div>
+            <div style={{ height: 12, borderRadius: 6, background: '#F3F4F6', overflow: 'hidden' }}><div style={{ height: '100%', width: `${o.pct}%`, borderRadius: 6, background: i===0?'#FF6B35':'#3B82F6', transition: 'width 0.6s' }}/></div>
+            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>{o.votes.toLocaleString()} votes</div>
+          </div>
+        ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px', background: '#ECFDF5', borderRadius: 10, marginTop: 12 }}>
+          <I n="check" sz={16} c="#059669" />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#059669' }}>{tx('youVoted', lang)}: Road Repair</span>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 10 }}>
+          <span style={{ fontSize: 12, color: '#DC2626', fontWeight: 600, cursor: 'pointer' }}>{tx('retractVote', lang)}</span>
+        </div>
+      </div>
+      <div className="card">
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 }}>{tx('pollInfo', lang) || 'Poll Info'}</div>
+        {[
+          { l: tx('createdBy', lang) || 'Created by', v: 'Ward Office' },
+          { l: tx('endsIn', lang) || 'Ends in', v: '3 days' },
+          { l: 'Scope', v: 'Ward 45 only' },
+        ].map((r, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 2 ? '1px solid #F3F4F6' : 'none' }}>
+            <span style={{ fontSize: 13, color: '#6B7280' }}>{r.l}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{r.v}</span>
+          </div>
+        ))}
+        <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 10, fontStyle: 'italic' }}>This poll is for informational purposes only and does not constitute an official government vote.</div>
+      </div>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   EXIT POLLS SCREEN
+   ============================================================================ */
+const ExitPollsScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title={tx('exitPolls', lang)} onBack={onBack} />
+    <div style={{ padding: '16px 16px 24px' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        {[{ l: 'Total', v: '3', c: '#3B82F6', bg: '#EFF6FF' }, { l: 'Active', v: '1', c: '#059669', bg: '#ECFDF5' }, { l: 'Votes', v: '2,456', c: '#D97706', bg: '#FFFBEB' }].map((s, i) => (
+          <div key={i} style={{ flex: 1, background: s.bg, borderRadius: 12, padding: 12, textAlign: 'center' }}><div style={{ fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div><div style={{ fontSize: 10, fontWeight: 600, color: '#6B7280', marginTop: 2 }}>{s.l}</div></div>
+        ))}
+      </div>
+      {[
+        { title: 'Ward Development Satisfaction', status: 'Active', statusC: '#059669', statusBg: '#ECFDF5', votes: 892, options: [{ l: 'Satisfied', p: 34 }, { l: 'Neutral', p: 28 }, { l: 'Dissatisfied', p: 38 }] },
+        { title: 'BMC Performance Rating', status: 'Ended', statusC: '#6B7280', statusBg: '#F3F4F6', votes: 1564, options: [{ l: 'Good', p: 22 }, { l: 'Average', p: 45 }, { l: 'Poor', p: 33 }] },
+      ].map((poll, i) => (
+        <div key={i} className="card" style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#111827', flex: 1 }}>{poll.title}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: poll.statusC, background: poll.statusBg, padding: '3px 10px', borderRadius: 6 }}>{poll.status}</span>
+          </div>
+          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10 }}>{poll.votes.toLocaleString()} votes</div>
+          {poll.options.map((o, j) => (
+            <div key={j} style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span style={{ fontSize: 12, fontWeight: 500, color: '#374151' }}>{o.l}</span><span style={{ fontSize: 12, fontWeight: 700, color: '#FF6B35' }}>{o.p}%</span></div>
+              <div style={{ height: 6, borderRadius: 3, background: '#F3F4F6', overflow: 'hidden' }}><div style={{ height: '100%', width: `${o.p}%`, borderRadius: 3, background: j===0?'#FF6B35':j===1?'#3B82F6':'#EF4444' }}/></div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   CREATE ACTION SCREEN
+   ============================================================================ */
+const CreateActionScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title={tx('startCommunityAction', lang)} onBack={onBack} />
+    <div style={{ padding: '16px 16px 24px' }}>
+      {[
+        { l: tx('whatChange', lang) || 'What change do you want to see?', v: 'Fix water supply failures in Ward 45', type: 'input' },
+        { l: tx('description', lang) || 'Description', v: 'Multiple areas in Ward 45 have been experiencing daily water supply disruptions for the past 3 weeks...', type: 'textarea' },
+        { l: tx('desiredOutcome', lang) || 'Desired Outcome', v: 'Restore regular 24/7 water supply to all affected areas within 2 weeks', type: 'textarea' },
+      ].map((f, i) => (
+        <div key={i} style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{f.l}</div>
+          {f.type === 'textarea' ? (
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 13, color: '#374151', background: 'white', minHeight: 80, lineHeight: '20px' }}>{f.v}</div>
+          ) : (
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 14, fontWeight: 600, color: '#111827', background: 'white' }}>{f.v}</div>
+          )}
+        </div>
+      ))}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8 }}>{tx('linkIssues', lang) || 'Link Issues'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: 12, background: '#F9FAFB', marginBottom: 8 }}>
+          <I n="search" sz={16} c="#9CA3AF" /><span style={{ fontSize: 13, color: '#9CA3AF' }}>Search issues...</span>
+        </div>
+        {ISSUES.slice(0, 2).map(iss => (
+          <div key={iss.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#FFF3ED', borderRadius: 10, marginBottom: 6, border: '1px solid #FFD5C2' }}>
+            <CatIcon cat={iss.cat} sz={24} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#111827' }}>{iss.title}</span>
+            <I n="check" sz={16} c="#FF6B35" />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn-secondary" style={{ flex: 1 }}>{tx('previewAction', lang)}</button>
+        <button className="btn-primary" style={{ flex: 1 }}>{tx('publishAction', lang)}</button>
+      </div>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   ACTION DETAIL SCREEN
+   ============================================================================ */
+const ActionDetailScreen = ({ lang, nav, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title="" onBack={onBack} right={
+      <div style={{ display: 'flex', gap: 6 }}>
+        <span className="badge" style={{ background: '#FEF3C7', color: '#D97706' }}>Trending</span>
+        <span className="badge" style={{ background: '#EFF6FF', color: '#2563EB' }}>Municipal Level</span>
+      </div>
+    } />
+    <div style={{ padding: '12px 16px 24px' }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', lineHeight: '28px', marginBottom: 8 }}>Fix water supply failures</div>
+      <div style={{ fontSize: 13, color: '#374151', lineHeight: '20px', marginBottom: 16 }}>Multiple areas in Ward 45 have been experiencing daily water supply disruptions. Citizens demand immediate restoration of service.</div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Support Progress</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: '#FF6B35' }}>312/500</span>
+        </div>
+        <div className="progress-track" style={{ height: 10, marginBottom: 6 }}><div className="progress-fill" style={{ width: '62%', height: '100%' }} /></div>
+        <div style={{ fontSize: 12, color: '#6B7280' }}>62% of goal reached</div>
+      </div>
+      <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, marginBottom: 16 }}>
+        <I n="check" sz={18} c="white" /> {tx('supported', lang) || 'Supported'} {'\u2714'}
+      </button>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{tx('evidenceSection', lang) || 'Evidence'}</div>
+        <div style={{ fontSize: 13, color: '#6B7280' }}>8 {tx('linkedIssues', lang) || 'linked issues'} from 5 locations</div>
+      </div>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{tx('economicImpact', lang)}</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: '#0F766E' }}>{'\u20B9'}18.2 Lakh</div>
+        <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>Estimated economic impact based on linked issues</div>
+      </div>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{tx('stakeholderResponses', lang) || 'Stakeholder Responses'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px', background: '#F9FAFB', borderRadius: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 16, background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: 11, fontWeight: 700, color: 'white' }}>WO</span></div>
+          <div><div style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>Ward Office</div><div style={{ fontSize: 11, color: '#6B7280' }}>Acknowledged {'\u00B7'} 3 days ago</div></div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn-outline" style={{ flex: 1 }} onClick={() => nav('actionTimeline')}>{tx('actionTimeline', lang) || 'Timeline'}</button>
+        <button className="btn-outline" style={{ flex: 1 }}><I n="share" sz={14} c="#374151" /> {tx('share', lang)}</button>
+      </div>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   ACTION TIMELINE SCREEN
+   ============================================================================ */
+const ActionTimelineScreen = ({ lang, onBack }) => {
+  const events = [
+    { label: 'Created by Priya Sharma', time: '14 days ago', color: '#10B981', type: 'citizen' },
+    { label: '50 supporters reached', time: '12 days ago', color: '#10B981', type: 'citizen' },
+    { label: 'Acknowledged by Ward Office', time: '8 days ago', color: '#3B82F6', type: 'stakeholder' },
+    { label: 'Escalated to Municipal level', time: '5 days ago', color: '#FF6B35', type: 'escalation' },
+    { label: 'Work order issued', time: '2 days ago', color: '#9CA3AF', type: 'system' },
+  ];
+  const legend = [
+    { l: tx('citizenActions', lang) || 'Citizen Actions', c: '#10B981' },
+    { l: tx('stakeholder', lang) || 'Stakeholder', c: '#3B82F6' },
+    { l: tx('system', lang) || 'System', c: '#9CA3AF' },
+    { l: tx('escalation', lang) || 'Escalation', c: '#FF6B35' },
+  ];
+  return (
+    <div className="screen-in">
+      <BackHeader title={tx('actionTimeline', lang)} onBack={onBack} />
+      <div style={{ padding: '20px 16px 24px' }}>
+        {events.map((ev, i) => (
+          <div key={i} style={{ display: 'flex', gap: 16, marginBottom: i < events.length - 1 ? 0 : 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ width: 14, height: 14, borderRadius: 7, background: ev.color, border: '3px solid white', boxShadow: `0 0 0 2px ${ev.color}` }} />
+              {i < events.length - 1 && <div style={{ width: 2, flex: 1, minHeight: 50, background: '#E5E7EB' }} />}
+            </div>
+            <div style={{ flex: 1, paddingBottom: 20 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 4 }}>{ev.label}</div>
+              <div style={{ fontSize: 12, color: '#6B7280' }}>{ev.time}</div>
+            </div>
+          </div>
+        ))}
+        <div className="card">
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 10 }}>Legend</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {legend.map((l, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 5, background: l.c }} />
+                <span style={{ fontSize: 11, fontWeight: 500, color: '#374151' }}>{l.l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   PROMISE DETAIL SCREEN
+   ============================================================================ */
+const PromiseDetailScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title={tx('promiseDetail', lang) || 'Promise Detail'} onBack={onBack} />
+    <div style={{ padding: '16px 16px 24px' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <span className="badge" style={{ background: '#FFFBEB', color: '#D97706' }}>On Track</span>
+        <span className="badge" style={{ background: '#F5F3FF', color: '#7C3AED' }}>{tx('aiExtracted', lang) || 'AI Extracted'}</span>
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', lineHeight: '28px', marginBottom: 12 }}>Complete Metro Phase 3 by 2027</div>
+      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, cursor: 'pointer' }}>
+        <div style={{ width: 44, height: 44, borderRadius: 22, background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>SK</span></div>
+        <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>MLA Suresh Kumar</div><div style={{ fontSize: 12, color: '#6B7280' }}>BJP {'\u00B7'} Vile Parle</div></div>
+        <I n="chevR" sz={18} c="#D1D5DB" />
+      </div>
+      <div style={{ fontSize: 14, color: '#374151', lineHeight: '22px', marginBottom: 16 }}>Promised to complete Metro Phase 3 construction connecting Andheri to Cuffe Parade by 2027, reducing commute times by 40% for over 2 million daily commuters.</div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{tx('source', lang) || 'Source'}</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <span className="badge" style={{ background: '#F3F4F6', color: '#6B7280' }}>Speech</span>
+            <span className="badge" style={{ background: '#F5F3FF', color: '#7C3AED' }}>AI Extracted</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{tx('confidence', lang)}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#3B82F6' }}>78%</span>
+        </div>
+        <div style={{ height: 6, borderRadius: 3, background: '#F3F4F6', overflow: 'hidden', marginTop: 6 }}>
+          <div style={{ height: '100%', width: '78%', borderRadius: 3, background: '#3B82F6' }} />
+        </div>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 }}>{tx('statusTimeline', lang) || 'Status Timeline'}</div>
+        {['Detected', 'On Track'].map((s, i) => (
+          <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i < 1 ? 0 : 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ width: 10, height: 10, borderRadius: 5, background: i === 1 ? '#3B82F6' : '#10B981' }} />
+              {i < 1 && <div style={{ width: 2, height: 24, background: '#F3F4F6' }} />}
+            </div>
+            <div style={{ marginTop: -3 }}><div style={{ fontSize: 13, fontWeight: 600, color: i === 1 ? '#3B82F6' : '#111827' }}>{s} {i === 1 ? '(Current)' : ''}</div></div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: '10px 14px', background: '#FFFBEB', borderRadius: 10, border: '1px solid #FDE68A', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+        <span style={{ fontSize: 14 }}>{'\u26A0\uFE0F'}</span>
+        <span style={{ fontSize: 11, color: '#92400E', lineHeight: '16px' }}>{tx('aiDisclaimer', lang) || 'AI-generated analysis. Verify with original sources.'}</span>
+      </div>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   ORG DETAIL SCREEN
+   ============================================================================ */
+const OrgDetailScreen = ({ lang, nav, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title="" onBack={onBack} />
+    <div style={{ padding: '12px 16px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><I n="org" sz={28} c="#3B82F6" /></div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20, fontWeight: 800, color: '#111827' }}>Andheri East RWA</span>
+          </div>
+          <span className="badge" style={{ background: '#EFF6FF', color: '#3B82F6', marginTop: 4 }}>RWA</span>
+        </div>
+      </div>
+      <div style={{ fontSize: 13, color: '#374151', lineHeight: '20px', marginBottom: 16 }}>Resident Welfare Association for Andheri East ward. Focused on civic improvements, community events, and welfare activities.</div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        {[{ l: tx('members', lang), v: '234', c: '#3B82F6' }, { l: tx('broadcasts', lang), v: '12', c: '#FF6B35' }, { l: tx('readRate', lang) || 'Read Rate', v: '89%', c: '#10B981' }].map((s, i) => (
+          <div key={i} style={{ flex: 1, background: 'white', borderRadius: 12, padding: 12, textAlign: 'center', border: '1px solid #F3F4F6' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: '#6B7280', marginTop: 2 }}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <button className="btn-primary" style={{ flex: 1, fontSize: 12 }} onClick={() => nav('orgMembers')}>{tx('members', lang)}</button>
+        <button className="btn-secondary" style={{ flex: 1, fontSize: 12 }} onClick={() => nav('broadcasts')}>{tx('broadcasts', lang)}</button>
+        <button className="btn-outline" style={{ flex: 1, fontSize: 12 }}>{tx('analytics', lang) || 'Analytics'}</button>
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 }}>Members</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: -4, marginBottom: 16 }}>
+        <div style={{ display: 'flex', marginRight: 8 }}>
+          {['P','A','R','S','M'].map((init, i) => (
+            <div key={i} style={{ width: 32, height: 32, borderRadius: 16, background: ['#FF6B35','#3B82F6','#10B981','#7C3AED','#F59E0B'][i], display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white', marginLeft: i > 0 ? -8 : 0, zIndex: 5-i }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'white' }}>{init}</span>
+            </div>
+          ))}
+        </div>
+        <span style={{ fontSize: 12, color: '#6B7280', cursor: 'pointer' }} onClick={() => nav('orgMembers')}>{tx('seeAll', lang)}</span>
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 }}>Recent Broadcasts</div>
+      {[
+        { title: 'Monthly ward meeting notice', time: '2 days ago', reads: '89%' },
+        { title: 'Water tank cleaning schedule', time: '5 days ago', reads: '67%' },
+      ].map((b, i) => (
+        <div key={i} className="card" style={{ marginBottom: 8, cursor: 'pointer' }} onClick={() => nav('broadcasts')}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 4 }}>{b.title}</div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <span style={{ fontSize: 11, color: '#6B7280' }}>{b.time}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981' }}>{b.reads} read</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   ORG MEMBERS SCREEN
+   ============================================================================ */
+const OrgMembersScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title={tx('members', lang)} onBack={onBack} right={
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#6B7280' }}>234</span>
+        <button className="btn-primary" style={{ padding: '6px 12px', fontSize: 11 }}>+ {tx('addMember', lang)}</button>
+      </div>
+    } />
+    <div style={{ padding: '12px 16px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#F3F4F6', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
+        <I n="search" sz={16} c="#9CA3AF" /><span style={{ fontSize: 13, color: '#9CA3AF' }}>Search members...</span>
+      </div>
+      {[
+        { role: tx('admins', lang) || 'Admins', count: 3, color: '#FF6B35', bg: '#FFF3ED', members: [
+          { n: 'Priya Sharma', init: 'PS' }, { n: 'Amit Desai', init: 'AD' }, { n: 'Neha Patel', init: 'NP' }
+        ]},
+        { role: tx('functionaries', lang) || 'Functionaries', count: 8, color: '#3B82F6', bg: '#EFF6FF', members: [
+          { n: 'Raj Kumar', init: 'RK' }, { n: 'Sunita Joshi', init: 'SJ' }, { n: 'Vikram Singh', init: 'VS' }
+        ]},
+        { role: tx('members', lang) || 'Members', count: 223, color: '#6B7280', bg: '#F3F4F6', members: [
+          { n: 'Meera Jain', init: 'MJ' }, { n: 'Sunil Khanna', init: 'SK' }, { n: 'Kavita Rao', init: 'KR' }
+        ]},
+      ].map((group, gi) => (
+        <div key={gi} style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{group.role}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: group.color, background: group.bg, padding: '2px 8px', borderRadius: 6 }}>{group.count}</span>
+          </div>
+          {group.members.map((m, mi) => (
+            <div key={mi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #F3F4F6' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 18, background: group.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>{m.init}</span></div>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#111827' }}>{m.n}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: group.color, background: group.bg, padding: '3px 8px', borderRadius: 6 }}>{group.role.replace(/s$/, '')}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   CREATE ORG SCREEN
+   ============================================================================ */
+const CreateOrgScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title={tx('newOrganization', lang)} onBack={onBack} />
+    <div style={{ padding: '16px 16px 24px' }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 10 }}>Organization Type</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+        {[
+          { l: 'Political Party', ic: 'party', c: '#FF6B35', bg: '#FFF3ED', desc: 'Political organization' },
+          { l: 'NGO', ic: 'org', c: '#059669', bg: '#ECFDF5', desc: 'Non-profit organization' },
+          { l: 'RWA', ic: 'bldg', c: '#3B82F6', bg: '#EFF6FF', desc: 'Resident welfare' },
+          { l: 'Club', ic: 'leaders', c: '#7C3AED', bg: '#F5F3FF', desc: 'Community club' },
+        ].map((t, i) => (
+          <div key={i} style={{ padding: 16, borderRadius: 16, border: i===2?'2px solid #3B82F6':'1px solid #F3F4F6', background: i===2?t.bg:'white', textAlign: 'center', cursor: 'pointer' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}><I n={t.ic} sz={20} c={t.c} /></div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.l}</div>
+            <div style={{ fontSize: 10, color: '#6B7280', marginTop: 2 }}>{t.desc}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Name</span>
+          <span style={{ fontSize: 11, color: '#9CA3AF' }}>18/50</span>
+        </div>
+        <div style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#374151', background: 'white' }}>Andheri East RWA</div>
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{tx('description', lang) || 'Description'} (optional)</div>
+        <div style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', fontSize: 13, color: '#374151', background: 'white', minHeight: 60, lineHeight: '20px' }}>Resident Welfare Association for Andheri East ward</div>
+      </div>
+      <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15 }}>{tx('createOrg', lang)}</button>
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   BROADCASTS SCREEN
+   ============================================================================ */
+const BroadcastsScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <BackHeader title={tx('broadcasts', lang)} onBack={onBack} right={
+      <button className="btn-primary" style={{ padding: '6px 12px', fontSize: 11 }}>+ {tx('newBroadcast', lang) || 'New Broadcast'}</button>
+    } />
+    <div style={{ padding: '16px 16px 24px' }}>
+      {[
+        { title: 'Monthly ward meeting notice', msg: 'Dear members, the monthly meeting is scheduled for this Saturday at 10 AM at the community hall...', reads: '89%', reached: 234, time: '2 days ago' },
+        { title: 'Water tank cleaning schedule', msg: 'Water tank cleaning will be done on Thursday. Please store water in advance...', reads: '67%', reached: 198, time: '5 days ago' },
+      ].map((b, i) => (
+        <div key={i} className="card" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 6 }}>{b.title}</div>
+          <div style={{ fontSize: 13, color: '#374151', lineHeight: '20px', marginBottom: 10 }}>{b.msg}</div>
+          <div style={{ display: 'flex', gap: 16, paddingTop: 10, borderTop: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#10B981' }}>{b.reads}</span>
+              <span style={{ fontSize: 11, color: '#6B7280' }}>read</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#3B82F6' }}>{b.reached}</span>
+              <span style={{ fontSize: 11, color: '#6B7280' }}>{tx('reached', lang) || 'reached'}</span>
+            </div>
+            <span style={{ fontSize: 11, color: '#9CA3AF', marginLeft: 'auto' }}>{b.time}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   HEATMAP SCREEN
+   ============================================================================ */
+const HeatmapScreen = ({ lang, onBack }) => {
+  const heatDots = useMemo(() => {
+    const d = [];
+    const cats = ['Pothole','Water','Drainage','Garbage','Streetlight','Traffic','Noise','Encroachment'];
+    const colors = ['#EF4444','#3B82F6','#0D9488','#DC2626','#D97706','#7C3AED','#F59E0B','#6B7280'];
+    for (let i = 0; i < 40; i++) {
+      const intensity = Math.random();
+      d.push({ x: 30+Math.random()*300, y: 50+Math.random()*450, s: 12 + intensity*30, o: 0.15 + intensity*0.35, c: colors[Math.floor(Math.random()*colors.length)] });
+    }
+    return d;
+  }, []);
+  return (
+    <div className="screen-in" style={{ position: 'relative', height: '100%' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, background: 'rgba(255,255,255,0.95)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #F3F4F6' }}>
+        <button onClick={onBack} style={{ width: 28, height: 28, borderRadius: 14, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><I n="arrowL" sz={16} c="#111827"/></button>
+        <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{tx('heatmapTitle', lang)}</span>
+      </div>
+      <div style={{ position: 'absolute', top: 48, left: 0, right: 0, zIndex: 10, padding: '8px 12px' }}>
+        <div className="hscroll" style={{ gap: 6 }}>
+          {['All','Pothole','Water','Drainage','Garbage','Streetlight','Traffic','Noise'].map((f, i) => (
+            <button key={i} style={{ padding: '5px 10px', borderRadius: 14, background: i===0?'#FF6B35':'white', color: i===0?'white':'#374151', border: i===0?'none':'1px solid #E5E7EB', fontSize: 10, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', fontFamily: 'Inter' }}>{f}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 30%, #A5D6A7 60%, #81C784 100%)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '20%', left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.5)' }}/>
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.5)' }}/>
+        <div style={{ position: 'absolute', left: '30%', top: 0, bottom: 0, width: 3, background: 'rgba(255,255,255,0.5)' }}/>
+        <div style={{ position: 'absolute', left: '65%', top: 0, bottom: 0, width: 3, background: 'rgba(255,255,255,0.5)' }}/>
+        {heatDots.map((d, i) => (
+          <div key={i} style={{ position: 'absolute', left: d.x - d.s/2, top: d.y - d.s/2, width: d.s, height: d.s, borderRadius: '50%', background: d.c, opacity: d.o }} />
+        ))}
+      </div>
+      <div style={{ position: 'absolute', bottom: 50, left: 12, right: 12, zIndex: 10 }}>
+        <div style={{ background: 'white', borderRadius: 12, padding: '10px 14px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#111827', marginBottom: 6 }}>{tx('intensity', lang) || 'Intensity'}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ height: 6, flex: 1, borderRadius: 3, background: 'linear-gradient(90deg, #10B98130, #F59E0B80, #EF4444CC)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', position: 'absolute', left: 14, right: 14 }}>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+            <span style={{ fontSize: 9, color: '#6B7280' }}>{tx('low', lang) || 'Low'}</span>
+            <span style={{ fontSize: 9, color: '#6B7280' }}>{tx('medium', lang) || 'Medium'}</span>
+            <span style={{ fontSize: 9, color: '#6B7280' }}>{tx('high', lang) || 'High'}</span>
+          </div>
+        </div>
+        <div style={{ background: 'white', borderRadius: 10, padding: '8px 12px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', display: 'flex', gap: 16 }}>
+          <span style={{ fontSize: 10, fontWeight: 600, color: '#374151' }}>156 {tx('points', lang) || 'points'}</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: '#374151' }}>8 {tx('categories', lang) || 'categories'}</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: '#FF6B35' }}>Ward 45</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   LEADER PROFILE SCREEN
+   ============================================================================ */
+const LeaderProfileScreen = ({ lang, onBack }) => (
+  <div className="screen-in">
+    <div style={{ height: 100, background: 'linear-gradient(135deg, #FF6B35 0%, #0B1426 100%)', position: 'relative' }}>
+      <button onClick={onBack} style={{ position: 'absolute', top: 12, left: 12, width: 32, height: 32, borderRadius: 16, background: 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><I n="arrowL" sz={18} c="white"/></button>
+    </div>
+    <div style={{ padding: '0 16px 24px', marginTop: -40 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, marginBottom: 16 }}>
+        <div style={{ width: 80, height: 80, borderRadius: 40, background: '#FF6B35', border: '4px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color: 'white' }}>RP</span>
+        </div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#111827' }}>Rajesh Patel</div>
+          <div style={{ fontSize: 12, color: '#6B7280' }}>Ward Councillor {'\u00B7'} BJP</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {[
+          { l: tx('rating', lang) || 'Rating', v: '3.8\u2605', c: '#D97706' },
+          { l: tx('avgResponseTime', lang) || 'Avg Response', v: '5 days', c: '#3B82F6' },
+          { l: tx('resolution', lang) || 'Resolution', v: '89%', c: '#10B981' },
+        ].map((s, i) => (
+          <div key={i} style={{ flex: 1, background: 'white', borderRadius: 10, padding: 10, textAlign: 'center', border: '1px solid #F3F4F6' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: s.c }}>{s.v}</div>
+            <div style={{ fontSize: 9, color: '#6B7280', marginTop: 2 }}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 6 }}>{tx('bio', lang) || 'Bio'}</div>
+        <div style={{ fontSize: 13, color: '#374151', lineHeight: '20px' }}>Serving as Ward Councillor since 2022. Focused on infrastructure development, water supply, and sanitation improvements for Ward 45.</div>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+        <div className="card" style={{ flex: 1, textAlign: 'center' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#FF6B35' }}>234</div>
+          <div style={{ fontSize: 10, color: '#6B7280' }}>{tx('issuesHandled', lang) || 'Issues Handled'}</div>
+        </div>
+        <div className="card" style={{ flex: 1, textAlign: 'center' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#10B981' }}>186</div>
+          <div style={{ fontSize: 10, color: '#6B7280' }}>{tx('resolved', lang)}</div>
+        </div>
+      </div>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 }}>{tx('promiseTracker', lang) || 'Promise Tracker'}</div>
+        {[
+          { title: '24/7 water supply', status: 'Fulfilled', c: '#10B981', bg: '#ECFDF5' },
+          { title: 'Road repair by March', status: 'On Track', c: '#D97706', bg: '#FFFBEB' },
+          { title: 'New community center', status: 'Delayed', c: '#DC2626', bg: '#FEF2F2' },
+        ].map((p, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 2 ? '1px solid #F3F4F6' : 'none' }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>{p.title}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: p.c, background: p.bg, padding: '3px 8px', borderRadius: 6 }}>{p.status}</span>
+          </div>
+        ))}
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 }}>{tx('ratingBreakdown', lang) || 'Rating Breakdown'}</div>
+        {[
+          { l: tx('responsiveness', lang) || 'Responsiveness', v: 3.5 },
+          { l: tx('transparency', lang) || 'Transparency', v: 4.0 },
+          { l: tx('accessibility', lang) || 'Accessibility', v: 3.8 },
+          { l: tx('effectiveness', lang) || 'Effectiveness', v: 4.2 },
+          { l: tx('communication', lang) || 'Communication', v: 3.5 },
+        ].map((r, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 500, color: '#374151', width: 110 }}>{r.l}</span>
+            <div style={{ flex: 1, height: 6, borderRadius: 3, background: '#F3F4F6', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(r.v/5)*100}%`, borderRadius: 3, background: '#FFD700' }} />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#D97706', width: 28, textAlign: 'right' }}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+      <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 0', fontSize: 15, marginBottom: 16 }}>
+        <I n="star" sz={18} c="white" /> {tx('rateThisLeader', lang)}
+      </button>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 10 }}>{tx('recentActivity', lang) || 'Recent Activity'}</div>
+      {[
+        { text: 'Responded to pothole issue near Infinity Mall', time: '2h ago', ic: '#10B981' },
+        { text: 'Attended ward committee meeting', time: '1d ago', ic: '#3B82F6' },
+        { text: 'Inaugurated new garden in Sector 5', time: '3d ago', ic: '#FF6B35' },
+      ].map((a, i) => (
+        <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 4, background: a.ic, marginTop: 6, flexShrink: 0 }} />
+          <div><div style={{ fontSize: 13, color: '#374151', lineHeight: '18px' }}>{a.text}</div><div style={{ fontSize: 11, color: '#9CA3AF' }}>{a.time}</div></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ============================================================================
+   LANGUAGE SETTINGS SCREEN
+   ============================================================================ */
+const LanguageSettingsScreen = ({ lang, onBack }) => {
+  const [selected, setSelected] = useState('English');
+  const languages = [
+    'English', '\u0939\u093F\u0928\u094D\u0926\u0940', '\u0BA4\u0BAE\u0BBF\u0BB4\u0BCD', '\u0C24\u0C46\u0C32\u0C41\u0C17\u0C41',
+    '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1', '\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02', '\u092E\u0930\u093E\u0920\u0940', '\u09AC\u09BE\u0982\u09B2\u09BE',
+    '\u0A97\u0AC1\u0A9C\u0AB0\u0ABE\u0AA4\u0AC0', '\u0A2A\u0A70\u0A1C\u0A3E\u0A2C\u0A40', '\u0B13\u0B21\u0B3C\u0B3F\u0B06',
+    '\u0985\u09B8\u09AE\u09C0\u09AF\u09BC\u09BE', '\u0627\u0631\u062F\u0648', '\u0938\u0902\u0938\u094D\u0915\u0943\u0924\u092E\u094D',
+    '\u06A9\u0672\u0634\u0650\u0631', '\u0928\u0947\u092A\u093E\u0932\u0940'
+  ];
+  return (
+    <div className="screen-in">
+      <BackHeader title={tx('languageSettings', lang)} onBack={onBack} />
+      <div style={{ padding: '16px 16px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{tx('currentLanguage', lang) || 'Current Language'}:</span>
+          <span className="badge" style={{ background: '#FFF3ED', color: '#FF6B35' }}>English</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+          {languages.map((l, i) => (
+            <div key={i} onClick={() => setSelected(l)} style={{ padding: '12px 14px', borderRadius: 12, border: selected===l?'2px solid #FF6B35':'1px solid #E5E7EB', background: selected===l?'#FFF3ED':'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 14, fontWeight: selected===l?700:500, color: selected===l?'#FF6B35':'#374151' }}>{l}</span>
+              {selected===l && <I n="check" sz={16} c="#FF6B35" />}
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderTop: '1px solid #F3F4F6' }}>
+          <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{tx('autoTranslate', lang)}</span>
+          <div style={{ width: 44, height: 24, borderRadius: 12, background: '#FF6B35', position: 'relative', cursor: 'pointer' }}>
+            <div style={{ width: 20, height: 20, borderRadius: 10, background: 'white', position: 'absolute', top: 2, right: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   NOTIFICATION SETTINGS SCREEN
+   ============================================================================ */
+const NotifSettingsScreen = ({ lang, onBack }) => {
+  const toggles = [
+    { l: tx('pushNotifications', lang) || 'Push Notifications', on: true },
+    { l: tx('issueUpdates', lang) || 'Issue Updates', on: true },
+    { l: tx('newPolls', lang) || 'New Polls', on: true },
+    { l: tx('communityActionsNotif', lang) || 'Community Actions', on: true },
+    { l: tx('messagesNotif', lang) || 'Messages', on: true },
+    { l: tx('weeklyDigest', lang) || 'Weekly Digest', on: false },
+  ];
+  return (
+    <div className="screen-in">
+      <BackHeader title={tx('notifSettings', lang)} onBack={onBack} />
+      <div style={{ padding: '8px 16px 24px' }}>
+        {toggles.map((t, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #F3F4F6' }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{t.l}</span>
+            <div style={{ width: 44, height: 24, borderRadius: 12, background: t.on?'#FF6B35':'#D1D5DB', position: 'relative', cursor: 'pointer' }}>
+              <div style={{ width: 20, height: 20, borderRadius: 10, background: 'white', position: 'absolute', top: 2, [t.on?'right':'left']: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   PRIVACY SETTINGS SCREEN
+   ============================================================================ */
+const PrivacySettingsScreen = ({ lang, onBack }) => {
+  const toggles = [
+    { l: tx('showProfilePublicly', lang) || 'Show Profile Publicly', on: true },
+    { l: tx('allowAnonymousVoices', lang) || 'Allow Anonymous Voices', on: false },
+    { l: tx('showCivicScore', lang) || 'Show Civic Score', on: true },
+    { l: tx('locationSharing', lang) || 'Location Sharing', on: true },
+    { l: tx('dataAnalytics', lang) || 'Data Analytics', on: true },
+  ];
+  return (
+    <div className="screen-in">
+      <BackHeader title={tx('privacySettings', lang)} onBack={onBack} />
+      <div style={{ padding: '8px 16px 24px' }}>
+        {toggles.map((t, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #F3F4F6' }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{t.l}</span>
+            <div style={{ width: 44, height: 24, borderRadius: 12, background: t.on?'#FF6B35':'#D1D5DB', position: 'relative', cursor: 'pointer' }}>
+              <div style={{ width: 20, height: 20, borderRadius: 10, background: 'white', position: 'absolute', top: 2, [t.on?'right':'left']: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   HELP & SUPPORT SCREEN
+   ============================================================================ */
+const HelpScreen = ({ lang, onBack }) => {
+  const [expanded, setExpanded] = useState(0);
+  const faqs = [
+    { q: 'How do I report an issue?', a: '1. Tap the Report tab at the bottom\n2. Take a photo of the issue\n3. Add description and location\n4. Select category\n5. Submit — the issue is automatically routed to the right department via AI.' },
+    { q: 'How does civic score work?', a: 'Your civic score increases when you report issues, vote in polls, validate resolutions, and participate in community actions. Higher scores unlock badges and priority routing.' },
+    { q: 'Is my data safe?', a: 'Yes. We use end-to-end encryption for messages, Aadhaar verification is done offline using XML, and we never store your Aadhaar number. All data is processed in India.' },
+  ];
+  return (
+    <div className="screen-in">
+      <BackHeader title={tx('helpSupport', lang)} onBack={onBack} />
+      <div style={{ padding: '16px 16px 24px' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 12 }}>{tx('faq', lang) || 'FAQ'}</div>
+        {faqs.map((f, i) => (
+          <div key={i} className="card" style={{ marginBottom: 8, cursor: 'pointer' }} onClick={() => setExpanded(expanded === i ? -1 : i)}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#111827', flex: 1 }}>{f.q}</span>
+              <I n={expanded===i?'chevL':'chevR'} sz={16} c="#6B7280" />
+            </div>
+            {expanded === i && (
+              <div style={{ fontSize: 13, color: '#374151', lineHeight: '20px', marginTop: 10, paddingTop: 10, borderTop: '1px solid #F3F4F6', whiteSpace: 'pre-line' }}>{f.a}</div>
+            )}
+          </div>
+        ))}
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 12, marginTop: 20 }}>{tx('contactUs', lang) || 'Contact Us'}</div>
+        {[
+          { l: 'Email', v: 'support@civitro.in', ic: 'mail' },
+          { l: 'Phone', v: '+91 22 4000 5000', ic: 'bell' },
+        ].map((c, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#FFF3ED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><I n={c.ic} sz={18} c="#FF6B35" /></div>
+            <div><div style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{c.l}</div><div style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{c.v}</div></div>
+          </div>
+        ))}
+        <button className="btn-secondary" style={{ width: '100%', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 8 }}>
+          <I n="comment" sz={16} c="#374151" /> {tx('appFeedback', lang) || 'App Feedback'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+   ABOUT SCREEN
+   ============================================================================ */
+const AboutScreen = ({ lang, onBack }) => {
+  const [modal, setModal] = useState(false);
+  return (
+    <div className="screen-in" style={{ position: 'relative' }}>
+      <BackHeader title={tx('aboutCivitro', lang)} onBack={onBack} />
+      <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <svg width="80" height="80" viewBox="0 0 641 366" style={{ display: 'block', marginBottom: 8 }}>
+          <path fill="#121825" transform="scale(0.476934 0.476562)" d="M1125.26 361.315C1125.35 361.306 1125.43 361.296 1125.51 361.287C1158.61 359.981 1192.51 369.093 1218.01 390.742C1236.3 406.276 1248.82 426.994 1250.74 450.975C1252.8 475.223 1245.41 498.519 1229.48 516.96C1218.08 530.16 1205.23 538.725 1189.25 545.663C1172.86 552.784 1157.05 555.186 1139.39 556.544C1103.33 556.978 1070.59 549.543 1042.59 525.374C1024.36 509.791 1013.21 487.489 1011.69 463.55C1010.2 440.805 1017.83 418.403 1032.91 401.307C1057.29 373.428 1089.49 363.736 1125.26 361.315ZM1136.46 521.252C1144.95 520.369 1150.01 519.856 1157.95 517.075C1186.57 507.049 1201.63 480.618 1198.38 450.904C1196.7 434.896 1188.61 420.253 1175.94 410.321C1163.3 400.284 1143.92 394.272 1128.01 396.11C1107.91 397.775 1091.18 403.348 1077.66 419.084C1056.4 443.822 1059.63 484.224 1084.8 505.056C1100.25 517.844 1116.78 521.654 1136.46 521.252Z"/>
+          <path fill="#DA5E34" transform="scale(0.476934 0.476562)" d="M576.072 291.009C616.117 285.657 675.933 283.354 716.025 291.199C714.138 300.499 711.401 310 709.64 318.952C680.388 318.047 676.755 313.403 675.831 345.299L616.723 345.277C613.963 311.069 613.071 319.284 582.268 318.993C580.22 309.713 578.228 300.249 576.072 291.009Z"/>
+          <circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="525" cy="259" r="33"/>
+          <circle fill="#DA5E34" transform="scale(0.476934 0.476562)" cx="765" cy="259" r="33"/>
+        </svg>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', letterSpacing: 3, marginBottom: 12 }}>Democracy. You Shape.{'\u2122'}</div>
+        <div style={{ fontSize: 13, color: '#374151', lineHeight: '20px', textAlign: 'center', marginBottom: 20 }}>
+          Civitro is India's civic infrastructure platform — connecting citizens, leaders, and government through AI-powered issue tracking, community actions, and democratic participation.
+        </div>
+        <div style={{ width: '100%' }}>
+          {[
+            { l: tx('platformLabel', lang) || 'Platform', v: 'iOS / Android' },
+            { l: tx('version', lang) || 'Version', v: '1.3.0' },
+            { l: tx('languageAI', lang) || 'Language AI', v: 'Bhashini' },
+            { l: tx('builtWith', lang) || 'Built With', v: 'React Native + Go + Python' },
+          ].map((r, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+              <span style={{ fontSize: 13, color: '#6B7280' }}>{r.l}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{r.v}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ width: '100%', marginTop: 16 }}>
+          {[tx('website', lang) || 'Website', tx('privacyPolicy', lang) || 'Privacy Policy', tx('termsOfService', lang) || 'Terms of Service', tx('openSource', lang) || 'Open Source'].map((l, i) => (
+            <div key={i} onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid #F3F4F6', cursor: 'pointer' }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#3B82F6' }}>{l}</span>
+              <I n="chevR" sz={16} c="#D1D5DB" />
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <div style={{ fontSize: 24, marginBottom: 4 }}>{'\uD83C\uDDEE\uD83C\uDDF3'}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7280' }}>{tx('madeInIndia', lang)}</div>
+        </div>
+      </div>
+      {modal && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }} onClick={() => setModal(false)}>
+          <div style={{ background: 'white', borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 280 }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>{'\uD83D\uDD52'}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{tx('comingSoon', lang)}</div>
+            <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 20 }}>This feature will be available in the next release.</div>
+            <button className="btn-primary" style={{ padding: '10px 32px' }} onClick={() => setModal(false)}>OK</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ============================================================================
+   CELEBRATION SCREEN (existing screens reference)
+   ============================================================================ */
+
+/* ============================================================================
    MAIN APP — orchestrator
    ============================================================================ */
 const App = () => {
@@ -2340,7 +3592,7 @@ const App = () => {
   const [auto, setAuto] = useState(false);
   const ref = useRef(null);
 
-  const DEMOS = ['home', 'report', 'issueDetail', 'leaders', 'voices', 'polls', 'actions', 'trending', 'map', 'profile', 'messages', 'chat', 'notifications', 'search', 'promises', 'chi', 'budget', 'datamine', 'organizations', 'leaderDash'];
+  const DEMOS = ['home', 'login', 'register', 'otp', 'aadhaar', 'report', 'issueDetail', 'issuesList', 'leaders', 'leaderProfile', 'voices', 'createVoice', 'voiceDetail', 'polls', 'pollDetail', 'exitPolls', 'actions', 'createAction', 'actionDetail', 'actionTimeline', 'trending', 'map', 'heatmap', 'promises', 'promiseDetail', 'organizations', 'orgDetail', 'orgMembers', 'createOrg', 'broadcasts', 'profile', 'language', 'notifSettings', 'privacy', 'help', 'about', 'messages', 'chat', 'notifications', 'search', 'chi', 'budget', 'datamine', 'leaderDash'];
 
   useEffect(() => {
     if (auto) {
@@ -2363,31 +3615,55 @@ const App = () => {
     go({ home: 'home', report: 'report', leaders: 'leaders', map: 'map', trending: 'trending' }[t] || t);
   };
 
-  const activeTab = ['home','issueDetail','voices','polls','actions','profile','messages','chat','notifications','search','promises','chi','budget','datamine','organizations','leaderDash'].includes(scr) ? 'home' : scr === 'report' ? 'report' : scr;
+  const activeTab = ['home','issueDetail','issuesList','voices','createVoice','voiceDetail','polls','pollDetail','exitPolls','actions','createAction','actionDetail','actionTimeline','profile','messages','chat','notifications','search','promises','promiseDetail','chi','budget','datamine','organizations','orgDetail','orgMembers','createOrg','broadcasts','leaderDash','leaderProfile','login','register','otp','aadhaar','language','notifSettings','privacy','help','about','heatmap'].includes(scr) ? 'home' : scr === 'report' ? 'report' : scr;
   const langs = [{ c: 'en', l: 'English' }, { c: 'hi', l: '\u0939\u093F\u0928\u094D\u0926\u0940' }, { c: 'te', l: '\u0C24\u0C46\u0C32\u0C41\u0C17\u0C41' }, { c: 'mr', l: '\u092E\u0930\u093E\u0920\u0940' }];
 
   const render = () => {
     switch (scr) {
       case 'home': return <HomeScreen lang={lang} nav={go}/>;
+      case 'login': return <LoginScreen lang={lang} nav={go}/>;
+      case 'register': return <RegisterScreen lang={lang} nav={go}/>;
+      case 'otp': return <OtpScreen lang={lang} nav={go}/>;
+      case 'aadhaar': return <AadhaarScreen lang={lang} nav={go}/>;
       case 'report': return <ReportScreen lang={lang}/>;
       case 'issueDetail': return <IssueDetailScreen lang={lang} onBack={() => go('home')}/>;
+      case 'issuesList': return <IssuesListScreen lang={lang} nav={go} onBack={() => go('home')}/>;
       case 'leaders': return <LeadersScreen lang={lang} nav={go}/>;
-      case 'voices': return <VoicesScreen lang={lang}/>;
-      case 'polls': return <PollsScreen lang={lang}/>;
-      case 'actions': return <ActionsScreen lang={lang}/>;
+      case 'leaderProfile': return <LeaderProfileScreen lang={lang} onBack={() => go('leaders')}/>;
+      case 'voices': return <VoicesScreen lang={lang} nav={go}/>;
+      case 'createVoice': return <CreateVoiceScreen lang={lang} onBack={() => go('voices')}/>;
+      case 'voiceDetail': return <VoiceDetailScreen lang={lang} onBack={() => go('voices')}/>;
+      case 'polls': return <PollsScreen lang={lang} nav={go}/>;
+      case 'pollDetail': return <PollDetailScreen lang={lang} onBack={() => go('polls')}/>;
+      case 'exitPolls': return <ExitPollsScreen lang={lang} onBack={() => go('polls')}/>;
+      case 'actions': return <ActionsScreen lang={lang} nav={go}/>;
+      case 'createAction': return <CreateActionScreen lang={lang} onBack={() => go('actions')}/>;
+      case 'actionDetail': return <ActionDetailScreen lang={lang} nav={go} onBack={() => go('actions')}/>;
+      case 'actionTimeline': return <ActionTimelineScreen lang={lang} onBack={() => go('actionDetail')}/>;
       case 'trending': return <TrendingScreen lang={lang}/>;
-      case 'map': return <MapScreen lang={lang}/>;
+      case 'map': return <MapScreen lang={lang} nav={go}/>;
+      case 'heatmap': return <HeatmapScreen lang={lang} onBack={() => go('map')}/>;
       case 'profile': return <ProfileScreen lang={lang} nav={go}/>;
       case 'messages': return <MessagesScreen lang={lang} nav={go} onBack={() => go('home')}/>;
       case 'chat': return <ChatScreen lang={lang} onBack={() => go('messages')}/>;
       case 'notifications': return <NotificationsScreen lang={lang} onBack={() => go('home')}/>;
       case 'search': return <SearchScreen lang={lang} onBack={() => go('home')}/>;
-      case 'promises': return <PromisesScreen lang={lang} onBack={() => go('leaders')}/>;
+      case 'promises': return <PromisesScreen lang={lang} nav={go} onBack={() => go('leaders')}/>;
+      case 'promiseDetail': return <PromiseDetailScreen lang={lang} onBack={() => go('promises')}/>;
       case 'chi': return <CHIScreen lang={lang} onBack={() => go('home')}/>;
       case 'budget': return <BudgetScreen lang={lang} onBack={() => go('home')}/>;
       case 'datamine': return <DatamineScreen lang={lang} onBack={() => go('home')}/>;
-      case 'organizations': return <OrganizationsScreen lang={lang} onBack={() => go('profile')}/>;
+      case 'organizations': return <OrganizationsScreen lang={lang} nav={go} onBack={() => go('profile')}/>;
+      case 'orgDetail': return <OrgDetailScreen lang={lang} nav={go} onBack={() => go('organizations')}/>;
+      case 'orgMembers': return <OrgMembersScreen lang={lang} onBack={() => go('orgDetail')}/>;
+      case 'createOrg': return <CreateOrgScreen lang={lang} onBack={() => go('organizations')}/>;
+      case 'broadcasts': return <BroadcastsScreen lang={lang} onBack={() => go('orgDetail')}/>;
       case 'leaderDash': return <LeaderDashScreen lang={lang} onBack={() => go('leaders')}/>;
+      case 'language': return <LanguageSettingsScreen lang={lang} onBack={() => go('profile')}/>;
+      case 'notifSettings': return <NotifSettingsScreen lang={lang} onBack={() => go('profile')}/>;
+      case 'privacy': return <PrivacySettingsScreen lang={lang} onBack={() => go('profile')}/>;
+      case 'help': return <HelpScreen lang={lang} onBack={() => go('profile')}/>;
+      case 'about': return <AboutScreen lang={lang} onBack={() => go('profile')}/>;
       default: return <HomeScreen lang={lang} nav={go}/>;
     }
   };
@@ -2402,7 +3678,7 @@ const App = () => {
           <span className="banner-label">Investor Demo</span>
         </div>
         <span className="banner-metric"><b>100M+</b> users</span>
-        <span className="banner-metric"><b>24</b> services</span>
+        <span className="banner-metric"><b>44</b> screens</span>
         <span className="banner-metric"><b>22</b> languages</span>
         <span className="banner-metric"><b>Real-time</b> AI</span>
         <button
