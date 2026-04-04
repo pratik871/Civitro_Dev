@@ -1805,8 +1805,8 @@ const IssueDetailScreen = ({ lang, onBack }) => {
    ============================================================================ */
 const LeadersScreen = ({ lang, nav }) => (
   <div className="screen-in screen-pad" style={{ paddingTop: 16 }}>
-    <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{tx('govChain', lang)}</div>
-    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 12 }}>{USER.ward} {'\u00B7'} {USER.area}</div>
+    <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 4 }}>{tx('govChain', lang)}</div>
+    <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 10 }}>{USER.ward} {'\u00B7'} {USER.area}</div>
     <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
       <button className="btn-primary" style={{ fontSize: 11, padding: '8px 14px' }} onClick={() => nav('promises')}>{tx('viewPromises', lang)}</button>
       <button className="btn-secondary" style={{ fontSize: 11, padding: '8px 14px' }} onClick={() => nav('leaderDash')}>{tx('viewLeaderDash', lang)}</button>
@@ -1830,7 +1830,11 @@ const LeadersScreen = ({ lang, nav }) => (
               {r.rating !== null && <span className="pill" style={{ background: '#FFFBEB', color: '#92400E' }}><I n="star" sz={10} c="#92400E"/>{r.rating}/5</span>}
               {r.issues !== null && <span className="pill" style={{ background: '#F3F4F6', color: '#374151' }}>{r.issues} issues</span>}
             </div>
-            {i === 0 && <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>{[tx('message', lang), tx('rate', lang), tx('viewIssues', lang)].map((b, bi) => <button key={bi} className="btn-outline">{b}</button>)}</div>}
+            {i === 0 && <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+              <button className="btn-outline" onClick={(e) => { e.stopPropagation(); nav('chat'); }}>{tx('message', lang)}</button>
+              <button className="btn-outline" onClick={(e) => { e.stopPropagation(); nav('leaderProfile'); }}>{tx('rate', lang)}</button>
+              <button className="btn-outline" onClick={(e) => { e.stopPropagation(); nav('issuesList'); }}>{tx('viewIssues', lang)}</button>
+            </div>}
           </div>
         </div>
       );
