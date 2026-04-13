@@ -102,8 +102,8 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.Com
 		       COALESCE(ca.pattern_id::text, ''),
 		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
 		FROM community_actions ca
-		LEFT JOIN users u ON u.id = ca.creator_id
-		LEFT JOIN boundaries b ON b.id::text = ca.ward_id
+		LEFT JOIN users u ON u.id::text = ca.creator_id::text
+		LEFT JOIN boundaries b ON b.id::text = ca.ward_id::text
 		LEFT JOIN representatives rep ON rep.id::text = ca.target_authority_id::text
 		WHERE ca.id = $1
 	`
@@ -136,8 +136,8 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.Com
 		       ar.response_type, ar.content,
 		       COALESCE(ar.timeline_date::text, ''), ar.created_at
 		FROM action_responses ar
-		LEFT JOIN representatives r ON r.id::text = ar.responder_id
-		LEFT JOIN users u ON u.id::text = ar.responder_id
+		LEFT JOIN representatives r ON r.id::text = ar.responder_id::text
+		LEFT JOIN users u ON u.id::text = ar.responder_id::text
 		WHERE ar.action_id = $1
 		ORDER BY ar.created_at DESC LIMIT 5
 	`
@@ -181,7 +181,7 @@ func (r *PostgresRepository) ListByWard(ctx context.Context, wardID string, limi
 		       COALESCE(ca.pattern_id::text, ''),
 		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
 		FROM community_actions ca
-		LEFT JOIN users u ON u.id = ca.creator_id
+		LEFT JOIN users u ON u.id::text = ca.creator_id::text
 		LEFT JOIN representatives rep ON rep.id::text = ca.target_authority_id::text
 		WHERE ca.ward_id = $1
 		ORDER BY ca.created_at DESC
