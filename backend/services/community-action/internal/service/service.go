@@ -430,17 +430,17 @@ func (s *Service) AddVerification(ctx context.Context, actionID, userID string, 
 }
 
 // ListTrending retrieves trending actions across wards.
-func (s *Service) ListTrending(ctx context.Context, limit int) (*model.TrendingListResponse, error) {
+func (s *Service) ListTrending(ctx context.Context, limit int) (*model.ActionListResponse, error) {
 	actions, err := s.repo.ListTrending(ctx, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list trending: %w", err)
 	}
 
 	if actions == nil {
-		actions = []model.TrendingAction{}
+		actions = []model.CommunityAction{}
 	}
 
-	return &model.TrendingListResponse{
+	return &model.ActionListResponse{
 		Actions: actions,
 		Count:   len(actions),
 	}, nil

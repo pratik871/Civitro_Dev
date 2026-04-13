@@ -74,6 +74,7 @@ type CommunityAction struct {
 	AcknowledgedAt          *time.Time      `json:"acknowledged_at,omitempty"`
 	ResolvedAt              *time.Time      `json:"resolved_at,omitempty"`
 	VerifiedAt              *time.Time      `json:"verified_at,omitempty"`
+	EvidenceCount           int                `json:"evidence_count"`
 	Evidence                []ActionEvidence   `json:"evidence,omitempty"`
 	RecentResponses         []ActionResponse   `json:"recent_responses,omitempty"`
 	HasSupported            bool               `json:"has_supported"`

@@ -30,7 +30,7 @@ type Repository interface {
 	UpdateStatus(ctx context.Context, id string, status model.ActionStatus) error
 	UpdateSupportCount(ctx context.Context, id string, count int) error
 	UpdateSupportGoal(ctx context.Context, actionID string, newGoal int) error
-	ListTrending(ctx context.Context, limit int) ([]model.TrendingAction, error)
+	ListTrending(ctx context.Context, limit int) ([]model.CommunityAction, error)
 	UpdateEvidencePackage(ctx context.Context, id string, evidenceJSON interface{}) error
 	GetUserCivicScore(ctx context.Context, userID string) (int, error)
 	CountUserActionsInPeriod(ctx context.Context, userID string, since time.Time) (int, error)
@@ -542,23 +542,32 @@ func (r *PostgresRepository) UpdateSupportCount(ctx context.Context, id string, 
 }
 
 // ListTrending retrieves trending actions across wards, ordered by momentum score.
-func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]model.TrendingAction, error) {
+// Returns full CommunityAction objects so the frontend gets all required fields.
+func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]model.CommunityAction, error) {
 	if limit <= 0 {
 		limit = 20
 	}
 
 	query := `
-		SELECT a.id, a.title, a.ward_id, a.status, a.support_count, a.support_goal,
-		       (SELECT COUNT(*) FROM action_evidence e WHERE e.action_id = a.id) AS evidence_count,
-		       a.escalation_level, a.created_at,
-		       (a.support_count * 1.0 / GREATEST(a.support_goal, 1) * 50 +
-		        (SELECT COUNT(*) FROM action_evidence e WHERE e.action_id = a.id) * 5 +
-		        CASE WHEN a.created_at > NOW() - INTERVAL '7 days' THEN 20 ELSE 0 END +
-		        CASE WHEN a.status IN ('open', 'acknowledged') THEN 10 ELSE 0 END
-		       ) AS momentum_score
-		FROM community_actions a
-		WHERE a.status NOT IN ('draft', 'archived')
-		ORDER BY momentum_score DESC, a.created_at DESC
+		SELECT ca.id, ca.creator_id, COALESCE(u.name, ''), ca.ward_id,
+		       ca.title, ca.description, ca.desired_outcome,
+		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
+		       ca.escalation_level,
+		       ca.status, ca.support_count, ca.support_goal,
+		       (SELECT COUNT(*) FROM action_evidence e WHERE e.action_id = ca.id) AS evidence_count,
+		       COALESCE(ca.economic_impact_estimate, 0),
+		       COALESCE(ca.category, ''),
+		       COALESCE(ca.pattern_id::text, ''),
+		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
+		FROM community_actions ca
+		LEFT JOIN users u ON u.id::text = ca.creator_id::text
+		LEFT JOIN representatives rep ON rep.id::text = ca.target_authority_id::text
+		WHERE ca.status NOT IN ('draft', 'archived')
+		ORDER BY (ca.support_count * 1.0 / GREATEST(ca.support_goal, 1) * 50 +
+		          (SELECT COUNT(*) FROM action_evidence e WHERE e.action_id = ca.id) * 5 +
+		          CASE WHEN ca.created_at > NOW() - INTERVAL '7 days' THEN 20 ELSE 0 END +
+		          CASE WHEN ca.status IN ('open', 'acknowledged') THEN 10 ELSE 0 END
+		         ) DESC, ca.created_at DESC
 		LIMIT $1
 	`
 
@@ -568,16 +577,25 @@ func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]mod
 	}
 	defer rows.Close()
 
-	var actions []model.TrendingAction
+	var actions []model.CommunityAction
 	for rows.Next() {
-		var a model.TrendingAction
+		var a model.CommunityAction
+		var evidenceCount int
 		if err := rows.Scan(
-			&a.ID, &a.Title, &a.WardID, &a.Status,
-			&a.SupportCount, &a.SupportGoal, &a.EvidenceCount,
-			&a.EscalationLevel, &a.CreatedAt, &a.MomentumScore,
+			&a.ID, &a.CreatorID, &a.CreatorName, &a.WardID,
+			&a.Title, &a.Description, &a.DesiredOutcome,
+			&a.TargetAuthorityID, &a.TargetAuthorityName,
+			&a.EscalationLevel,
+			&a.Status, &a.SupportCount, &a.SupportGoal,
+			&evidenceCount,
+			&a.EconomicImpactEstimate,
+			&a.Category,
+			&a.PatternID,
+			&a.CreatedAt, &a.AcknowledgedAt, &a.ResolvedAt, &a.VerifiedAt,
 		); err != nil {
 			return nil, err
 		}
+		a.EvidenceCount = evidenceCount
 		actions = append(actions, a)
 	}
 
