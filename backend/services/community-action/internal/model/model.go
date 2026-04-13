@@ -54,11 +54,14 @@ const (
 type CommunityAction struct {
 	ID                      string          `json:"id"`
 	CreatorID               string          `json:"creator_id"`
+	CreatorName             string          `json:"creator_name"`
 	WardID                  string          `json:"ward_id"`
+	WardName                string          `json:"ward_name"`
 	Title                   string          `json:"title"`
 	Description             string          `json:"description"`
 	DesiredOutcome          string          `json:"desired_outcome"`
 	TargetAuthorityID       string          `json:"target_authority_id,omitempty"`
+	TargetAuthorityName     string          `json:"target_authority_name,omitempty"`
 	EscalationLevel         EscalationLevel `json:"escalation_level"`
 	Status                  ActionStatus    `json:"status"`
 	SupportCount            int             `json:"support_count"`
@@ -103,13 +106,15 @@ type ActionEvidence struct {
 
 // ActionResponse represents a stakeholder response to a community action.
 type ActionResponse struct {
-	ID           string       `json:"id"`
-	ActionID     string       `json:"action_id"`
-	ResponderID  string       `json:"responder_id"`
-	ResponseType ResponseType `json:"response_type"`
-	Content      string       `json:"content"`
-	TimelineDate string       `json:"timeline_date,omitempty"`
-	CreatedAt    time.Time    `json:"created_at"`
+	ID            string       `json:"id"`
+	ActionID      string       `json:"action_id"`
+	ResponderID   string       `json:"responder_id"`
+	ResponderName string       `json:"responder_name"`
+	ResponderRole string       `json:"responder_role"`
+	ResponseType  ResponseType `json:"response_type"`
+	Content       string       `json:"content"`
+	TimelineDate  string       `json:"timeline_date,omitempty"`
+	CreatedAt     time.Time    `json:"created_at"`
 }
 
 // ActionEscalation represents an escalation event for a community action.

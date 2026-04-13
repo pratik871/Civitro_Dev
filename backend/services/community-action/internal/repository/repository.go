@@ -69,7 +69,10 @@ func (r *PostgresRepository) Create(ctx context.Context, action *model.Community
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 	`
 
-	var targetAuthorityID, patternID interface{}
+	var wardID, targetAuthorityID, patternID interface{}
+	if action.WardID != "" {
+		wardID = action.WardID
+	}
 	if action.TargetAuthorityID != "" {
 		targetAuthorityID = action.TargetAuthorityID
 	}
@@ -78,7 +81,7 @@ func (r *PostgresRepository) Create(ctx context.Context, action *model.Community
 	}
 
 	_, err := r.pool.Exec(ctx, query,
-		action.ID, action.CreatorID, action.WardID, action.Title, action.Description,
+		action.ID, action.CreatorID, wardID, action.Title, action.Description,
 		action.DesiredOutcome, targetAuthorityID, action.EscalationLevel,
 		action.Status, action.SupportCount, action.SupportGoal,
 		action.EvidencePackageJSON, action.EconomicImpactEstimate,
@@ -90,20 +93,27 @@ func (r *PostgresRepository) Create(ctx context.Context, action *model.Community
 // GetByID retrieves a community action by its ID, including evidence and recent responses.
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.CommunityAction, error) {
 	query := `
-		SELECT id, creator_id, ward_id, title, description, desired_outcome,
-		       COALESCE(target_authority_id::text, ''), escalation_level,
-		       status, support_count, support_goal,
-		       evidence_package_json, COALESCE(economic_impact_estimate, 0),
-		       COALESCE(pattern_id::text, ''),
-		       created_at, acknowledged_at, resolved_at, verified_at
-		FROM community_actions WHERE id = $1
+		SELECT ca.id, ca.creator_id, COALESCE(u.name, ''), ca.ward_id, COALESCE(b.name, ''),
+		       ca.title, ca.description, ca.desired_outcome,
+		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
+		       ca.escalation_level,
+		       ca.status, ca.support_count, ca.support_goal,
+		       ca.evidence_package_json, COALESCE(ca.economic_impact_estimate, 0),
+		       COALESCE(ca.pattern_id::text, ''),
+		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
+		FROM community_actions ca
+		LEFT JOIN users u ON u.id = ca.creator_id
+		LEFT JOIN boundaries b ON b.id::text = ca.ward_id
+		LEFT JOIN representatives rep ON rep.id::text = ca.target_authority_id::text
+		WHERE ca.id = $1
 	`
 
 	action := &model.CommunityAction{}
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&action.ID, &action.CreatorID, &action.WardID, &action.Title,
-		&action.Description, &action.DesiredOutcome,
-		&action.TargetAuthorityID, &action.EscalationLevel,
+		&action.ID, &action.CreatorID, &action.CreatorName, &action.WardID, &action.WardName,
+		&action.Title, &action.Description, &action.DesiredOutcome,
+		&action.TargetAuthorityID, &action.TargetAuthorityName,
+		&action.EscalationLevel,
 		&action.Status, &action.SupportCount, &action.SupportGoal,
 		&action.EvidencePackageJSON, &action.EconomicImpactEstimate,
 		&action.PatternID,
@@ -119,12 +129,17 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.Com
 	// Load evidence
 	action.Evidence, _ = r.ListEvidence(ctx, id)
 
-	// Load recent responses (last 5)
+	// Load recent responses (last 5), enriched with responder name/role
 	respQuery := `
-		SELECT id, action_id, responder_id, response_type, content,
-		       COALESCE(timeline_date::text, ''), created_at
-		FROM action_responses WHERE action_id = $1
-		ORDER BY created_at DESC LIMIT 5
+		SELECT ar.id, ar.action_id, ar.responder_id,
+		       COALESCE(r.name, u.name, ''), COALESCE(r.position, ''),
+		       ar.response_type, ar.content,
+		       COALESCE(ar.timeline_date::text, ''), ar.created_at
+		FROM action_responses ar
+		LEFT JOIN representatives r ON r.id::text = ar.responder_id
+		LEFT JOIN users u ON u.id::text = ar.responder_id
+		WHERE ar.action_id = $1
+		ORDER BY ar.created_at DESC LIMIT 5
 	`
 	rows, err := r.pool.Query(ctx, respQuery, id)
 	if err == nil {
@@ -132,8 +147,9 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.Com
 		for rows.Next() {
 			var resp model.ActionResponse
 			if err := rows.Scan(
-				&resp.ID, &resp.ActionID, &resp.ResponderID, &resp.ResponseType,
-				&resp.Content, &resp.TimelineDate, &resp.CreatedAt,
+				&resp.ID, &resp.ActionID, &resp.ResponderID,
+				&resp.ResponderName, &resp.ResponderRole,
+				&resp.ResponseType, &resp.Content, &resp.TimelineDate, &resp.CreatedAt,
 			); err == nil {
 				action.RecentResponses = append(action.RecentResponses, resp)
 			}
@@ -156,14 +172,19 @@ func (r *PostgresRepository) ListByWard(ctx context.Context, wardID string, limi
 	}
 
 	query := `
-		SELECT id, creator_id, ward_id, title, description, desired_outcome,
-		       COALESCE(target_authority_id::text, ''), escalation_level,
-		       status, support_count, support_goal,
-		       COALESCE(economic_impact_estimate, 0),
-		       COALESCE(pattern_id::text, ''),
-		       created_at, acknowledged_at, resolved_at, verified_at
-		FROM community_actions WHERE ward_id = $1
-		ORDER BY created_at DESC
+		SELECT ca.id, ca.creator_id, COALESCE(u.name, ''), ca.ward_id,
+		       ca.title, ca.description, ca.desired_outcome,
+		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
+		       ca.escalation_level,
+		       ca.status, ca.support_count, ca.support_goal,
+		       COALESCE(ca.economic_impact_estimate, 0),
+		       COALESCE(ca.pattern_id::text, ''),
+		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
+		FROM community_actions ca
+		LEFT JOIN users u ON u.id = ca.creator_id
+		LEFT JOIN representatives rep ON rep.id::text = ca.target_authority_id::text
+		WHERE ca.ward_id = $1
+		ORDER BY ca.created_at DESC
 		LIMIT $2 OFFSET $3
 	`
 
@@ -177,8 +198,10 @@ func (r *PostgresRepository) ListByWard(ctx context.Context, wardID string, limi
 	for rows.Next() {
 		var a model.CommunityAction
 		if err := rows.Scan(
-			&a.ID, &a.CreatorID, &a.WardID, &a.Title, &a.Description, &a.DesiredOutcome,
-			&a.TargetAuthorityID, &a.EscalationLevel,
+			&a.ID, &a.CreatorID, &a.CreatorName, &a.WardID,
+			&a.Title, &a.Description, &a.DesiredOutcome,
+			&a.TargetAuthorityID, &a.TargetAuthorityName,
+			&a.EscalationLevel,
 			&a.Status, &a.SupportCount, &a.SupportGoal,
 			&a.EconomicImpactEstimate,
 			&a.PatternID,
