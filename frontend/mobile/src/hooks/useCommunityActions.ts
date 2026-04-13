@@ -222,16 +222,23 @@ export function useAction(actionId: string) {
     queryKey: ['actions', actionId],
     queryFn: async () => {
       const res = await api.get<{
-        action: RawAction;
-        evidence: RawEvidence[];
-        responses: RawResponse[];
-        verifications: RawVerification[];
+        action: RawAction & {
+          evidence?: RawEvidence[];
+          recent_responses?: RawResponse[];
+        };
+        evidence?: RawEvidence[];
+        responses?: RawResponse[];
+        verifications?: RawVerification[];
       }>(`/api/v1/actions/${actionId}`);
+      // Backend embeds evidence/responses inside action object, or may return top-level
+      const rawEvidence = res.evidence ?? res.action?.evidence ?? [];
+      const rawResponses = res.responses ?? res.action?.recent_responses ?? [];
+      const rawVerifications = res.verifications ?? [];
       return {
         action: mapAction(res.action),
-        evidence: (res.evidence ?? []).map(mapEvidence),
-        responses: (res.responses ?? []).map(mapResponse),
-        verifications: (res.verifications ?? []).map(mapVerification),
+        evidence: rawEvidence.map(mapEvidence),
+        responses: rawResponses.map(mapResponse),
+        verifications: rawVerifications.map(mapVerification),
       };
     },
     staleTime: 30_000,
@@ -299,9 +306,9 @@ export function useCreateAction() {
         title: data.title,
         description: data.description,
         desired_outcome: data.desiredOutcome,
-        target_authority_id: data.targetAuthorityId,
+        ...(data.targetAuthorityId ? { target_authority_id: data.targetAuthorityId } : {}),
         linked_issue_ids: data.linkedIssueIds,
-        pattern_id: data.patternId || undefined,
+        ...(data.patternId ? { pattern_id: data.patternId } : {}),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['actions'] });

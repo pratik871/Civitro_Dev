@@ -258,12 +258,17 @@ func (r *PostgresRepository) AddEvidence(ctx context.Context, evidence *model.Ac
 	return err
 }
 
-// ListEvidence retrieves all evidence linked to a community action.
+// ListEvidence retrieves all evidence linked to a community action, enriched with issue details.
 func (r *PostgresRepository) ListEvidence(ctx context.Context, actionID string) ([]model.ActionEvidence, error) {
 	query := `
-		SELECT id, action_id, issue_id, linked_by, auto_linked, created_at
-		FROM action_evidence WHERE action_id = $1
-		ORDER BY created_at ASC
+		SELECT ae.id, ae.action_id, ae.issue_id,
+		       COALESCE(i.text, ''), COALESCE(i.category, ''), i.photo_urls, COALESCE(i.status, ''),
+		       ae.linked_by, COALESCE(u.name, ''), ae.auto_linked, ae.created_at
+		FROM action_evidence ae
+		LEFT JOIN issues i ON i.id = ae.issue_id
+		LEFT JOIN users u ON u.id = ae.linked_by
+		WHERE ae.action_id = $1
+		ORDER BY ae.created_at ASC
 	`
 	rows, err := r.pool.Query(ctx, query, actionID)
 	if err != nil {
@@ -274,8 +279,16 @@ func (r *PostgresRepository) ListEvidence(ctx context.Context, actionID string) 
 	var evidence []model.ActionEvidence
 	for rows.Next() {
 		var e model.ActionEvidence
-		if err := rows.Scan(&e.ID, &e.ActionID, &e.IssueID, &e.LinkedBy, &e.AutoLinked, &e.CreatedAt); err != nil {
+		var photoUrls []string
+		if err := rows.Scan(
+			&e.ID, &e.ActionID, &e.IssueID,
+			&e.IssueTitle, &e.IssueCategory, &photoUrls, &e.IssueStatus,
+			&e.LinkedBy, &e.LinkedByName, &e.AutoLinked, &e.CreatedAt,
+		); err != nil {
 			return nil, err
+		}
+		if len(photoUrls) > 0 {
+			e.IssuePhotoUrl = &photoUrls[0]
 		}
 		evidence = append(evidence, e)
 	}

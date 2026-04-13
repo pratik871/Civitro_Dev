@@ -88,12 +88,17 @@ type ActionSupporter struct {
 
 // ActionEvidence represents a linked issue as evidence for a community action.
 type ActionEvidence struct {
-	ID         string    `json:"id"`
-	ActionID   string    `json:"action_id"`
-	IssueID    string    `json:"issue_id"`
-	LinkedBy   string    `json:"linked_by"`
-	AutoLinked bool      `json:"auto_linked"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID            string    `json:"id"`
+	ActionID      string    `json:"action_id"`
+	IssueID       string    `json:"issue_id"`
+	IssueTitle    string    `json:"issue_title"`
+	IssueCategory string    `json:"issue_category"`
+	IssuePhotoUrl *string   `json:"issue_photo_url"`
+	IssueStatus   string    `json:"issue_status"`
+	LinkedBy      string    `json:"linked_by"`
+	LinkedByName  string    `json:"linked_by_name"`
+	AutoLinked    bool      `json:"auto_linked"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // ActionResponse represents a stakeholder response to a community action.
