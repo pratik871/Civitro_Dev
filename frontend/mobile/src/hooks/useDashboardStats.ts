@@ -18,6 +18,7 @@ export interface DashboardStats {
   validations: number;
   actions_supported: number;
   actions_started: number;
+  voices_created: number;
   streak_days: number;
   ward_id: string;
   ward_name: string;

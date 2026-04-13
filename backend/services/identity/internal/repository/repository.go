@@ -705,7 +705,15 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, userID strin
 		return nil, err
 	}
 
-	// 8. Streak days — count consecutive days (from today backwards) with any activity
+	// 8. Voices created
+	err = r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM voices WHERE user_id = $1`, userID,
+	).Scan(&stats.VoicesCreated)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	// 9. Streak days — count consecutive days (from today backwards) with any activity
 	err = r.pool.QueryRow(ctx, `
 		WITH activity_dates AS (
 			SELECT DISTINCT created_at::date AS d FROM issues WHERE user_id = $1

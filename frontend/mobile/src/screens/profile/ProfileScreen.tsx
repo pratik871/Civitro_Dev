@@ -203,7 +203,7 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('VoicesList' as any, { myVoices: true })} activeOpacity={0.7}>
             <Text style={styles.statValue}>
-              {stats?.actions_started ?? 0}
+              {stats?.voices_created ?? 0}
             </Text>
             <Text style={styles.statLabel}>{t('profile.voicesCreated')}</Text>
           </TouchableOpacity>

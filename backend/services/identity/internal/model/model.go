@@ -131,6 +131,7 @@ type DashboardStats struct {
 	Validations         int                `json:"validations"`
 	ActionsSupported    int                `json:"actions_supported"`
 	ActionsStarted      int                `json:"actions_started"`
+	VoicesCreated       int                `json:"voices_created"`
 	StreakDays          int                `json:"streak_days"`
 	WardID              string             `json:"ward_id"`
 	WardName            string             `json:"ward_name"`
