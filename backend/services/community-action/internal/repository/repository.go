@@ -93,11 +93,11 @@ func (r *PostgresRepository) Create(ctx context.Context, action *model.Community
 // GetByID retrieves a community action by its ID, including evidence and recent responses.
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.CommunityAction, error) {
 	query := `
-		SELECT ca.id, ca.creator_id, COALESCE(u.name, ''), ca.ward_id, COALESCE(b.name, ''),
-		       ca.title, ca.description, ca.desired_outcome,
+		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id, ''), COALESCE(b.name, ''),
+		       COALESCE(ca.title, ''), COALESCE(ca.description, ''), COALESCE(ca.desired_outcome, ''),
 		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
-		       ca.escalation_level,
-		       ca.status, ca.support_count, ca.support_goal,
+		       COALESCE(ca.escalation_level::text, 'ward'),
+		       COALESCE(ca.status::text, 'open'), ca.support_count, ca.support_goal,
 		       ca.evidence_package_json, COALESCE(ca.economic_impact_estimate, 0),
 		       COALESCE(ca.pattern_id::text, ''),
 		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
@@ -172,11 +172,11 @@ func (r *PostgresRepository) ListByWard(ctx context.Context, wardID string, limi
 	}
 
 	query := `
-		SELECT ca.id, ca.creator_id, COALESCE(u.name, ''), ca.ward_id,
-		       ca.title, ca.description, ca.desired_outcome,
+		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id, ''),
+		       COALESCE(ca.title, ''), COALESCE(ca.description, ''), COALESCE(ca.desired_outcome, ''),
 		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
-		       ca.escalation_level,
-		       ca.status, ca.support_count, ca.support_goal,
+		       COALESCE(ca.escalation_level::text, 'ward'),
+		       COALESCE(ca.status::text, 'open'), ca.support_count, ca.support_goal,
 		       COALESCE(ca.economic_impact_estimate, 0),
 		       COALESCE(ca.pattern_id::text, ''),
 		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
@@ -549,11 +549,11 @@ func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]mod
 	}
 
 	query := `
-		SELECT ca.id, ca.creator_id, COALESCE(u.name, ''), ca.ward_id,
-		       ca.title, ca.description, ca.desired_outcome,
+		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id, ''),
+		       COALESCE(ca.title, ''), COALESCE(ca.description, ''), COALESCE(ca.desired_outcome, ''),
 		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
-		       ca.escalation_level,
-		       ca.status, ca.support_count, ca.support_goal,
+		       COALESCE(ca.escalation_level::text, 'ward'),
+		       COALESCE(ca.status::text, 'open'), ca.support_count, ca.support_goal,
 		       (SELECT COUNT(*) FROM action_evidence e WHERE e.action_id = ca.id) AS evidence_count,
 		       COALESCE(ca.economic_impact_estimate, 0),
 		       COALESCE(ca.pattern_id::text, ''),
