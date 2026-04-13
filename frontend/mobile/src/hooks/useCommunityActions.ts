@@ -209,9 +209,17 @@ export function useActions(wardId?: string) {
       const endpoint = wardId
         ? `/api/v1/actions/ward/${wardId}`
         : '/api/v1/actions/trending';
+      console.log('=== ACTIONS ENDPOINT ===', endpoint, 'wardId:', wardId);
       const res = await api.get<{ actions: RawAction[]; count: number }>(endpoint);
-      console.log('=== RAW ACTIONS ===', JSON.stringify((res.actions ?? []).slice(0, 2).map(a => ({ title: a.title?.substring(0, 20), has_supported: a.has_supported }))));
-      return (res.actions ?? []).map(mapAction);
+      console.log('=== ACTIONS COUNT ===', res.actions?.length ?? 0);
+      try {
+        const mapped = (res.actions ?? []).map(mapAction);
+        console.log('=== MAPPED ACTIONS ===', mapped.length);
+        return mapped;
+      } catch (e: any) {
+        console.log('=== MAP ERROR ===', e.message, e.stack);
+        return [];
+      }
     },
     staleTime: 30_000,
   });
@@ -298,7 +306,7 @@ export function useCreateAction() {
       title: string;
       description: string;
       desiredOutcome: string;
-      targetAuthorityId: string;
+      targetAuthorityIds: string[];
       linkedIssueIds: string[];
       patternId?: string;
     }) =>
@@ -306,7 +314,10 @@ export function useCreateAction() {
         title: data.title,
         description: data.description,
         desired_outcome: data.desiredOutcome,
-        ...(data.targetAuthorityId ? { target_authority_id: data.targetAuthorityId } : {}),
+        // Primary authority for backward compat
+        ...(data.targetAuthorityIds.length > 0 ? { target_authority_id: data.targetAuthorityIds[0] } : {}),
+        // Full list for future multi-authority support
+        ...(data.targetAuthorityIds.length > 0 ? { target_authority_ids: data.targetAuthorityIds } : {}),
         linked_issue_ids: data.linkedIssueIds,
         ...(data.patternId ? { pattern_id: data.patternId } : {}),
       }),

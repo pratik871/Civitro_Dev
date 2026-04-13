@@ -556,7 +556,6 @@ func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]mod
 		       ca.status, ca.support_count, ca.support_goal,
 		       (SELECT COUNT(*) FROM action_evidence e WHERE e.action_id = ca.id) AS evidence_count,
 		       COALESCE(ca.economic_impact_estimate, 0),
-		       COALESCE(ca.category, ''),
 		       COALESCE(ca.pattern_id::text, ''),
 		       ca.created_at, ca.acknowledged_at, ca.resolved_at, ca.verified_at
 		FROM community_actions ca
@@ -589,7 +588,6 @@ func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]mod
 			&a.Status, &a.SupportCount, &a.SupportGoal,
 			&evidenceCount,
 			&a.EconomicImpactEstimate,
-			&a.Category,
 			&a.PatternID,
 			&a.CreatedAt, &a.AcknowledgedAt, &a.ResolvedAt, &a.VerifiedAt,
 		); err != nil {

@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { formatRelativeTime, formatNumber } from '../../lib/utils';
-import { useActions, useTrendingActions, useSupportAction } from '../../hooks/useCommunityActions';
+import { useActions, useSupportAction } from '../../hooks/useCommunityActions';
 import { useAuthStore } from '../../stores/authStore';
 import { ACTION_STATUS_LABELS, ACTION_STATUS_COLORS } from '../../types/action';
 import type { CommunityAction } from '../../types/action';
@@ -27,14 +27,13 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-type FilterTab = 'all' | 'trending' | 'my_actions' | 'acknowledged';
+type FilterTab = 'all' | 'trending' | 'my_actions' | 'acknowledged' | 'active' | 'resolved' | 'supported' | 'unsupported';
 
 export const ActionsListScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<NavProp>();
   const FILTER_TABS: { key: FilterTab; label: string }[] = [
     { key: 'all', label: t('actions.all', 'All') },
-    { key: 'trending', label: t('actions.trending', 'Trending') },
     { key: 'my_actions', label: t('actions.myActions', 'My Actions') },
     { key: 'acknowledged', label: t('actions.acknowledged', 'Acknowledged') },
   ];
@@ -42,12 +41,11 @@ export const ActionsListScreen: React.FC = () => {
   const currentUser = useAuthStore(s => s.user);
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
-  const { data: allActions, isLoading, refetch } = useActions(currentUser?.wardId);
-  const { data: trendingActions } = useTrendingActions();
+  const { data: allActions, isLoading, refetch, error } = useActions();
+  console.log('=== useActions result ===', 'data:', allActions?.length, 'loading:', isLoading, 'error:', error?.message);
   const supportMutation = useSupportAction();
 
   const filteredActions = useMemo(() => {
-    if (activeTab === 'trending') return trendingActions ?? [];
     const actions = allActions ?? [];
     switch (activeTab) {
       case 'my_actions':
@@ -56,21 +54,31 @@ export const ActionsListScreen: React.FC = () => {
         return actions.filter(
           a => a.status === 'acknowledged' || a.status === 'committed' || a.status === 'in_progress',
         );
+      case 'active':
+        return actions.filter(a => a.status !== 'archived' && a.status !== 'verified');
+      case 'resolved':
+        return actions.filter(a => a.status === 'resolved' || a.status === 'verified');
+      case 'supported':
+        return actions.filter(a => a.hasSupported);
+      case 'unsupported':
+        return actions.filter(a => !a.hasSupported);
       default:
         return actions;
     }
-  }, [allActions, trendingActions, activeTab, currentUser?.id]);
+  }, [allActions, activeTab, currentUser?.id]);
 
   const stats = useMemo(() => {
     const actions = allActions ?? [];
-    const totalSupporters = actions.reduce((sum, a) => sum + a.supportCount, 0);
+    console.log('=== STATS CALC ===', 'allActions:', allActions?.length, 'isArray:', Array.isArray(allActions));
     const activeCount = actions.filter(
       a => a.status !== 'archived' && a.status !== 'verified',
     ).length;
     const resolvedCount = actions.filter(
       a => a.status === 'resolved' || a.status === 'verified',
     ).length;
-    return { total: actions.length, active: activeCount, resolved: resolvedCount, supporters: totalSupporters };
+    const supportedCount = actions.filter(a => a.hasSupported).length;
+    const unsupportedCount = actions.filter(a => !a.hasSupported).length;
+    return { total: actions.length, active: activeCount, resolved: resolvedCount, supported: supportedCount, unsupported: unsupportedCount };
   }, [allActions]);
 
   const handleSupport = (action: CommunityAction) => {
@@ -80,28 +88,32 @@ export const ActionsListScreen: React.FC = () => {
     });
   };
 
+  console.log('=== RENDER ===', 'stats:', JSON.stringify(stats), 'filteredActions:', filteredActions.length, 'allActions:', allActions?.length);
+
   const renderHeader = () => (
     <View>
-      {/* Stats row */}
+      {/* Stats row — tap to filter */}
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{stats.total}</Text>
-          <Text style={styles.statLabel}>{t('actions.total', 'Total')}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, { color: colors.saffron }]}>{stats.active}</Text>
-          <Text style={styles.statLabel}>{t('actions.active', 'Active')}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, { color: colors.success }]}>{stats.resolved}</Text>
-          <Text style={styles.statLabel}>{t('actions.resolved', 'Resolved')}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, { color: colors.primary }]}>
-            {formatNumber(stats.supporters)}
-          </Text>
-          <Text style={styles.statLabel}>{t('actions.supporters', 'Supporters')}</Text>
-        </View>
+        {([
+          { key: 'all' as FilterTab, value: stats.total, label: t('actions.total', 'Total'), color: colors.textPrimary },
+          { key: 'active' as FilterTab, value: stats.active, label: t('actions.active', 'Active'), color: colors.saffron },
+          { key: 'resolved' as FilterTab, value: stats.resolved, label: t('actions.resolved', 'Resolved'), color: colors.success },
+          { key: 'supported' as FilterTab, value: stats.supported, label: t('actions.supported', 'Supported'), color: colors.info },
+          { key: 'unsupported' as FilterTab, value: stats.unsupported, label: t('actions.discover', 'Discover'), color: colors.warning },
+        ]).map(item => {
+          const isActive = activeTab === item.key || (item.key === 'all' && activeTab === 'all');
+          return (
+            <TouchableOpacity
+              key={item.key}
+              style={[styles.statCard, isActive && styles.statCardActive]}
+              onPress={() => setActiveTab(isActive && item.key !== 'all' ? 'all' : item.key as FilterTab)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.statValue, { color: isActive ? colors.white : item.color }]}>{item.value}</Text>
+              <Text style={[styles.statLabel, isActive && styles.statLabelActive]}>{item.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Filter tabs */}
@@ -225,17 +237,35 @@ export const ActionsListScreen: React.FC = () => {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>{'\u{270A}'}</Text>
-            <Text style={styles.emptyTitle}>{t('actions.noActionsYet', 'No community actions yet')}</Text>
-            <Text style={styles.emptyText}>
-              {t('actions.noActionsDesc', 'Community actions help drive systemic change. Start one to rally your ward around an issue that matters.')}
+            <Text style={styles.emptyIcon}>
+              {activeTab === 'supported' ? '\u2705' : activeTab === 'unsupported' ? '\u{1F50D}' : activeTab === 'resolved' ? '\u{1F3C6}' : activeTab === 'active' ? '\u26A1' : '\u{270A}'}
             </Text>
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={() => navigation.navigate('CreateAction')}
-            >
-              <Text style={styles.createButtonText}>{t('actions.startCommunityAction', 'Start a Community Action')}</Text>
-            </TouchableOpacity>
+            <Text style={styles.emptyTitle}>
+              {activeTab === 'supported' ? t('actions.noSupported', 'No supported actions yet')
+                : activeTab === 'unsupported' ? t('actions.noDiscover', 'Nothing new to discover')
+                : activeTab === 'resolved' ? t('actions.noResolved', 'No resolved actions yet')
+                : activeTab === 'active' ? t('actions.noActive', 'No active actions right now')
+                : activeTab === 'my_actions' ? t('actions.noMyActions', 'You haven\'t created any actions')
+                : activeTab === 'acknowledged' ? t('actions.noAcknowledged', 'No acknowledged actions yet')
+                : t('actions.noActionsYet', 'No community actions yet')}
+            </Text>
+            <Text style={styles.emptyText}>
+              {activeTab === 'supported' ? t('actions.noSupportedDesc', 'Support actions you care about and they\'ll show up here.')
+                : activeTab === 'unsupported' ? t('actions.noDiscoverDesc', 'All actions have your support. Great work!')
+                : activeTab === 'resolved' ? t('actions.noResolvedDesc', 'Resolved actions will appear here once issues are addressed.')
+                : activeTab === 'active' ? t('actions.noActiveDesc', 'Start a new action to rally your community around an issue.')
+                : activeTab === 'my_actions' ? t('actions.noMyActionsDesc', 'Start a community action to drive change in your ward.')
+                : activeTab === 'acknowledged' ? t('actions.noAcknowledgedDesc', 'Actions acknowledged by leaders will appear here.')
+                : t('actions.noActionsDesc', 'Community actions help drive systemic change. Start one to rally your ward around an issue that matters.')}
+            </Text>
+            {(activeTab === 'all' || activeTab === 'active' || activeTab === 'my_actions') && (
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={() => navigation.navigate('CreateAction')}
+              >
+                <Text style={styles.createButtonText}>{t('actions.startCommunityAction', 'Start a Community Action')}</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
@@ -272,11 +302,13 @@ const styles = StyleSheet.create({
   // Stats
   statsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
   statCard: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '30%',
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     paddingVertical: spacing.md,
@@ -286,6 +318,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  statCardActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statValue: {
     fontSize: 20,
@@ -299,6 +340,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  statLabelActive: {
+    color: 'rgba(255,255,255,0.8)',
   },
 
   // Tabs
