@@ -13,7 +13,7 @@ from app.models import (
 )
 from app import service
 
-router = APIRouter(prefix="/chi", tags=["chi"])
+router = APIRouter(prefix="/api/v1/chi", tags=["chi"])
 
 
 @router.get("/{boundary_id}", response_model=CHIScore)
