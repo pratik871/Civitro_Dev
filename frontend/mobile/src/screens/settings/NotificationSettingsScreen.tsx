@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StatusBar,
-  TextInput,
-  Alert,
+  Modal,
+  FlatList,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useAuthStore } from '../../stores/authStore';
@@ -35,6 +37,206 @@ const DEFAULT_PREFS: NotificationPrefs = {
   quietHoursEnd: '08:00',
 };
 
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = ['00', '15', '30', '45'];
+
+const ITEM_HEIGHT = 44;
+
+/* ── Time Picker Bottom Sheet ── */
+interface TimePickerProps {
+  visible: boolean;
+  label: string;
+  value: string;
+  onConfirm: (time: string) => void;
+  onCancel: () => void;
+}
+
+const TimePicker: React.FC<TimePickerProps> = ({ visible, label, value, onConfirm, onCancel }) => {
+  const insets = useSafeAreaInsets();
+  const [hour, setHour] = useState('22');
+  const [minute, setMinute] = useState('00');
+  const hourRef = useRef<FlatList>(null);
+  const minuteRef = useRef<FlatList>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      const [h, m] = (value || '22:00').split(':');
+      setHour(h);
+      setMinute(m);
+      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+      // Scroll to initial positions
+      setTimeout(() => {
+        const hIdx = HOURS.indexOf(h);
+        const mIdx = MINUTES.indexOf(m);
+        if (hIdx >= 0) hourRef.current?.scrollToIndex({ index: hIdx, animated: false });
+        if (mIdx >= 0) minuteRef.current?.scrollToIndex({ index: mIdx, animated: false });
+      }, 100);
+    } else {
+      fadeAnim.setValue(0);
+    }
+  }, [visible, value]);
+
+  const renderColumn = (
+    data: string[],
+    selected: string,
+    onSelect: (v: string) => void,
+    ref: React.RefObject<FlatList>,
+  ) => (
+    <FlatList
+      ref={ref}
+      data={data}
+      keyExtractor={item => item}
+      showsVerticalScrollIndicator={false}
+      snapToInterval={ITEM_HEIGHT}
+      decelerationRate="fast"
+      style={pickerStyles.column}
+      contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+      getItemLayout={(_, index) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index })}
+      onMomentumScrollEnd={e => {
+        const idx = Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT);
+        if (idx >= 0 && idx < data.length) onSelect(data[idx]);
+      }}
+      renderItem={({ item }) => {
+        const isSelected = item === selected;
+        return (
+          <TouchableOpacity
+            style={[pickerStyles.item, isSelected && pickerStyles.itemSelected]}
+            onPress={() => {
+              onSelect(item);
+              const idx = data.indexOf(item);
+              ref.current?.scrollToIndex({ index: idx, animated: true });
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[pickerStyles.itemText, isSelected && pickerStyles.itemTextSelected]}>
+              {item}
+            </Text>
+          </TouchableOpacity>
+        );
+      }}
+    />
+  );
+
+  if (!visible) return null;
+
+  return (
+    <Modal transparent visible={visible} animationType="none" onRequestClose={onCancel}>
+      <Animated.View style={[pickerStyles.overlay, { opacity: fadeAnim }]}>
+        <TouchableOpacity style={pickerStyles.overlayTap} onPress={onCancel} activeOpacity={1} />
+        <View style={[pickerStyles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+          {/* Header */}
+          <View style={pickerStyles.sheetHeader}>
+            <TouchableOpacity onPress={onCancel} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={pickerStyles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={pickerStyles.sheetTitle}>{label}</Text>
+            <TouchableOpacity
+              onPress={() => onConfirm(`${hour}:${minute}`)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={pickerStyles.doneText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Picker */}
+          <View style={pickerStyles.pickerRow}>
+            {renderColumn(HOURS, hour, setHour, hourRef as any)}
+            <Text style={pickerStyles.colon}>:</Text>
+            {renderColumn(MINUTES, minute, setMinute, minuteRef as any)}
+          </View>
+
+          {/* Selection highlight */}
+          <View style={pickerStyles.selectionBar} pointerEvents="none" />
+        </View>
+      </Animated.View>
+    </Modal>
+  );
+};
+
+const pickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(11, 20, 38, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  overlayTap: { flex: 1 },
+  sheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  sheetTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0B1426',
+  },
+  cancelText: {
+    fontSize: 15,
+    color: '#6B7280',
+  },
+  doneText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FF6B35',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: ITEM_HEIGHT * 5,
+    paddingHorizontal: 40,
+  },
+  column: {
+    width: 70,
+    height: ITEM_HEIGHT * 5,
+  },
+  colon: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#0B1426',
+    marginHorizontal: 8,
+  },
+  item: {
+    height: ITEM_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemSelected: {},
+  itemText: {
+    fontSize: 20,
+    color: '#D1D5DB',
+    fontWeight: '500',
+  },
+  itemTextSelected: {
+    fontSize: 24,
+    color: '#0B1426',
+    fontWeight: '700',
+  },
+  selectionBar: {
+    position: 'absolute',
+    left: 40,
+    right: 40,
+    top: 14 + 49 + ITEM_HEIGHT * 2, // header + border + 2 items offset
+    height: ITEM_HEIGHT,
+    borderTopWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: '#FF6B35' + '40',
+    borderRadius: 8,
+  },
+});
+
+/* ── Main Screen ── */
 export const NotificationSettingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
@@ -45,6 +247,7 @@ export const NotificationSettingsScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [pickerTarget, setPickerTarget] = useState<'quietHoursStart' | 'quietHoursEnd' | null>(null);
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -55,10 +258,16 @@ export const NotificationSettingsScreen: React.FC = () => {
     if (!userId) return;
     const fetchPrefs = async () => {
       try {
-        const data = await api.get<NotificationPrefs>(
+        const data = await api.get<any>(
           `/api/v1/notifications/users/${userId}/prefs`,
         );
-        setPrefs(data);
+        setPrefs({
+          pushEnabled: data.push_enabled ?? DEFAULT_PREFS.pushEnabled,
+          emailEnabled: data.email_enabled ?? DEFAULT_PREFS.emailEnabled,
+          smsEnabled: data.sms_enabled ?? DEFAULT_PREFS.smsEnabled,
+          quietHoursStart: data.quiet_hours_start || DEFAULT_PREFS.quietHoursStart,
+          quietHoursEnd: data.quiet_hours_end || DEFAULT_PREFS.quietHoursEnd,
+        });
       } catch {
         // Use defaults if fetch fails
       } finally {
@@ -73,8 +282,14 @@ export const NotificationSettingsScreen: React.FC = () => {
       if (!userId) return;
       setIsSaving(true);
       try {
-        await api.put(`/api/v1/notifications/users/${userId}/prefs`, updated as unknown as Record<string, unknown>);
-        showToast('Settings saved');
+        await api.put(`/api/v1/notifications/users/${userId}/prefs`, {
+          push_enabled: updated.pushEnabled,
+          email_enabled: updated.emailEnabled,
+          sms_enabled: updated.smsEnabled,
+          quiet_hours_start: updated.quietHoursStart || '22:00',
+          quiet_hours_end: updated.quietHoursEnd || '08:00',
+        } as unknown as Record<string, unknown>);
+        // saved silently
       } catch {
         showToast('Failed to save');
       } finally {
@@ -93,28 +308,24 @@ export const NotificationSettingsScreen: React.FC = () => {
     [prefs, savePrefs],
   );
 
-  const handleQuietHoursChange = useCallback(
-    (key: 'quietHoursStart' | 'quietHoursEnd', value: string) => {
-      const updated = { ...prefs, [key]: value };
+  const handleTimeConfirm = useCallback(
+    (time: string) => {
+      if (!pickerTarget) return;
+      const updated = { ...prefs, [pickerTarget]: time };
       setPrefs(updated);
+      setPickerTarget(null);
+      savePrefs(updated);
     },
-    [prefs],
+    [prefs, pickerTarget, savePrefs],
   );
 
-  const handleQuietHoursBlur = useCallback(
-    (key: 'quietHoursStart' | 'quietHoursEnd') => {
-      // Validate HH:MM format
-      const value = prefs[key];
-      const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
-      if (!match) {
-        Alert.alert('Invalid Time', 'Please enter time in HH:MM format (e.g. 22:00)');
-        setPrefs(prev => ({ ...prev, [key]: DEFAULT_PREFS[key] }));
-        return;
-      }
-      savePrefs(prefs);
-    },
-    [prefs, savePrefs],
-  );
+  const formatTime12 = (time24: string) => {
+    const [hStr, m] = time24.split(':');
+    const h = parseInt(hStr, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${m} ${ampm}`;
+  };
 
   if (isLoading) {
     return (
@@ -208,46 +419,76 @@ export const NotificationSettingsScreen: React.FC = () => {
 
         {/* Quiet Hours */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.quietHours')}</Text>
+          <View style={styles.quietHeader}>
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+              <Path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+            <Text style={[styles.sectionTitle, { marginBottom: 0, marginLeft: 8 }]}>{t('settings.quietHours')}</Text>
+          </View>
           <Text style={styles.sectionDescription}>
             {t('settings.quietHoursDesc')}
           </Text>
 
           <View style={styles.card}>
-            <View style={styles.timeRow}>
-              <Text style={styles.timeLabel}>{t('settings.startTime')}</Text>
-              <TextInput
-                style={styles.timeInput}
-                value={prefs.quietHoursStart}
-                onChangeText={value => handleQuietHoursChange('quietHoursStart', value)}
-                onBlur={() => handleQuietHoursBlur('quietHoursStart')}
-                placeholder="22:00"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numbers-and-punctuation"
-                maxLength={5}
-              />
+            {/* Visual time range */}
+            <View style={styles.timeRange}>
+              <TouchableOpacity
+                style={styles.timePill}
+                onPress={() => setPickerTarget('quietHoursStart')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.timePillLabel}>From</Text>
+                <Text style={styles.timePillValue}>{formatTime12(prefs.quietHoursStart)}</Text>
+              </TouchableOpacity>
+
+              <View style={styles.timeArrow}>
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <Path d="M5 12h14M12 5l7 7-7 7" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              </View>
+
+              <TouchableOpacity
+                style={styles.timePill}
+                onPress={() => setPickerTarget('quietHoursEnd')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.timePillLabel}>To</Text>
+                <Text style={styles.timePillValue}>{formatTime12(prefs.quietHoursEnd)}</Text>
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.timeRow}>
-              <Text style={styles.timeLabel}>{t('settings.endTime')}</Text>
-              <TextInput
-                style={styles.timeInput}
-                value={prefs.quietHoursEnd}
-                onChangeText={value => handleQuietHoursChange('quietHoursEnd', value)}
-                onBlur={() => handleQuietHoursBlur('quietHoursEnd')}
-                placeholder="08:00"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numbers-and-punctuation"
-                maxLength={5}
-              />
+            {/* Duration hint */}
+            <View style={styles.durationRow}>
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke={colors.textMuted} strokeWidth={1.5} />
+                <Path d="M12 6v6l4 2" stroke={colors.textMuted} strokeWidth={1.5} strokeLinecap="round" />
+              </Svg>
+              <Text style={styles.durationText}>
+                {(() => {
+                  const [sh, sm] = prefs.quietHoursStart.split(':').map(Number);
+                  const [eh, em] = prefs.quietHoursEnd.split(':').map(Number);
+                  let diff = (eh * 60 + em) - (sh * 60 + sm);
+                  if (diff <= 0) diff += 24 * 60;
+                  const hours = Math.floor(diff / 60);
+                  const mins = diff % 60;
+                  return mins > 0 ? `${hours}h ${mins}m silent` : `${hours} hours silent`;
+                })()}
+              </Text>
             </View>
           </View>
         </View>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Time Picker Modal */}
+      <TimePicker
+        visible={pickerTarget !== null}
+        label={pickerTarget === 'quietHoursStart' ? 'Start Time' : 'End Time'}
+        value={pickerTarget ? prefs[pickerTarget] : '22:00'}
+        onConfirm={handleTimeConfirm}
+        onCancel={() => setPickerTarget(null)}
+      />
 
       {/* Toast */}
       {toastMessage && (
@@ -330,6 +571,11 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: spacing.md,
   },
+  quietHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.card,
@@ -364,27 +610,49 @@ const styles = StyleSheet.create({
     backgroundColor: colors.borderLight,
     marginVertical: spacing.sm,
   },
-  timeRow: {
+  timeRange: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
   },
-  timeLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.textPrimary,
+  timePill: {
+    flex: 1,
+    backgroundColor: '#FFF7ED',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FF6B35' + '20',
   },
-  timeInput: {
-    fontSize: 15,
+  timePillLabel: {
+    fontSize: 11,
     fontWeight: '500',
-    color: colors.primary,
-    backgroundColor: colors.backgroundGray,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minWidth: 80,
-    textAlign: 'center',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  timePillValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FF6B35',
+  },
+  timeArrow: {
+    marginHorizontal: 12,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  durationText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginLeft: 6,
   },
   toast: {
     position: 'absolute',

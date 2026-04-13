@@ -100,20 +100,40 @@ func (r *Repository) ClearAll(ctx context.Context, userID string) error {
 // GetPrefs retrieves notification preferences for a user.
 func (r *Repository) GetPrefs(ctx context.Context, userID string) (*model.NotificationPrefs, error) {
 	prefs := &model.NotificationPrefs{}
+	var qhStart, qhEnd *time.Time
 	err := r.db.QueryRow(ctx,
 		`SELECT user_id, push_enabled, email_enabled, sms_enabled, quiet_hours_start, quiet_hours_end
 		 FROM notification_prefs WHERE user_id = $1`,
 		userID,
 	).Scan(&prefs.UserID, &prefs.PushEnabled, &prefs.EmailEnabled, &prefs.SMSEnabled,
-		&prefs.QuietHoursStart, &prefs.QuietHoursEnd)
+		&qhStart, &qhEnd)
 	if err != nil {
 		return nil, err
+	}
+	if qhStart != nil {
+		prefs.QuietHoursStart = qhStart.Format("15:04")
+	}
+	if qhEnd != nil {
+		prefs.QuietHoursEnd = qhEnd.Format("15:04")
 	}
 	return prefs, nil
 }
 
 // UpdatePrefs updates or inserts notification preferences for a user.
 func (r *Repository) UpdatePrefs(ctx context.Context, prefs *model.NotificationPrefs) error {
+	// Parse quiet hours strings to time.Time for Postgres TIME column.
+	var qhStart, qhEnd interface{}
+	if prefs.QuietHoursStart != "" {
+		if t, err := time.Parse("15:04", prefs.QuietHoursStart); err == nil {
+			qhStart = t
+		}
+	}
+	if prefs.QuietHoursEnd != "" {
+		if t, err := time.Parse("15:04", prefs.QuietHoursEnd); err == nil {
+			qhEnd = t
+		}
+	}
+
 	_, err := r.db.Exec(ctx,
 		`INSERT INTO notification_prefs (user_id, push_enabled, email_enabled, sms_enabled, quiet_hours_start, quiet_hours_end)
 		 VALUES ($1, $2, $3, $4, $5, $6)
@@ -124,7 +144,7 @@ func (r *Repository) UpdatePrefs(ctx context.Context, prefs *model.NotificationP
 		   quiet_hours_start = EXCLUDED.quiet_hours_start,
 		   quiet_hours_end = EXCLUDED.quiet_hours_end`,
 		prefs.UserID, prefs.PushEnabled, prefs.EmailEnabled, prefs.SMSEnabled,
-		prefs.QuietHoursStart, prefs.QuietHoursEnd,
+		qhStart, qhEnd,
 	)
 	return err
 }
