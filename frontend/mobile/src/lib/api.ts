@@ -102,19 +102,16 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   let response = await fetch(`${BASE_URL}${endpoint}`, config);
 
-  // On 401, the token may have expired between getAccessToken and the request.
-  // Try refreshing once and retry the request.
+  // On 401, try refreshing the token once and retry the request.
   if (response.status === 401 && authenticated) {
     const { getAccessToken: retryToken } = require('./auth');
     const freshToken = await retryToken();
     if (freshToken) {
       config.headers = { ...(config.headers as Record<string, string>), Authorization: `Bearer ${freshToken}` };
       response = await fetch(`${BASE_URL}${endpoint}`, config);
-    } else {
-      // Refresh also failed — force logout
-      const { useAuthStore } = require('../stores/authStore');
-      useAuthStore.getState().logout();
     }
+    // If refresh fails, don't force logout — just let the 401 error propagate.
+    // The user stays on the current screen and can retry or navigate to login.
   }
 
   if (!response.ok) {

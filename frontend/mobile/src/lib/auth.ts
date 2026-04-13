@@ -107,8 +107,9 @@ async function refreshAccessToken(refreshToken: string): Promise<string | null> 
     });
 
     if (!response.ok) {
-      // Refresh token is also expired/invalid — user must re-login
-      await clearAll();
+      // Refresh token expired — don't force logout here.
+      // The 401 interceptor in api.ts will handle showing login.
+      // User data stays in storage so profile info isn't lost.
       return null;
     }
 
