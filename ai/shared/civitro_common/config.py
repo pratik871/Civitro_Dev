@@ -456,7 +456,7 @@ def load_config(
             raw = yaml.safe_load(fh) or {}
 
     # Overlay environment-specific file (e.g. config/production.yaml)
-    env = environment or os.environ.get("CIVITRO_ENV", raw.get("app", {}).get("environment", "local"))
+    env = environment or os.environ.get("CIVITRO_ENV") or os.environ.get("APP_ENV") or raw.get("app", {}).get("environment", "local")
     env_path = base_path.parent / f"{env}.yaml"
     if env_path.exists() and env_path != base_path:
         with open(env_path, "r", encoding="utf-8") as fh:

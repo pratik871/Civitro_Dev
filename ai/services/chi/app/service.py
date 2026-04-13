@@ -177,35 +177,38 @@ async def compute_chi(boundary_id: str) -> ComputeResponse:
         dimensions=[d.model_dump() for d in dimensions],
     )
 
-    # Publish event
-    await publish(
-        get_topic("chi"),
-        {
-            "event": "chi.computed",
-            "boundary_id": boundary_id,
-            "overall_score": overall,
-        },
-        key=boundary_id,
-    )
+    # Publish event (non-fatal if Kafka unavailable)
+    try:
+        await publish(
+            get_topic("chi"),
+            {
+                "event": "chi.computed",
+                "boundary_id": boundary_id,
+                "overall_score": overall,
+            },
+            key=boundary_id,
+        )
 
-    # Alert if >10pt drop in 30 days
-    if history:
-        oldest_score = history[-1].get("score", overall)
-        if overall < oldest_score - 10:
-            log.warning(
-                "CHI alert: significant drop",
-                boundary_id=boundary_id,
-                drop=round(oldest_score - overall, 2),
-            )
-            await publish(
-                get_topic("chi"),
-                {
-                    "event": "chi.alert",
-                    "boundary_id": boundary_id,
-                    "drop_points": round(oldest_score - overall, 2),
-                },
-                key=boundary_id,
-            )
+        # Alert if >10pt drop in 30 days
+        if history:
+            oldest_score = history[-1].get("score", overall)
+            if overall < oldest_score - 10:
+                log.warning(
+                    "CHI alert: significant drop",
+                    boundary_id=boundary_id,
+                    drop=round(oldest_score - overall, 2),
+                )
+                await publish(
+                    get_topic("chi"),
+                    {
+                        "event": "chi.alert",
+                        "boundary_id": boundary_id,
+                        "drop_points": round(oldest_score - overall, 2),
+                    },
+                    key=boundary_id,
+                )
+    except Exception:
+        log.warning("failed to publish CHI event (Kafka unavailable)", boundary_id=boundary_id)
 
     log.info("CHI computed", boundary_id=boundary_id, overall=overall)
     return ComputeResponse(
@@ -233,7 +236,7 @@ async def get_chi(boundary_id: str) -> CHIScore:
     dims = [CHIDimension(**d) for d in dims_raw]
 
     return CHIScore(
-        boundary_id=row["boundary_id"],
+        boundary_id=str(row["boundary_id"]),
         overall_score=row["overall_score"],
         rank=row["rank"],
         rank_total=row["rank_total"],

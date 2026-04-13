@@ -108,7 +108,7 @@ async def save_chi_score(
         rank,
         rank_total,
         json.dumps(dimensions),
-        datetime.now(timezone.utc),
+        datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 

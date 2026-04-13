@@ -5,8 +5,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Add shared library to path
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "shared"))
+# Add shared library to path (local dev only — in Docker it's pip-installed)
+try:
+    _shared = Path(__file__).resolve().parents[3] / "shared"
+    if _shared.is_dir():
+        sys.path.insert(0, str(_shared))
+except IndexError:
+    pass
 
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
