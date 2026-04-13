@@ -71,9 +71,58 @@ export async function isTokenExpired(): Promise<boolean> {
   return Date.now() > tokens.expiresAt;
 }
 
+// Track if a refresh is already in progress to avoid multiple simultaneous refreshes
+let refreshPromise: Promise<string | null> | null = null;
+
 export async function getAccessToken(): Promise<string | null> {
   const tokens = await getTokens();
   if (!tokens) return null;
-  if (Date.now() > tokens.expiresAt) return null;
-  return tokens.accessToken;
+
+  // Token still valid — return it
+  if (Date.now() < tokens.expiresAt) {
+    return tokens.accessToken;
+  }
+
+  // Token expired — try to refresh
+  if (!tokens.refreshToken) return null;
+
+  // Deduplicate concurrent refresh attempts
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = refreshAccessToken(tokens.refreshToken);
+  const result = await refreshPromise;
+  refreshPromise = null;
+  return result;
+}
+
+async function refreshAccessToken(refreshToken: string): Promise<string | null> {
+  try {
+    // Determine base URL (same logic as api.ts)
+    const baseUrl = __DEV__ ? 'https://api.civitro.com' : 'https://api.civitro.com';
+
+    const response = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      // Refresh token is also expired/invalid — user must re-login
+      await clearAll();
+      return null;
+    }
+
+    const data = await response.json();
+    const newTokens: AuthTokens = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || refreshToken,
+      expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
+    };
+
+    await saveTokens(newTokens);
+    return newTokens.accessToken;
+  } catch {
+    // Network error during refresh — don't clear tokens, just return null
+    return null;
+  }
 }

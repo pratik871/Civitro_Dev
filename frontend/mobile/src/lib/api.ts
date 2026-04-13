@@ -100,7 +100,22 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     config.body = body instanceof FormData ? body : JSON.stringify(body);
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, config);
+  let response = await fetch(`${BASE_URL}${endpoint}`, config);
+
+  // On 401, the token may have expired between getAccessToken and the request.
+  // Try refreshing once and retry the request.
+  if (response.status === 401 && authenticated) {
+    const { getAccessToken: retryToken } = require('./auth');
+    const freshToken = await retryToken();
+    if (freshToken) {
+      config.headers = { ...(config.headers as Record<string, string>), Authorization: `Bearer ${freshToken}` };
+      response = await fetch(`${BASE_URL}${endpoint}`, config);
+    } else {
+      // Refresh also failed — force logout
+      const { useAuthStore } = require('../stores/authStore');
+      useAuthStore.getState().logout();
+    }
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);

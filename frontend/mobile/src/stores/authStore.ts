@@ -34,11 +34,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const user = await getUser();
       const tokens = await getTokens();
-      set({
-        user,
-        isAuthenticated: !!user && !!tokens,
-        isInitialized: true,
-      });
+
+      if (user && tokens) {
+        // Token exists — even if access token expired, refresh will handle it
+        // on first API call. Mark as authenticated.
+        set({
+          user,
+          isAuthenticated: true,
+          isInitialized: true,
+        });
+      } else {
+        // No user or tokens — not authenticated
+        set({ isInitialized: true });
+      }
     } catch (e) {
       console.warn('Auth init failed:', e);
       set({ isInitialized: true });
