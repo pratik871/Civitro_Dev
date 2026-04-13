@@ -16,6 +16,11 @@ from app import service
 router = APIRouter(prefix="/api/v1/chi", tags=["chi"])
 
 
+@router.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok", "service": "chi"}
+
+
 @router.get("/{boundary_id}", response_model=CHIScore)
 async def get_chi(boundary_id: str) -> CHIScore:
     """Get the latest CHI score for a boundary."""
