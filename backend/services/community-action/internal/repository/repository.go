@@ -93,7 +93,7 @@ func (r *PostgresRepository) Create(ctx context.Context, action *model.Community
 // GetByID retrieves a community action by its ID, including evidence and recent responses.
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*model.CommunityAction, error) {
 	query := `
-		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id, ''), COALESCE(b.name, ''),
+		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id::text, ''), COALESCE(b.name, ''),
 		       COALESCE(ca.title, ''), COALESCE(ca.description, ''), COALESCE(ca.desired_outcome, ''),
 		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
 		       COALESCE(ca.escalation_level::text, 'ward'),
@@ -172,7 +172,7 @@ func (r *PostgresRepository) ListByWard(ctx context.Context, wardID string, limi
 	}
 
 	query := `
-		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id, ''),
+		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id::text, ''),
 		       COALESCE(ca.title, ''), COALESCE(ca.description, ''), COALESCE(ca.desired_outcome, ''),
 		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
 		       COALESCE(ca.escalation_level::text, 'ward'),
@@ -549,7 +549,7 @@ func (r *PostgresRepository) ListTrending(ctx context.Context, limit int) ([]mod
 	}
 
 	query := `
-		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id, ''),
+		SELECT ca.id, COALESCE(ca.creator_id::text, ''), COALESCE(u.name, ''), COALESCE(ca.ward_id::text, ''),
 		       COALESCE(ca.title, ''), COALESCE(ca.description, ''), COALESCE(ca.desired_outcome, ''),
 		       COALESCE(ca.target_authority_id::text, ''), COALESCE(rep.name, ''),
 		       COALESCE(ca.escalation_level::text, 'ward'),
